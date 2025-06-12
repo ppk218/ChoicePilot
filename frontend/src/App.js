@@ -790,7 +790,7 @@ function App() {
           Welcome to <span className="text-blue-600">ChoicePilot</span>
         </h1>
         <p className="text-xl text-gray-600">Your Personal AI Guide for Stress-Free Decisions</p>
-        <p className="text-sm text-gray-500">Now with voice integration, AI routing, and decision analysis tools</p>
+        <p className="text-sm text-gray-500">Now with 8 distinct advisor personalities, voice integration, and AI routing</p>
       </div>
       
       <div className="max-w-2xl mx-auto space-y-4 text-gray-700">
