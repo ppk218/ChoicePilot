@@ -276,7 +276,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Chat Interface"
+    - "LLM Routing Engine"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
