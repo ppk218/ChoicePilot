@@ -306,7 +306,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Voice Integration"
+    - "Enhanced UI/UX"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
