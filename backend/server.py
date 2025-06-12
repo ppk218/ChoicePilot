@@ -206,6 +206,10 @@ async def get_session_info(session_id: str):
         if not session:
             return {"session_id": session_id, "user_preferences": {}, "conversation_count": 0}
         
+        # Convert ObjectId to string to make it JSON serializable
+        if "_id" in session:
+            session["_id"] = str(session["_id"])
+        
         return session
     except Exception as e:
         logging.error(f"Error getting session info: {str(e)}")
