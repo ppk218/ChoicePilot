@@ -321,7 +321,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced UI/UX"
+    - "Enhanced Advisor Personas"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
