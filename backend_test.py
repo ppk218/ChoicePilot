@@ -33,6 +33,15 @@ test_results = {
 # Flag to determine if we should mock the Claude API
 MOCK_CLAUDE_API = True
 
+# Test user credentials for authenticated endpoints
+TEST_USER = {
+    "email": "test@example.com",
+    "password": "TestPassword123!"
+}
+
+# Store auth token for authenticated requests
+AUTH_TOKEN = None
+
 def run_test(test_name, test_func):
     """Run a test and track results"""
     test_results["total"] += 1
