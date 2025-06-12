@@ -351,6 +351,9 @@ function MainApp() {
   const [activeToolTab, setActiveToolTab] = useState("summary");
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [error, setError] = useState("");
+  const [showBillingDashboard, setShowBillingDashboard] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showPaymentError, setShowPaymentError] = useState(false);
   
   // Voice-related state
   const [voiceEnabled, setVoiceEnabled] = useState(false);
