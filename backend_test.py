@@ -222,7 +222,7 @@ def test_chat_endpoint_categories():
 
 def test_session_management():
     """Test session creation and retrieval"""
-    # Create a new session via chat
+    # Create a new session via preferences endpoint
     session_id = str(uuid.uuid4())
     preferences = {
         "budget": "high",
@@ -230,32 +230,18 @@ def test_session_management():
         "brand_preference": "Apple"
     }
     
-    chat_payload = {
-        "message": "I want to buy a new phone.",
-        "session_id": session_id,
-        "category": "consumer",
-        "preferences": preferences
-    }
-    
-    if MOCK_CLAUDE_API:
-        # Skip the actual chat API call since we're testing session management
-        print(f"Skipping actual chat API call for session management test")
-    else:
-        chat_response = requests.post(f"{API_URL}/chat", json=chat_payload)
-        if chat_response.status_code != 200:
-            print(f"Error: Failed to create session via chat: {chat_response.status_code}")
-            return False
-    
-    # Create a mock session directly in the database by calling the session endpoint
-    session_create_response = requests.post(f"{API_URL}/preferences/{session_id}", json=preferences)
-    if session_create_response.status_code != 200:
-        print(f"Error: Failed to create session via preferences endpoint: {session_create_response.status_code}")
+    # Create session directly with preferences endpoint
+    create_response = requests.post(f"{API_URL}/preferences/{session_id}", json=preferences)
+    if create_response.status_code != 200:
+        print(f"Error: Failed to create session via preferences endpoint: {create_response.status_code}")
+        print(f"Response: {create_response.text}")
         return False
     
     # Get session info
     session_response = requests.get(f"{API_URL}/session/{session_id}")
     if session_response.status_code != 200:
         print(f"Error: Failed to retrieve session: {session_response.status_code}")
+        print(f"Response: {session_response.text}")
         return False
     
     session_data = session_response.json()
@@ -282,6 +268,7 @@ def test_session_management():
     update_response = requests.post(f"{API_URL}/preferences/{session_id}", json=new_preferences)
     if update_response.status_code != 200:
         print(f"Error: Failed to update preferences: {update_response.status_code}")
+        print(f"Response: {update_response.text}")
         return False
     
     # Verify updated preferences
