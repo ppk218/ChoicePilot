@@ -371,6 +371,7 @@ function MainApp() {
       loadSubscriptionInfo();
       loadDecisions();
       checkVoiceSupport();
+      checkPaymentStatus();
     }
     return () => {
       if (speechSynthesisRef.current) {
