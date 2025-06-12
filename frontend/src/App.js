@@ -17,19 +17,25 @@ const DECISION_CATEGORIES = {
 };
 
 function App() {
-  const [sessionId, setSessionId] = useState(null);
+  const [currentDecisionId, setCurrentDecisionId] = useState(null);
+  const [decisions, setDecisions] = useState([]);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("general");
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [currentDecisionTitle, setCurrentDecisionTitle] = useState("");
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Generate session ID when app loads
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setSessionId(newSessionId);
+    loadDecisions();
   }, []);
+
+  useEffect(() => {
+    if (currentDecisionId) {
+      loadDecisionHistory(currentDecisionId);
+    }
+  }, [currentDecisionId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -37,6 +43,49 @@ function App() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const loadDecisions = async () => {
+    try {
+      const response = await axios.get(`${API}/decisions`);
+      setDecisions(response.data.decisions || []);
+    } catch (error) {
+      console.error("Error loading decisions:", error);
+    }
+  };
+
+  const loadDecisionHistory = async (decisionId) => {
+    try {
+      const response = await axios.get(`${API}/decisions/${decisionId}/history`);
+      const conversations = response.data.conversations || [];
+      
+      const formattedMessages = conversations.map((conv, index) => [
+        {
+          id: `user_${index}`,
+          text: conv.user_message,
+          isUser: true,
+          timestamp: new Date(conv.timestamp),
+          category: conv.category
+        },
+        {
+          id: `ai_${index}`,
+          text: conv.ai_response,
+          isUser: false,
+          timestamp: new Date(conv.timestamp),
+          category: conv.category
+        }
+      ]).flat();
+
+      setMessages(formattedMessages);
+      
+      // Get decision info for title
+      const decisionResponse = await axios.get(`${API}/decisions/${decisionId}`);
+      setCurrentDecisionTitle(decisionResponse.data.title || "Untitled Decision");
+      setSelectedCategory(decisionResponse.data.category || "general");
+      
+    } catch (error) {
+      console.error("Error loading decision history:", error);
+    }
   };
 
   const sendMessage = async () => {
@@ -61,7 +110,7 @@ function App() {
     try {
       const response = await axios.post(`${API}/chat`, {
         message: userMessage,
-        session_id: sessionId,
+        decision_id: currentDecisionId,
         category: selectedCategory
       });
 
@@ -74,6 +123,13 @@ function App() {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Update current decision ID if this was a new decision
+      if (!currentDecisionId) {
+        setCurrentDecisionId(response.data.decision_id);
+        loadDecisions(); // Refresh decisions list
+      }
+
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage = {
@@ -89,18 +145,24 @@ function App() {
     }
   };
 
+  const startNewDecision = () => {
+    setCurrentDecisionId(null);
+    setCurrentDecisionTitle("");
+    setMessages([]);
+    setShowWelcome(true);
+    setSelectedCategory("general");
+  };
+
+  const switchToDecision = (decision) => {
+    setCurrentDecisionId(decision.decision_id);
+    setShowWelcome(false);
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
-  };
-
-  const startNewConversation = () => {
-    setMessages([]);
-    setShowWelcome(true);
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setSessionId(newSessionId);
   };
 
   const formatTime = (timestamp) => {
@@ -129,6 +191,36 @@ function App() {
     </div>
   );
 
+  const DecisionsList = () => (
+    <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+      <h3 className="text-sm font-medium text-gray-700 mb-3">Your Recent Decisions:</h3>
+      <div className="space-y-2 max-h-40 overflow-y-auto">
+        {decisions.length === 0 ? (
+          <p className="text-gray-500 text-sm">No previous decisions yet</p>
+        ) : (
+          decisions.map((decision) => (
+            <button
+              key={decision.decision_id}
+              onClick={() => switchToDecision(decision)}
+              className={`w-full text-left p-3 rounded-lg text-sm transition-all duration-200 ${
+                currentDecisionId === decision.decision_id
+                  ? 'bg-blue-100 border-2 border-blue-300'
+                  : 'bg-white border border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-medium text-gray-900 truncate">{decision.title}</div>
+              <div className="text-xs text-gray-500 flex items-center mt-1">
+                <span className="mr-2">{DECISION_CATEGORIES[decision.category]?.icon}</span>
+                <span>{DECISION_CATEGORIES[decision.category]?.label}</span>
+                <span className="ml-auto">{decision.message_count} messages</span>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
   const WelcomeScreen = () => (
     <div className="text-center space-y-6 py-8">
       <div className="space-y-2">
@@ -152,8 +244,8 @@ function App() {
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">🔍</div>
-            <h3 className="font-semibold text-green-900">Transparent</h3>
-            <p className="text-green-700">Clear rationale for every recommendation to build your confidence</p>
+            <h3 className="font-semibold text-green-900">Contextual</h3>
+            <p className="text-green-700">Remembers your conversation and builds upon previous exchanges</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">⚡</div>
@@ -162,6 +254,8 @@ function App() {
           </div>
         </div>
       </div>
+
+      {decisions.length > 0 && <DecisionsList />}
 
       <CategorySelector />
 
@@ -198,15 +292,17 @@ function App() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">ChoicePilot</h1>
-              <p className="text-sm text-gray-500">AI Decision Assistant</p>
+              <p className="text-sm text-gray-500">
+                {currentDecisionTitle ? currentDecisionTitle : "AI Decision Assistant"}
+              </p>
             </div>
           </div>
           
           <button
-            onClick={startNewConversation}
+            onClick={startNewDecision}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
           >
-            New Conversation
+            New Decision
           </button>
         </div>
 

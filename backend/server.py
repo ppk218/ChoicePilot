@@ -32,32 +32,35 @@ ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 # Decision session and chat models
 class DecisionRequest(BaseModel):
     message: str
-    session_id: Optional[str] = None
+    decision_id: Optional[str] = None  # New: separate decision threads
     category: Optional[str] = None
     preferences: Optional[dict] = None
 
 class DecisionResponse(BaseModel):
-    session_id: str
+    decision_id: str
     response: str
     category: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class ConversationHistory(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str
+    decision_id: str  # Changed from session_id to decision_id
     user_message: str
     ai_response: str
     category: Optional[str] = None
     preferences: Optional[dict] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-class UserSession(BaseModel):
+class DecisionSession(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str
+    decision_id: str
+    title: str  # User-friendly title for the decision
+    category: str
     user_preferences: Optional[dict] = None
-    conversation_count: int = 0
+    message_count: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_active: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = True
 
 # Decision categories
 DECISION_CATEGORIES = {
@@ -78,18 +81,21 @@ def get_system_message(category: str = "general", preferences: dict = None) -> s
 
 Core Principles:
 1. Always provide clear, personalized recommendations with transparent rationale
-2. Ask clarifying questions when you need more context about preferences, budget, or constraints
-3. Consider the user's lifestyle, past choices, and stated preferences
-4. Explain WHY you're recommending something - build trust through transparency
-5. Provide actionable next steps, not just advice
-6. Be concise but thorough in your explanations
+2. Remember the conversation context and build upon previous exchanges
+3. Ask clarifying questions when you need more context about preferences, budget, or constraints
+4. Consider the user's lifestyle, past choices, and stated preferences
+5. Explain WHY you're recommending something - build trust through transparency
+6. Provide actionable next steps, not just advice
+7. Be concise but thorough in your explanations
 
 Your decision-making framework:
 1. Understand the decision context and constraints
 2. Extract user preferences and priorities
 3. Consider practical factors (budget, timeline, location, etc.)
 4. Provide 2-3 specific recommendations with clear rationale
-5. Suggest next steps for implementation"""
+5. Suggest next steps for implementation
+
+Important: This is a continuing conversation. Reference previous messages and build upon the information the user has already provided. Don't ask for information they've already given you."""
 
     if category and category != "general":
         category_context = DECISION_CATEGORIES.get(category, "")
@@ -103,84 +109,199 @@ Your decision-making framework:
     
     return base_prompt
 
+def format_conversation_context(conversations: List[dict]) -> str:
+    """Format conversation history for Claude context"""
+    if not conversations:
+        return ""
+    
+    context = "\n\nPrevious conversation context:\n"
+    for conv in conversations[-5:]:  # Last 5 exchanges for context
+        context += f"User: {conv['user_message']}\n"
+        context += f"Assistant: {conv['ai_response']}\n\n"
+    
+    context += "Continue this conversation, building upon the information already provided.\n"
+    return context
+
 @api_router.post("/chat", response_model=DecisionResponse)
 async def chat_with_assistant(request: DecisionRequest):
     """Main chat endpoint for decision assistance"""
     try:
-        # Generate or use existing session ID
-        session_id = request.session_id or str(uuid.uuid4())
+        # Generate or use existing decision ID
+        decision_id = request.decision_id or str(uuid.uuid4())
         
-        # Get or create user session
-        existing_session = await db.user_sessions.find_one({"session_id": session_id})
+        # Get or create decision session
+        existing_session = await db.decision_sessions.find_one({"decision_id": decision_id})
         if not existing_session:
-            session_obj = UserSession(session_id=session_id, user_preferences=request.preferences or {})
-            await db.user_sessions.insert_one(session_obj.dict())
+            # Create new decision session with auto-generated title
+            title = generate_decision_title(request.message, request.category)
+            session_obj = DecisionSession(
+                decision_id=decision_id, 
+                title=title,
+                category=request.category or "general",
+                user_preferences=request.preferences or {}
+            )
+            await db.decision_sessions.insert_one(session_obj.dict())
         else:
-            # Update session activity and preferences
+            # Update existing session
             update_data = {
                 "last_active": datetime.utcnow(),
-                "conversation_count": existing_session.get("conversation_count", 0) + 1
+                "message_count": existing_session.get("message_count", 0) + 1
             }
             if request.preferences:
                 update_data["user_preferences"] = {**existing_session.get("user_preferences", {}), **request.preferences}
             
-            await db.user_sessions.update_one(
-                {"session_id": session_id},
+            await db.decision_sessions.update_one(
+                {"decision_id": decision_id},
                 {"$set": update_data}
             )
         
-        # Get user preferences for context
-        session_data = await db.user_sessions.find_one({"session_id": session_id})
-        user_preferences = session_data.get("user_preferences", {}) if session_data else {}
+        # Get conversation history for this decision
+        conversation_history = await db.conversations.find(
+            {"decision_id": decision_id}
+        ).sort("timestamp", 1).to_list(20)  # Get chronological order
         
-        # Initialize Claude chat with system message
-        system_message = get_system_message(request.category, user_preferences)
+        # Get user preferences for context
+        session_data = await db.decision_sessions.find_one({"decision_id": decision_id})
+        user_preferences = session_data.get("user_preferences", {}) if session_data else {}
+        category = session_data.get("category", "general") if session_data else (request.category or "general")
         
         ai_response = ""
         
         try:
-            # Try to use Claude API
+            # Try to use Claude API with conversation history
+            system_message = get_system_message(category, user_preferences)
+            
+            # Add conversation context to the user message
+            context_message = request.message
+            if conversation_history:
+                context = format_conversation_context(conversation_history)
+                context_message = context + f"\nUser's current message: {request.message}"
+            
             chat = LlmChat(
                 api_key=ANTHROPIC_API_KEY,
-                session_id=session_id,
+                session_id=decision_id,  # Use decision_id as session for Claude
                 system_message=system_message
             ).with_model("anthropic", "claude-sonnet-4-20250514").with_max_tokens(4096)
             
             # Send user message to Claude
-            user_message = UserMessage(text=request.message)
+            user_message = UserMessage(text=context_message)
             ai_response = await chat.send_message(user_message)
             
         except Exception as e:
             logging.warning(f"Claude API error: {str(e)}")
-            # Fallback to demo responses when Claude API is unavailable
-            ai_response = generate_demo_response(request.message, request.category, user_preferences)
+            # Fallback to demo responses with conversation context
+            ai_response = generate_demo_response(request.message, category, user_preferences, conversation_history)
         
         # Store conversation in database
         conversation = ConversationHistory(
-            session_id=session_id,
+            decision_id=decision_id,
             user_message=request.message,
             ai_response=ai_response,
-            category=request.category,
+            category=category,
             preferences=request.preferences
         )
         await db.conversations.insert_one(conversation.dict())
         
         return DecisionResponse(
-            session_id=session_id,
+            decision_id=decision_id,
             response=ai_response,
-            category=request.category
+            category=category
         )
         
     except Exception as e:
         logging.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
-def generate_demo_response(message: str, category: str = "general", user_preferences: dict = None) -> str:
-    """Generate demo responses when Claude API is unavailable"""
+def generate_decision_title(message: str, category: str = None) -> str:
+    """Generate a user-friendly title for a decision based on the first message"""
+    # Simple title generation logic
+    words = message.split()[:8]  # First 8 words
+    title = " ".join(words)
     
-    # Demo responses by category
-    demo_responses = {
-        "general": """I understand you're facing a decision and I'm here to help! Based on my analysis, here are my recommendations:
+    if len(title) > 60:
+        title = title[:57] + "..."
+    
+    if category and category != "general":
+        title = f"[{category.title()}] {title}"
+    
+    return title
+
+def generate_demo_response(message: str, category: str = "general", user_preferences: dict = None, conversation_history: List[dict] = None) -> str:
+    """Generate demo responses with conversation context when Claude API is unavailable"""
+    
+    # Check if this is a follow-up question based on conversation history
+    if conversation_history and len(conversation_history) > 0:
+        # This is a continuing conversation
+        last_response = conversation_history[-1]['ai_response']
+        
+        # Create a context-aware response
+        response = f"Thank you for that additional information! Building on our previous discussion:\n\n"
+        
+        # Add context-specific follow-up based on what was discussed
+        if "budget" in message.lower():
+            response += "**Budget Considerations:**\nNow that you've mentioned your budget, I can provide more targeted recommendations..."
+        elif any(word in message.lower() for word in ["yes", "no", "prefer", "like", "don't like"]):
+            response += "**Based on Your Preferences:**\nGiven what you've shared, let me refine my recommendations..."
+        elif "tell me more" in message.lower() or "more details" in message.lower():
+            response += "**Detailed Analysis:**\nLet me provide more specific information about the options we discussed..."
+        else:
+            response += "**Continuing Our Analysis:**\nTaking into account everything we've discussed so far..."
+        
+        # Add relevant follow-up content based on category
+        if category == "consumer":
+            response += """
+Based on our conversation, here are more specific recommendations:
+
+**Top Recommendations:**
+1. **For your use case** - This aligns with what you mentioned about your needs
+2. **Within your parameters** - Considering the constraints we discussed
+3. **Best value option** - Balancing your priorities from our conversation
+
+**Next Steps:**
+- Compare these options against the criteria we established
+- Check current pricing and availability
+- Read recent reviews focusing on the aspects that matter to you
+
+Would you like me to dive deeper into any of these recommendations or help you compare specific models?"""
+        
+        elif category == "travel":
+            response += """
+Based on what we've discussed about your travel preferences:
+
+**Refined Recommendations:**
+1. **Destination match** - Aligns with your interests and travel style
+2. **Practical considerations** - Fits your timeline and budget parameters
+3. **Experience optimization** - Maximizes the type of experiences you're seeking
+
+**Planning Next Steps:**
+- Research the best time to visit based on your schedule
+- Look into accommodation options that match your preferences
+- Plan activities that align with what you've told me you enjoy
+
+What specific aspect of the trip planning would you like to focus on next?"""
+        
+        else:
+            response += """
+Considering everything we've covered in our conversation:
+
+**Updated Recommendations:**
+1. **Personalized for you** - Based on the preferences you've shared
+2. **Practical approach** - Considering your specific situation
+3. **Next level strategy** - Building on the foundation we've established
+
+**Action Items:**
+- Take the next step we discussed
+- Consider the factors that are most important to you
+- Move forward with confidence based on our analysis
+
+Is there a particular aspect you'd like to explore further or are you ready to move forward with a decision?"""
+        
+        response += f"\n\n*This response builds on our ongoing conversation about your {category} decision.*"
+        
+    else:
+        # This is the first message - use the original demo responses
+        demo_responses = {
+            "general": """I understand you're facing a decision and I'm here to help! Based on my analysis, here are my recommendations:
 
 **Key Factors to Consider:**
 1. **Your values and priorities** - What matters most to you in this situation?
@@ -197,7 +318,7 @@ Without more specific details, I suggest taking a structured approach: List your
 
 *Note: This is a demo response. For full AI-powered assistance, please ensure your API credits are available.*""",
 
-        "consumer": """Great question about your purchase decision! Here's my analysis:
+            "consumer": """Great question about your purchase decision! Here's my analysis:
 
 **For Your Budget Range:**
 - **Performance:** Look for devices with at least 16GB RAM and SSD storage
@@ -217,9 +338,9 @@ Without more specific details, I suggest taking a structured approach: List your
 **Next Steps:**
 Check current deals at Best Buy, Amazon, and manufacturer websites. Read recent reviews on tech sites like The Verge or Ars Technica.
 
-*This is a demo response showcasing ChoicePilot's decision-making capabilities.*""",
+To help you further, could you tell me more about your specific use case and budget range?""",
 
-        "travel": """Exciting travel decision ahead! Here's my personalized travel recommendation:
+            "travel": """Exciting travel decision ahead! Here's my personalized travel recommendation:
 
 **Destination Analysis:**
 Based on your query, I'm comparing options considering:
@@ -239,12 +360,9 @@ Based on your query, I'm comparing options considering:
 - Check travel insurance and health requirements
 - Create a flexible itinerary with must-sees and free time
 
-**Next Steps:**
-Use tools like Google Flights for price tracking, check recent travel blogs, and read current traveler reviews on TripAdvisor.
+What type of travel experience are you most interested in, and what's your rough budget and timeframe?""",
 
-*This is a demo response. Full AI assistance provides even more personalized recommendations.*""",
-
-        "career": """This is a significant career decision, and I'm here to help you think through it systematically:
+            "career": """This is a significant career decision, and I'm here to help you think through it systematically:
 
 **Key Career Decision Factors:**
 1. **Growth Potential:** Which option offers better long-term advancement?
@@ -264,14 +382,9 @@ Use tools like Google Flights for price tracking, check recent travel blogs, and
 3. Consider your risk tolerance and current life situation
 4. Seek advice from mentors in your field
 
-**Next Steps:**
-- Request informational interviews with people in similar roles
-- Negotiate terms if you have multiple offers
-- Trust your instincts after thorough analysis
+What specific career decision are you facing, and what are your main priorities right now?""",
 
-*This demo showcases how ChoicePilot helps with important career decisions.*""",
-
-        "education": """Educational decisions are investments in your future! Here's my structured approach:
+            "education": """Educational decisions are investments in your future! Here's my structured approach:
 
 **Key Considerations for Educational Choices:**
 1. **ROI Analysis:** Cost vs. expected career impact
@@ -290,14 +403,9 @@ For tech skills: Consider bootcamps or online platforms like Coursera
 For degrees: Research employment rates and starting salaries of graduates
 For certifications: Check job postings to see which are most valued
 
-**Next Steps:**
-- Speak with recent graduates about their experiences
-- Compare multiple programs in terms of curriculum and outcomes
-- Consider starting with a trial course or audit option
+What type of education or skill development are you considering, and what's driving this decision?""",
 
-*This demonstrates ChoicePilot's approach to educational guidance.*""",
-
-        "lifestyle": """Lifestyle changes require thoughtful planning. Here's my personalized guidance:
+            "lifestyle": """Lifestyle changes require thoughtful planning. Here's my personalized guidance:
 
 **Sustainable Change Framework:**
 1. **Start Small:** Begin with manageable adjustments
@@ -317,14 +425,9 @@ For certifications: Check job postings to see which are most valued
 3. Plan for obstacles and setbacks
 4. Find accountability partners or support systems
 
-**Implementation Strategy:**
-- Week 1-2: Establish the routine
-- Week 3-4: Address challenges and refine approach
-- Month 2+: Build on success and add new elements
+What specific lifestyle change are you considering, and what's motivating this decision?""",
 
-*This shows how ChoicePilot supports sustainable lifestyle improvements.*""",
-
-        "entertainment": """Let me help you find the perfect entertainment choice!
+            "entertainment": """Let me help you find the perfect entertainment choice!
 
 **Current Trending Recommendations:**
 
@@ -344,12 +447,9 @@ For certifications: Check job postings to see which are most valued
 - **Console:** "Hades" for action or "Stardew Valley" for relaxation
 - **Board Games:** "Wingspan" or "Azul" for game nights
 
-**Selection Criteria:**
-Consider your current mood, available time, and what you've enjoyed recently.
+What type of entertainment are you in the mood for, and how much time do you have?""",
 
-*This is a demo response showcasing entertainment recommendations.*""",
-
-        "financial": """Financial decisions require careful analysis. Here's my structured approach:
+            "financial": """Financial decisions require careful analysis. Here's my structured approach:
 
 **Investment Decision Framework:**
 1. **Risk Assessment:** Your risk tolerance and investment timeline
@@ -368,17 +468,11 @@ Consider your current mood, available time, and what you've enjoyed recently.
 3. **Index Funds:** Low-cost, diversified option for most investors
 4. **Dollar-Cost Averaging:** Invest consistently over time
 
-**Next Steps:**
-- Assess your current financial situation
-- Define your investment goals and timeline
-- Consider consulting with a fee-only financial advisor
-- Start with broad market index funds if you're unsure
-
-*This demonstrates ChoicePilot's approach to financial guidance.*"""
-    }
-    
-    # Get the appropriate demo response
-    response = demo_responses.get(category, demo_responses["general"])
+What specific financial decision are you working on, and what's your investment timeline?"""
+        }
+        
+        # Get the appropriate demo response
+        response = demo_responses.get(category, demo_responses["general"])
     
     # Add personalization based on user preferences if available
     if user_preferences:
@@ -397,13 +491,31 @@ async def get_decision_categories():
     """Get available decision categories"""
     return {"categories": DECISION_CATEGORIES}
 
-@api_router.get("/history/{session_id}")
-async def get_conversation_history(session_id: str, limit: int = 20):
-    """Get conversation history for a session"""
+@api_router.get("/decisions")
+async def get_user_decisions(limit: int = 20):
+    """Get list of user's decision sessions"""
+    try:
+        decisions = await db.decision_sessions.find(
+            {"is_active": True}
+        ).sort("last_active", -1).limit(limit).to_list(limit)
+        
+        # Convert ObjectId to string for JSON serialization
+        for decision in decisions:
+            if "_id" in decision:
+                decision["_id"] = str(decision["_id"])
+        
+        return {"decisions": decisions}
+    except Exception as e:
+        logging.error(f"Error getting decisions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving decisions")
+
+@api_router.get("/decisions/{decision_id}/history")
+async def get_decision_history(decision_id: str, limit: int = 20):
+    """Get conversation history for a specific decision"""
     try:
         conversations = await db.conversations.find(
-            {"session_id": session_id}
-        ).sort("timestamp", -1).limit(limit).to_list(limit)
+            {"decision_id": decision_id}
+        ).sort("timestamp", 1).limit(limit).to_list(limit)  # Chronological order
         
         # Convert ObjectId to string to make it JSON serializable
         for conv in conversations:
@@ -415,12 +527,12 @@ async def get_conversation_history(session_id: str, limit: int = 20):
         logging.error(f"Error getting conversation history: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving conversation history")
 
-@api_router.post("/preferences/{session_id}")
-async def update_user_preferences(session_id: str, preferences: dict):
-    """Update user preferences for a session"""
+@api_router.post("/decisions/{decision_id}/preferences")
+async def update_decision_preferences(decision_id: str, preferences: dict):
+    """Update user preferences for a specific decision"""
     try:
-        await db.user_sessions.update_one(
-            {"session_id": session_id},
+        await db.decision_sessions.update_one(
+            {"decision_id": decision_id},
             {"$set": {"user_preferences": preferences, "last_active": datetime.utcnow()}},
             upsert=True
         )
@@ -429,22 +541,22 @@ async def update_user_preferences(session_id: str, preferences: dict):
         logging.error(f"Error updating preferences: {str(e)}")
         raise HTTPException(status_code=500, detail="Error updating preferences")
 
-@api_router.get("/session/{session_id}")
-async def get_session_info(session_id: str):
-    """Get session information and preferences"""
+@api_router.get("/decisions/{decision_id}")
+async def get_decision_info(decision_id: str):
+    """Get decision session information"""
     try:
-        session = await db.user_sessions.find_one({"session_id": session_id})
-        if not session:
-            return {"session_id": session_id, "user_preferences": {}, "conversation_count": 0}
+        decision = await db.decision_sessions.find_one({"decision_id": decision_id})
+        if not decision:
+            return {"decision_id": decision_id, "title": "New Decision", "category": "general", "user_preferences": {}, "message_count": 0}
         
         # Convert ObjectId to string to make it JSON serializable
-        if "_id" in session:
-            session["_id"] = str(session["_id"])
+        if "_id" in decision:
+            decision["_id"] = str(decision["_id"])
         
-        return session
+        return decision
     except Exception as e:
-        logging.error(f"Error getting session info: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error retrieving session information")
+        logging.error(f"Error getting decision info: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving decision information")
 
 # Legacy endpoints for compatibility
 @api_router.get("/")
