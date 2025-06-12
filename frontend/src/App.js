@@ -16,14 +16,29 @@ const DECISION_CATEGORIES = {
   financial: { icon: "💰", label: "Financial Planning", color: "bg-emerald-100 text-emerald-800" }
 };
 
+const LLM_MODELS = {
+  claude: { name: "Claude Sonnet 4", icon: "🧠", description: "Best for logical reasoning & structured analysis" },
+  gpt4o: { name: "GPT-4o", icon: "⚡", description: "Best for creative & conversational decisions" },
+  auto: { name: "Auto-Select", icon: "🎯", description: "Automatically chooses the best AI for your decision" }
+};
+
+const ADVISOR_STYLES = {
+  optimistic: { name: "Optimistic", icon: "🌟", description: "Encouraging, focuses on opportunities" },
+  realist: { name: "Realist", icon: "⚖️", description: "Balanced, practical, objective analysis" },
+  skeptical: { name: "Skeptical", icon: "🔍", description: "Cautious, thorough, risk-focused" }
+};
+
 function App() {
   const [currentDecisionId, setCurrentDecisionId] = useState(null);
   const [decisions, setDecisions] = useState([]);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("general");
+  const [llmPreference, setLlmPreference] = useState("auto");
+  const [advisorStyle, setAdvisorStyle] = useState("realist");
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
   const [currentDecisionTitle, setCurrentDecisionTitle] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -65,23 +80,29 @@ function App() {
           text: conv.user_message,
           isUser: true,
           timestamp: new Date(conv.timestamp),
-          category: conv.category
+          category: conv.category,
+          llmUsed: conv.llm_used,
+          advisorStyle: conv.advisor_style
         },
         {
           id: `ai_${index}`,
           text: conv.ai_response,
           isUser: false,
           timestamp: new Date(conv.timestamp),
-          category: conv.category
+          category: conv.category,
+          llmUsed: conv.llm_used,
+          advisorStyle: conv.advisor_style
         }
       ]).flat();
 
       setMessages(formattedMessages);
       
-      // Get decision info for title
+      // Get decision info for title and settings
       const decisionResponse = await axios.get(`${API}/decisions/${decisionId}`);
       setCurrentDecisionTitle(decisionResponse.data.title || "Untitled Decision");
       setSelectedCategory(decisionResponse.data.category || "general");
+      setLlmPreference(decisionResponse.data.llm_preference || "auto");
+      setAdvisorStyle(decisionResponse.data.advisor_style || "realist");
       
     } catch (error) {
       console.error("Error loading decision history:", error);
@@ -96,13 +117,14 @@ function App() {
     setIsLoading(true);
     setShowWelcome(false);
 
-    // Add user message to chat
     const newUserMessage = {
       id: Date.now(),
       text: userMessage,
       isUser: true,
       timestamp: new Date(),
-      category: selectedCategory
+      category: selectedCategory,
+      llmUsed: llmPreference,
+      advisorStyle: advisorStyle
     };
 
     setMessages(prev => [...prev, newUserMessage]);
@@ -111,7 +133,9 @@ function App() {
       const response = await axios.post(`${API}/chat`, {
         message: userMessage,
         decision_id: currentDecisionId,
-        category: selectedCategory
+        category: selectedCategory,
+        llm_preference: llmPreference,
+        advisor_style: advisorStyle
       });
 
       const aiMessage = {
@@ -119,15 +143,18 @@ function App() {
         text: response.data.response,
         isUser: false,
         timestamp: new Date(),
-        category: selectedCategory
+        category: selectedCategory,
+        llmUsed: response.data.llm_used,
+        advisorStyle: advisorStyle,
+        confidenceScore: response.data.confidence_score,
+        reasoningType: response.data.reasoning_type
       };
 
       setMessages(prev => [...prev, aiMessage]);
       
-      // Update current decision ID if this was a new decision
       if (!currentDecisionId) {
         setCurrentDecisionId(response.data.decision_id);
-        loadDecisions(); // Refresh decisions list
+        loadDecisions();
       }
 
     } catch (error) {
@@ -151,6 +178,8 @@ function App() {
     setMessages([]);
     setShowWelcome(true);
     setSelectedCategory("general");
+    setLlmPreference("auto");
+    setAdvisorStyle("realist");
   };
 
   const switchToDecision = (decision) => {
@@ -169,24 +198,73 @@ function App() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const CategorySelector = () => (
+  const SettingsPanel = () => (
     <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Choose your decision category:</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {Object.entries(DECISION_CATEGORIES).map(([key, category]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedCategory(key)}
-            className={`p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2 ${
-              selectedCategory === key 
-                ? `${category.color} border-current scale-105 shadow-md` 
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:scale-102'
-            }`}
-          >
-            <div className="text-lg mb-1">{category.icon}</div>
-            {category.label}
-          </button>
-        ))}
+      <h3 className="text-sm font-medium text-gray-700 mb-4">Decision Settings</h3>
+      
+      {/* Category Selection */}
+      <div className="mb-4">
+        <label className="text-xs font-medium text-gray-600 mb-2 block">Decision Category</label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {Object.entries(DECISION_CATEGORIES).map(([key, category]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedCategory(key)}
+              className={`p-2 rounded-lg text-xs font-medium transition-all duration-200 border-2 ${
+                selectedCategory === key 
+                  ? `${category.color} border-current scale-105 shadow-md` 
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="text-sm mb-1">{category.icon}</div>
+              {category.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* LLM Selection */}
+      <div className="mb-4">
+        <label className="text-xs font-medium text-gray-600 mb-2 block">AI Model Preference</label>
+        <div className="grid grid-cols-3 gap-2">
+          {Object.entries(LLM_MODELS).map(([key, model]) => (
+            <button
+              key={key}
+              onClick={() => setLlmPreference(key)}
+              className={`p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2 ${
+                llmPreference === key 
+                  ? 'bg-blue-100 text-blue-800 border-blue-300' 
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="text-lg mb-1">{model.icon}</div>
+              <div className="font-semibold">{model.name}</div>
+              <div className="text-xs text-gray-500 mt-1">{model.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Advisor Style */}
+      <div className="mb-4">
+        <label className="text-xs font-medium text-gray-600 mb-2 block">Advisor Personality</label>
+        <div className="grid grid-cols-3 gap-2">
+          {Object.entries(ADVISOR_STYLES).map(([key, style]) => (
+            <button
+              key={key}
+              onClick={() => setAdvisorStyle(key)}
+              className={`p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2 ${
+                advisorStyle === key 
+                  ? 'bg-purple-100 text-purple-800 border-purple-300' 
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="text-lg mb-1">{style.icon}</div>
+              <div className="font-semibold">{style.name}</div>
+              <div className="text-xs text-gray-500 mt-1">{style.description}</div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -214,6 +292,13 @@ function App() {
                 <span>{DECISION_CATEGORIES[decision.category]?.label}</span>
                 <span className="ml-auto">{decision.message_count} messages</span>
               </div>
+              <div className="text-xs text-gray-400 mt-1 flex items-center">
+                <span className="mr-2">{LLM_MODELS[decision.llm_preference]?.icon}</span>
+                <span>{LLM_MODELS[decision.llm_preference]?.name}</span>
+                <span className="mx-2">•</span>
+                <span>{ADVISOR_STYLES[decision.advisor_style]?.icon}</span>
+                <span className="ml-1">{ADVISOR_STYLES[decision.advisor_style]?.name}</span>
+              </div>
             </button>
           ))
         )}
@@ -228,36 +313,37 @@ function App() {
           Welcome to <span className="text-blue-600">ChoicePilot</span>
         </h1>
         <p className="text-xl text-gray-600">Your Personal AI Guide for Stress-Free Decisions</p>
+        <p className="text-sm text-gray-500">Now with intelligent AI routing and advisor personalities</p>
       </div>
       
       <div className="max-w-2xl mx-auto space-y-4 text-gray-700">
         <p className="text-lg">
           Stop struggling with decision fatigue. Get personalized, actionable recommendations 
-          for any choice you're facing.
+          from our advanced AI system.
         </p>
         
         <div className="grid md:grid-cols-3 gap-4 text-sm">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">🎯</div>
-            <h3 className="font-semibold text-blue-900">Personalized</h3>
-            <p className="text-blue-700">Tailored recommendations based on your preferences and context</p>
+            <h3 className="font-semibold text-blue-900">Smart AI Routing</h3>
+            <p className="text-blue-700">Claude for logic & analysis, GPT-4o for creativity & conversation</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">🔍</div>
-            <h3 className="font-semibold text-green-900">Contextual</h3>
-            <p className="text-green-700">Remembers your conversation and builds upon previous exchanges</p>
+            <h3 className="font-semibold text-green-900">Advisor Personalities</h3>
+            <p className="text-green-700">Choose optimistic, realistic, or skeptical decision guidance</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">⚡</div>
-            <h3 className="font-semibold text-purple-900">Actionable</h3>
-            <p className="text-purple-700">Specific next steps, not just advice</p>
+            <h3 className="font-semibold text-purple-900">Contextual Memory</h3>
+            <p className="text-purple-700">Remembers your preferences and builds on previous conversations</p>
           </div>
         </div>
       </div>
 
       {decisions.length > 0 && <DecisionsList />}
 
-      <CategorySelector />
+      <SettingsPanel />
 
       <div className="space-y-3">
         <p className="text-gray-600">Try asking something like:</p>
@@ -298,12 +384,20 @@ function App() {
             </div>
           </div>
           
-          <button
-            onClick={startNewDecision}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
-          >
-            New Decision
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              ⚙️ Settings
+            </button>
+            <button
+              onClick={startNewDecision}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              New Decision
+            </button>
+          </div>
         </div>
 
         {/* Chat Area */}
@@ -315,7 +409,7 @@ function App() {
               <WelcomeScreen />
             ) : (
               <div className="space-y-4">
-                {!showWelcome && messages.length === 0 && <CategorySelector />}
+                {showSettings && <SettingsPanel />}
                 
                 {messages.map((message) => (
                   <div
@@ -335,11 +429,26 @@ function App() {
                       <div className={`text-xs mt-2 ${
                         message.isUser ? 'text-blue-100' : 'text-gray-500'
                       }`}>
-                        {formatTime(message.timestamp)}
-                        {message.category && message.category !== 'general' && (
-                          <span className="ml-2">
-                            {DECISION_CATEGORIES[message.category]?.icon} {DECISION_CATEGORIES[message.category]?.label}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <span>{formatTime(message.timestamp)}</span>
+                          {!message.isUser && message.llmUsed && (
+                            <div className="flex items-center space-x-2 ml-2">
+                              <span className="flex items-center">
+                                {LLM_MODELS[message.llmUsed]?.icon} 
+                                <span className="ml-1">{LLM_MODELS[message.llmUsed]?.name}</span>
+                              </span>
+                              {message.confidenceScore && (
+                                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                  {Math.round(message.confidenceScore * 100)}% confidence
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {message.reasoningType && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            {message.reasoningType}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -355,7 +464,9 @@ function App() {
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                         </div>
-                        <span className="text-sm text-gray-600">ChoicePilot is thinking...</span>
+                        <span className="text-sm text-gray-600">
+                          {LLM_MODELS[llmPreference]?.icon} {LLM_MODELS[llmPreference]?.name} is thinking...
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -369,16 +480,22 @@ function App() {
           {/* Input Area */}
           <div className="border-t border-gray-200 p-4">
             {!showWelcome && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                <span className="text-sm text-gray-600">Category:</span>
+              <div className="mb-3 flex flex-wrap gap-2 items-center">
+                <span className="text-sm text-gray-600">Settings:</span>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${DECISION_CATEGORIES[selectedCategory]?.color}`}>
                   {DECISION_CATEGORIES[selectedCategory]?.icon} {DECISION_CATEGORIES[selectedCategory]?.label}
                 </span>
+                <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {LLM_MODELS[llmPreference]?.icon} {LLM_MODELS[llmPreference]?.name}
+                </span>
+                <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                  {ADVISOR_STYLES[advisorStyle]?.icon} {ADVISOR_STYLES[advisorStyle]?.name}
+                </span>
                 <button
-                  onClick={() => setShowWelcome(true)}
+                  onClick={() => setShowSettings(!showSettings)}
                   className="text-xs text-blue-600 hover:text-blue-800 underline"
                 >
-                  Change category
+                  {showSettings ? 'Hide' : 'Change'} settings
                 </button>
               </div>
             )}
@@ -388,7 +505,7 @@ function App() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={`Ask ChoicePilot about your ${DECISION_CATEGORIES[selectedCategory]?.label.toLowerCase()} decision...`}
+                placeholder={`Ask your ${ADVISOR_STYLES[advisorStyle]?.name.toLowerCase()} advisor about your ${DECISION_CATEGORIES[selectedCategory]?.label.toLowerCase()} decision...`}
                 className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows="1"
                 disabled={isLoading}
@@ -403,7 +520,8 @@ function App() {
             </div>
             
             <div className="text-xs text-gray-500 mt-2 text-center">
-              Press Enter to send • Shift+Enter for new line
+              Press Enter to send • Shift+Enter for new line • 
+              Using {LLM_MODELS[llmPreference]?.name} with {ADVISOR_STYLES[advisorStyle]?.name} style
             </div>
           </div>
         </div>
