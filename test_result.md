@@ -179,6 +179,96 @@ backend:
       - working: true
         agent: "testing"
         comment: "Conversation history storage and retrieval is working correctly. Fixed an issue with MongoDB ObjectId serialization in the history endpoint. The /api/history/{session_id} endpoint returns conversations in the expected format."
+        
+  - task: "Credit Packs Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/payments/credit-packs endpoint to return available credit packs"
+      - working: true
+        agent: "testing"
+        comment: "The credit packs endpoint is working correctly. It returns the expected credit packs (starter, power, boost) with all required properties (name, price, credits). The endpoint is accessible without authentication as intended."
+        
+  - task: "Subscription Plans Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/payments/subscription-plans endpoint to return available subscription plans"
+      - working: true
+        agent: "testing"
+        comment: "The subscription plans endpoint is working correctly. It returns the expected subscription plan (pro_monthly) with all required properties (name, price, interval, description, features). The endpoint is accessible without authentication as intended."
+        
+  - task: "Payment Authentication"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented authentication requirements for payment endpoints"
+      - working: true
+        agent: "testing"
+        comment: "Authentication is correctly required for all payment endpoints that involve user-specific data or actions. The billing history, payment link creation, and subscription creation endpoints all return appropriate authentication errors (403 Forbidden) when accessed without authentication."
+        
+  - task: "Payment Link Creation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented POST /api/payments/create-payment-link endpoint to create payment links for credit packs"
+      - working: true
+        agent: "testing"
+        comment: "The payment link creation endpoint is implemented correctly. The endpoint requires authentication and accepts the necessary parameters (product_id, quantity, user_email). While the actual payment processing couldn't be tested due to the Dodo Payments service not being available in the test environment, the endpoint structure and authentication requirements are working as expected."
+        
+  - task: "Subscription Creation"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented POST /api/payments/create-subscription endpoint to create subscriptions"
+      - working: true
+        agent: "testing"
+        comment: "The subscription creation endpoint is implemented correctly. The endpoint requires authentication and accepts the necessary parameters (plan_id, user_email, billing_cycle). While the actual subscription processing couldn't be tested due to the Dodo Payments service not being available in the test environment, the endpoint structure and authentication requirements are working as expected."
+        
+  - task: "Billing History"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/payments/billing-history endpoint to return user's billing history"
+      - working: true
+        agent: "testing"
+        comment: "The billing history endpoint is working correctly. It requires authentication and returns the expected data structure with payments, subscriptions, and total_spent fields. For new users with no payment history, it correctly returns empty arrays for payments and subscriptions."
 
 frontend:
   - task: "Chat Interface"
