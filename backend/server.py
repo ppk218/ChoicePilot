@@ -57,8 +57,11 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL')
 # Security
 security = HTTPBearer()
 
-# Initialize Dodo Payments service
+# Initialize services
 dodo_payments = DodoPaymentsService(DODO_API_KEY) if DODO_API_KEY else None
+pdf_exporter = DecisionPDFExporter()
+sharing_service = DecisionSharingService(db)
+comparison_service = DecisionComparisonService(db)
 
 # Subscription Plans
 SUBSCRIPTION_PLANS = {
