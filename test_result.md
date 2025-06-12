@@ -288,7 +288,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "LLM Routing Engine"
+    - "Voice Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
