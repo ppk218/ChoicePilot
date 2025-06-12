@@ -712,23 +712,33 @@ function App() {
 
       <div className="mb-4">
         <label className="text-xs font-medium text-gray-600 mb-2 block">Advisor Personality</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {Object.entries(ADVISOR_STYLES).map(([key, style]) => (
             <button
               key={key}
               onClick={() => setAdvisorStyle(key)}
-              className={`p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2 ${
+              className={`p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2 relative ${
                 advisorStyle === key 
-                  ? 'bg-purple-100 text-purple-800 border-purple-300' 
+                  ? `${style.theme} border-current scale-105 shadow-md` 
                   : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="text-lg mb-1">{style.icon}</div>
               <div className="font-semibold">{style.name}</div>
-              <div className="text-xs text-gray-500 mt-1">{style.description}</div>
+              <div className="text-xs text-gray-500 mt-1 line-clamp-2">{style.description}</div>
+              {advisorStyle === key && (
+                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                  {style.avatar}
+                </div>
+              )}
             </button>
           ))}
         </div>
+        {ADVISOR_STYLES[advisorStyle]?.motto && (
+          <div className="mt-3 text-xs italic text-gray-600 text-center p-2 bg-gray-50 rounded-lg border">
+            💭 "{ADVISOR_STYLES[advisorStyle].motto}"
+          </div>
+        )}
       </div>
     </div>
   );
