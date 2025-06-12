@@ -259,7 +259,8 @@ metadata:
 test_plan:
   current_focus:
     - "Chat Interface"
-  stuck_tasks: []
+  stuck_tasks: 
+    - "Chat Interface"
   test_all: false
   test_priority: "high_first"
 
