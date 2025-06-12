@@ -881,12 +881,6 @@ function MainApp() {
               📊 Tools
             </button>
             <button
-              onClick={() => setShowToolsPanel(true)}
-              className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors duration-200 text-sm font-medium"
-            >
-              📊 Tools
-            </button>
-            <button
               onClick={() => setShowSettings(!showSettings)}
               className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
             >
