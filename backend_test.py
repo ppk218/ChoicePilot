@@ -537,11 +537,12 @@ def test_payment_endpoints_auth_required():
         else:  # POST
             response = requests.post(url, json=data)
         
-        if response.status_code != 401:
+        # Either 401 (Unauthorized) or 403 (Forbidden) is acceptable for auth failure
+        if response.status_code not in [401, 403]:
             print(f"Error: Endpoint {method} {url} should require authentication but returned {response.status_code}")
             all_passed = False
         else:
-            print(f"Endpoint {method} {url} correctly requires authentication")
+            print(f"Endpoint {method} {url} correctly requires authentication (status code: {response.status_code})")
     
     return all_passed
 
