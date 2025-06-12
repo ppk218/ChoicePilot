@@ -399,6 +399,19 @@ function MainApp() {
     }
   };
 
+  const checkPaymentStatus = () => {
+    // Check URL parameters for payment status
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment_status');
+    const error = urlParams.get('error');
+    
+    if (paymentStatus === 'success') {
+      setShowPaymentSuccess(true);
+    } else if (error || paymentStatus === 'error') {
+      setShowPaymentError(true);
+    }
+  };
+
   const checkVoiceSupport = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const speechSynthesisSupported = 'speechSynthesis' in window;
