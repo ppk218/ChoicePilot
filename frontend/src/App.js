@@ -297,7 +297,10 @@ const SubscriptionBar = ({ subscriptionInfo }) => {
         </div>
 
         {!isProUser && (
-          <button className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200">
+          <button 
+            onClick={() => setShowBillingDashboard(true)}
+            className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-xs font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
+          >
             Upgrade to Pro
           </button>
         )}
