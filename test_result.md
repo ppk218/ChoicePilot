@@ -411,7 +411,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Advisor Personas"
+    - "Payment and Billing Endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
