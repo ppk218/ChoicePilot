@@ -201,6 +201,9 @@ frontend:
       - working: false
         agent: "user"
         comment: "User reports critical issues: 1) AI doesn't remember previous responses in conversation, keeps asking same questions already answered 2) All conversations are in same chat thread, need to segregate different decisions into separate buckets/sessions"
+      - working: false
+        agent: "testing"
+        comment: "Tested the Chat Interface for the two reported issues. Issue #2 (Chat Organization) has been fixed - different decisions are now properly segregated into separate conversation threads. The 'Your Recent Decisions' list correctly shows multiple decision sessions, and users can switch between them. However, Issue #1 (Context/Memory Problem) is still present - the AI does not remember previous conversation context. When sending follow-up messages about previously mentioned preferences (e.g., MacBook with $2000 budget), the AI does not reference this information in subsequent responses."
 
   - task: "Category Selection"
     implemented: true
