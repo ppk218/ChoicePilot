@@ -6,6 +6,8 @@ import time
 import os
 from dotenv import load_dotenv
 import sys
+from unittest.mock import patch, MagicMock
+import unittest
 
 # Load environment variables from frontend/.env
 load_dotenv("frontend/.env")
@@ -27,6 +29,9 @@ test_results = {
     "failed": 0,
     "tests": []
 }
+
+# Flag to determine if we should mock the Claude API
+MOCK_CLAUDE_API = True
 
 def run_test(test_name, test_func):
     """Run a test and track results"""
