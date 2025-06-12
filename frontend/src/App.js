@@ -903,14 +903,25 @@ function App() {
                     className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] p-4 rounded-2xl ${
+                      className={`max-w-[80%] p-4 rounded-2xl relative ${
                         message.isUser
                           ? 'bg-blue-600 text-white rounded-br-lg'
                           : message.isError
                           ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-lg'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-lg'
+                          : `bg-gray-100 text-gray-800 rounded-bl-lg ${
+                              message.advisorStyle && ADVISOR_STYLES[message.advisorStyle] 
+                                ? `border-l-4 border-${ADVISOR_STYLES[message.advisorStyle].color}-400` 
+                                : ''
+                            }`
                       }`}
                     >
+                      {/* Advisor Avatar for AI messages */}
+                      {!message.isUser && !message.isError && message.advisorStyle && ADVISOR_STYLES[message.advisorStyle] && (
+                        <div className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-sm shadow-md">
+                          {ADVISOR_STYLES[message.advisorStyle].avatar}
+                        </div>
+                      )}
+                      
                       <div className="flex items-start justify-between">
                         <div className="whitespace-pre-wrap break-words flex-1">{message.text}</div>
                         {!message.isUser && !message.isError && voiceEnabled && (
@@ -945,6 +956,15 @@ function App() {
                             </div>
                           )}
                         </div>
+                        
+                        {/* Advisor Personality Indicator */}
+                        {!message.isUser && message.advisorStyle && ADVISOR_STYLES[message.advisorStyle] && (
+                          <div className="mt-2 flex items-center space-x-2">
+                            <span className={`text-xs px-2 py-1 rounded ${ADVISOR_STYLES[message.advisorStyle].theme}`}>
+                              {ADVISOR_STYLES[message.advisorStyle].icon} {ADVISOR_STYLES[message.advisorStyle].name} Advisor
+                            </span>
+                          </div>
+                        )}
                         
                         {/* Confidence Score Display */}
                         {!message.isUser && message.confidenceScore && (
