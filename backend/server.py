@@ -1374,6 +1374,167 @@ async def process_subscription_updated(data: dict):
     except Exception as e:
         logging.error(f"Error processing subscription updated: {str(e)}")
 
+# Decision Export & Sharing Endpoints
+@api_router.post("/decisions/{decision_id}/export-pdf")
+async def export_decision_pdf(decision_id: str, current_user: dict = Depends(get_current_user)):
+    """Export a decision session to PDF (Pro feature)"""
+    try:
+        # Check if user has Pro plan
+        if current_user.get("plan") != "pro":
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, 
+                "PDF export requires Pro subscription"
+            )
+        
+        # Get decision data
+        decision = await db.decision_sessions.find_one({
+            "decision_id": decision_id,
+            "user_id": current_user["id"]
+        })
+        
+        if not decision:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Decision not found")
+        
+        # Get conversation history
+        conversations = await db.conversations.find({
+            "decision_id": decision_id,
+            "user_id": current_user["id"]
+        }).sort("timestamp", 1).to_list(100)
+        
+        # Generate PDF
+        pdf_data = await pdf_exporter.export_decision_to_pdf(
+            decision_data=decision,
+            conversations=conversations,
+            user_info=current_user
+        )
+        
+        # Create response with PDF
+        from fastapi.responses import StreamingResponse
+        
+        def generate_pdf():
+            yield pdf_data
+        
+        filename = f"decision-{decision_id[:8]}-{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_data),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logging.error(f"Error exporting PDF: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to export PDF: {str(e)}")
+
+@api_router.post("/decisions/{decision_id}/share")
+async def create_decision_share(
+    decision_id: str,
+    privacy_level: str = "link_only",
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a shareable link for a decision"""
+    try:
+        # Validate privacy level
+        if privacy_level not in ["public", "link_only"]:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid privacy level")
+        
+        # Check if decision exists
+        decision = await db.decision_sessions.find_one({
+            "decision_id": decision_id,
+            "user_id": current_user["id"]
+        })
+        
+        if not decision:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Decision not found")
+        
+        # Create shareable link
+        share_data = await sharing_service.create_shareable_link(
+            decision_id=decision_id,
+            user_id=current_user["id"],
+            privacy_level=privacy_level
+        )
+        
+        return share_data
+        
+    except Exception as e:
+        logging.error(f"Error creating share: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to create share: {str(e)}")
+
+@api_router.get("/shared/{share_id}")
+async def get_shared_decision(share_id: str):
+    """Get a shared decision by share ID (public endpoint)"""
+    try:
+        shared_data = await sharing_service.get_shared_decision(share_id)
+        
+        if not shared_data:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Shared decision not found or expired")
+        
+        return shared_data
+        
+    except Exception as e:
+        logging.error(f"Error getting shared decision: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve shared decision")
+
+@api_router.delete("/decisions/shares/{share_id}")
+async def revoke_decision_share(share_id: str, current_user: dict = Depends(get_current_user)):
+    """Revoke a decision share"""
+    try:
+        success = await sharing_service.revoke_share(share_id, current_user["id"])
+        
+        if not success:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Share not found")
+        
+        return {"message": "Share revoked successfully"}
+        
+    except Exception as e:
+        logging.error(f"Error revoking share: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to revoke share")
+
+@api_router.post("/decisions/compare")
+async def compare_decisions(
+    decision_ids: List[str],
+    current_user: dict = Depends(get_current_user)
+):
+    """Compare multiple decision sessions"""
+    try:
+        if len(decision_ids) < 2:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "At least 2 decisions required for comparison")
+        
+        if len(decision_ids) > 5:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Cannot compare more than 5 decisions at once")
+        
+        comparison_data = await comparison_service.compare_decisions(
+            decision_ids=decision_ids,
+            user_id=current_user["id"]
+        )
+        
+        return comparison_data
+        
+    except Exception as e:
+        logging.error(f"Error comparing decisions: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to compare decisions: {str(e)}")
+
+@api_router.get("/decisions/{decision_id}/shares")
+async def get_decision_shares(decision_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all shares for a decision"""
+    try:
+        shares = await db.decision_shares.find({
+            "decision_id": decision_id,
+            "user_id": current_user["id"],
+            "is_active": True
+        }).to_list(10)
+        
+        # Clean up shares data
+        for share in shares:
+            if "_id" in share:
+                share["_id"] = str(share["_id"])
+        
+        return {"shares": shares}
+        
+    except Exception as e:
+        logging.error(f"Error getting decision shares: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve shares")
+
 # Legacy endpoints for compatibility
 @api_router.get("/")
 async def root():
