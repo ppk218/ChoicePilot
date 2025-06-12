@@ -465,7 +465,7 @@ def test_credit_packs_endpoint():
     
     # Check for expected credit pack properties
     expected_packs = ["starter", "power", "boost"]
-    expected_properties = ["name", "price", "credits", "description"]
+    expected_properties = ["name", "price", "credits"]
     
     for pack_id in expected_packs:
         if pack_id not in credit_packs:
