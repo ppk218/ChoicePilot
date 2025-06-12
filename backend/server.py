@@ -179,6 +179,11 @@ async def get_conversation_history(session_id: str, limit: int = 20):
             {"session_id": session_id}
         ).sort("timestamp", -1).limit(limit).to_list(limit)
         
+        # Convert ObjectId to string to make it JSON serializable
+        for conv in conversations:
+            if "_id" in conv:
+                conv["_id"] = str(conv["_id"])
+        
         return {"conversations": conversations}
     except Exception as e:
         logging.error(f"Error getting conversation history: {str(e)}")
