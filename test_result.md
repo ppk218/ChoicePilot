@@ -237,6 +237,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Tested the Enhanced UI/UX features and found most features working correctly. The Tools Panel slides in from the right as expected when clicking the '📊 Tools' button, with a darkening overlay for the background. All four tabs (Summary, Logic, Pros/Cons, History) display appropriate content. The panel can be closed both via the X button and by clicking the overlay. The decision history in the History tab shows multiple decisions with compact confidence badges. The Tools Panel adapts well to mobile screens. However, some confidence-related features are inconsistently implemented - confidence progress bars and reasoning type badges don't always appear on AI responses. The voice star ratings feature works when voice is enabled. The UI has a professional appearance with good visual hierarchy, color-coded categories, and smooth animations. Overall, the Enhanced UI/UX features provide a significant improvement to the decision-making experience."
+      
+  - task: "Enhanced Advisor Personas"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented enhanced advisor personas with 8 distinct personalities, each with unique visual identities, communication styles, and decision frameworks."
+      - working: true
+        agent: "testing"
+        comment: "Tested the Enhanced Advisor Personas feature and found it properly implemented. All 8 advisor personalities (Optimistic, Realist, Skeptical, Creative, Analytical, Intuitive, Visionary, and Supportive) are present in the settings panel. Each advisor has a unique icon, description, and motto displayed when selected. The advisor selection UI is well-designed with a 4-column grid on desktop that adapts to 2 columns on mobile. When selecting different advisors, the UI updates to show the appropriate motto (e.g., 'Better safe than sorry - let's examine the risks' for Skeptical advisor). The input field placeholder text changes to reflect the selected advisor. However, the visual enhancements in AI responses (avatar badges, color-coded borders, and personality indicators) were not consistently appearing in our tests. The Tools Panel correctly displays the selected advisor style in the summary tab. Overall, the advisor selection UI works well, but the visual indicators in responses could be improved."
 
   - task: "Category Selection"
     implemented: true
