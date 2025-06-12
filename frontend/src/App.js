@@ -1163,6 +1163,17 @@ function MainApp() {
         subscriptionInfo={subscriptionInfo}
         advisorStyle={advisorStyle}
       />
+
+      {/* Enhanced Tools Panel */}
+      <ToolsPanel
+        isOpen={showToolsPanel}
+        onClose={() => setShowToolsPanel(false)}
+        currentDecisionId={currentDecisionId}
+        currentDecisionTitle={currentDecisionTitle}
+        messages={messages}
+        subscriptionInfo={subscriptionInfo}
+        advisorStyle={advisorStyle}
+      />
     </div>
   );
 }
