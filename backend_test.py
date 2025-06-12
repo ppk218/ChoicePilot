@@ -56,6 +56,35 @@ def run_test(test_name, test_func):
         print(f"❌ Test ERROR: {test_name} - {str(e)}")
         return False
 
+# Mock response generator for Claude AI
+def generate_mock_claude_response(message, category=None):
+    """Generate a mock response based on the message and category"""
+    responses = {
+        "general": "Here are my thoughts on your general decision. I recommend considering these factors: 1) Your personal preferences, 2) The long-term implications, and 3) The immediate benefits. Based on what you've shared, I suggest option A because it aligns with your values and offers the best balance of pros and cons.",
+        "consumer": "Based on your needs for a tech purchase, I recommend considering these key factors: 1) Performance requirements, 2) Budget constraints, 3) Brand reliability. For programming specifically, I'd suggest a laptop with at least 16GB RAM, an i7/Ryzen 7 processor, and SSD storage. The MacBook Pro and Dell XPS are excellent choices that balance performance and build quality.",
+        "travel": "For your travel decision between Bali and Thailand, here's my analysis: Bali offers more serene, cultural experiences with beautiful rice terraces and temples. Thailand provides more diverse experiences from bustling Bangkok to beautiful beaches. Consider: 1) Budget (Thailand is generally cheaper), 2) Activities (diving, surfing, temples), 3) Food preferences, 4) Travel style. Based on your interests, I recommend Thailand for first-time Southeast Asia travelers.",
+        "career": "Regarding your career decision between the master's degree and the startup job, here's my analysis: The master's degree offers long-term credential benefits and potentially higher future earnings, while the startup provides immediate income and practical experience. At 28 with 5 years of experience, consider: 1) Financial situation, 2) Career goals (specialist vs. management), 3) Network opportunities. A balanced approach might be accepting the job while pursuing a part-time master's program if possible.",
+        "education": "For your education decision, I recommend considering: 1) Career alignment, 2) Program reputation, 3) Cost vs. expected ROI, 4) Time commitment. Based on your background, I suggest focusing on programs that offer practical skills and industry connections rather than purely theoretical knowledge.",
+        "lifestyle": "Regarding your lifestyle decision, consider these factors: 1) Health impacts, 2) Time requirements, 3) Sustainability, 4) Alignment with your values. I recommend starting with small, consistent changes rather than a dramatic overhaul, as research shows this approach leads to more lasting habits.",
+        "entertainment": "For your entertainment choice, I'd consider: 1) Your current mood, 2) Available time, 3) Recent genres you've enjoyed. Based on current trends and your preferences, I recommend 'The Succession' if you enjoy drama, 'Everything Everywhere All at Once' for something unique, or 'Ted Lasso' if you want something uplifting.",
+        "financial": "Regarding your investment decision between stocks and real estate, here's my analysis: Stocks offer liquidity and diversification with lower entry costs, while real estate provides tangible assets with potential rental income and leverage benefits. Consider: 1) Investment timeline, 2) Risk tolerance, 3) Desired involvement level, 4) Current market conditions. A balanced approach might include REITs for real estate exposure while maintaining a diversified stock portfolio."
+    }
+    
+    # Default to general if category not specified or not found
+    category = category or "general"
+    if category not in responses:
+        category = "general"
+    
+    # Add some personalization based on the message
+    personalized = responses[category]
+    
+    # Add some keywords from the message to make it seem more responsive
+    keywords = [word for word in message.split() if len(word) > 4]
+    if keywords:
+        personalized += f" I noticed you mentioned {keywords[0]}, which is an important consideration."
+    
+    return personalized
+
 def test_root_endpoint():
     """Test the root API endpoint"""
     response = requests.get(f"{API_URL}/")
