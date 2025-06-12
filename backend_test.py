@@ -445,6 +445,214 @@ def test_chat_without_session_id():
     print(f"Chat without session_id generated new session: {data['session_id']}")
     return True
 
+def test_credit_packs_endpoint():
+    """Test the credit packs endpoint"""
+    response = requests.get(f"{API_URL}/payments/credit-packs")
+    if response.status_code != 200:
+        print(f"Error: Credit packs endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    if "credit_packs" not in data:
+        print(f"Error: Credit packs endpoint response missing 'credit_packs' field: {data}")
+        return False
+    
+    credit_packs = data["credit_packs"]
+    if not credit_packs:
+        print("Error: No credit packs returned")
+        return False
+    
+    # Check for expected credit pack properties
+    expected_packs = ["starter", "power", "boost"]
+    expected_properties = ["name", "price", "credits", "description"]
+    
+    for pack_id in expected_packs:
+        if pack_id not in credit_packs:
+            print(f"Error: Expected credit pack '{pack_id}' not found in response")
+            return False
+        
+        pack = credit_packs[pack_id]
+        for prop in expected_properties:
+            if prop not in pack:
+                print(f"Error: Credit pack '{pack_id}' missing property '{prop}'")
+                return False
+    
+    print(f"Credit packs endpoint returned {len(credit_packs)} packs: {list(credit_packs.keys())}")
+    return True
+
+def test_subscription_plans_endpoint():
+    """Test the subscription plans endpoint"""
+    response = requests.get(f"{API_URL}/payments/subscription-plans")
+    if response.status_code != 200:
+        print(f"Error: Subscription plans endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    if "subscription_plans" not in data:
+        print(f"Error: Subscription plans endpoint response missing 'subscription_plans' field: {data}")
+        return False
+    
+    subscription_plans = data["subscription_plans"]
+    if not subscription_plans:
+        print("Error: No subscription plans returned")
+        return False
+    
+    # Check for expected subscription plan properties
+    expected_plans = ["pro_monthly"]
+    expected_properties = ["name", "price", "interval", "description", "features"]
+    
+    for plan_id in expected_plans:
+        if plan_id not in subscription_plans:
+            print(f"Error: Expected subscription plan '{plan_id}' not found in response")
+            return False
+        
+        plan = subscription_plans[plan_id]
+        for prop in expected_properties:
+            if prop not in plan:
+                print(f"Error: Subscription plan '{plan_id}' missing property '{prop}'")
+                return False
+    
+    print(f"Subscription plans endpoint returned {len(subscription_plans)} plans: {list(subscription_plans.keys())}")
+    return True
+
+def test_payment_endpoints_auth_required():
+    """Test that payment endpoints require authentication"""
+    # Test endpoints that should require authentication
+    auth_required_endpoints = [
+        {"method": "GET", "url": f"{API_URL}/payments/billing-history"},
+        {"method": "POST", "url": f"{API_URL}/payments/create-payment-link", "data": {"product_id": "starter", "user_email": "test@example.com"}},
+        {"method": "POST", "url": f"{API_URL}/payments/create-subscription", "data": {"plan_id": "pro_monthly", "user_email": "test@example.com"}}
+    ]
+    
+    all_passed = True
+    for endpoint in auth_required_endpoints:
+        method = endpoint["method"]
+        url = endpoint["url"]
+        data = endpoint.get("data", {})
+        
+        if method == "GET":
+            response = requests.get(url)
+        else:  # POST
+            response = requests.post(url, json=data)
+        
+        if response.status_code != 401:
+            print(f"Error: Endpoint {method} {url} should require authentication but returned {response.status_code}")
+            all_passed = False
+        else:
+            print(f"Endpoint {method} {url} correctly requires authentication")
+    
+    return all_passed
+
+def test_payment_link_creation():
+    """Test creating a payment link for credit pack purchase"""
+    # Get auth token
+    headers = get_auth_headers()
+    if not headers:
+        print("Error: Could not get authentication token")
+        return False
+    
+    # Create payment link
+    payment_data = {
+        "product_id": "starter",
+        "quantity": 1,
+        "user_email": TEST_USER["email"]
+    }
+    
+    response = requests.post(
+        f"{API_URL}/payments/create-payment-link", 
+        json=payment_data,
+        headers=headers
+    )
+    
+    if response.status_code != 200:
+        print(f"Error: Create payment link endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    required_fields = ["payment_id", "payment_link", "status", "amount", "currency"]
+    for field in required_fields:
+        if field not in data:
+            print(f"Error: Payment link response missing required field '{field}'")
+            return False
+    
+    if not data["payment_link"] or not data["payment_id"]:
+        print("Error: Payment link or ID is empty")
+        return False
+    
+    print(f"Payment link created successfully: {data['payment_link']}")
+    return True
+
+def test_subscription_creation():
+    """Test creating a subscription for Pro plan"""
+    # Get auth token
+    headers = get_auth_headers()
+    if not headers:
+        print("Error: Could not get authentication token")
+        return False
+    
+    # Create subscription
+    subscription_data = {
+        "plan_id": "pro_monthly",
+        "user_email": TEST_USER["email"],
+        "billing_cycle": "monthly"
+    }
+    
+    response = requests.post(
+        f"{API_URL}/payments/create-subscription", 
+        json=subscription_data,
+        headers=headers
+    )
+    
+    if response.status_code != 200:
+        print(f"Error: Create subscription endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    required_fields = ["subscription_id", "status", "plan_name", "amount"]
+    for field in required_fields:
+        if field not in data:
+            print(f"Error: Subscription response missing required field '{field}'")
+            return False
+    
+    if not data["subscription_id"]:
+        print("Error: Subscription ID is empty")
+        return False
+    
+    print(f"Subscription created successfully: {data['subscription_id']}")
+    return True
+
+def test_billing_history():
+    """Test retrieving user's billing history"""
+    # Get auth token
+    headers = get_auth_headers()
+    if not headers:
+        print("Error: Could not get authentication token")
+        return False
+    
+    response = requests.get(
+        f"{API_URL}/payments/billing-history",
+        headers=headers
+    )
+    
+    if response.status_code != 200:
+        print(f"Error: Billing history endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    required_fields = ["payments", "subscriptions", "total_spent"]
+    for field in required_fields:
+        if field not in data:
+            print(f"Error: Billing history response missing required field '{field}'")
+            return False
+    
+    print(f"Billing history retrieved successfully: {len(data['payments'])} payments, {len(data['subscriptions'])} subscriptions")
+    return True
+
 def run_all_tests():
     """Run all backend tests"""
     tests = [
@@ -455,7 +663,14 @@ def run_all_tests():
         ("Session Management", test_session_management),
         ("Conversation History", test_conversation_history),
         ("Claude AI Integration", test_claude_ai_integration),
-        ("Chat Without Session ID", test_chat_without_session_id)
+        ("Chat Without Session ID", test_chat_without_session_id),
+        # Payment and billing endpoints
+        ("Credit Packs Endpoint", test_credit_packs_endpoint),
+        ("Subscription Plans Endpoint", test_subscription_plans_endpoint),
+        ("Payment Endpoints Auth Required", test_payment_endpoints_auth_required),
+        ("Payment Link Creation", test_payment_link_creation),
+        ("Subscription Creation", test_subscription_creation),
+        ("Billing History", test_billing_history)
     ]
     
     for test_name, test_func in tests:
