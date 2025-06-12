@@ -22,7 +22,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI(title="ChoicePilot API", description="AI-powered decision assistant with LLM routing")
+app = FastAPI(title="ChoicePilot API", description="AI-powered decision assistant with enhanced advisor personas")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -47,6 +47,114 @@ LLM_MODELS = {
     }
 }
 
+# Enhanced Advisor Personas
+ADVISOR_STYLES = {
+    "optimistic": {
+        "name": "Optimistic",
+        "icon": "🌟",
+        "avatar": "✨",
+        "color": "amber",
+        "description": "Encouraging, focuses on opportunities and positive outcomes",
+        "tone": "upbeat and encouraging",
+        "decision_weight": "opportunity-focused",
+        "language_style": "inspiring and action-oriented",
+        "framework": "Opportunity-First Analysis",
+        "traits": ["uplifting", "reframes positively", "encourages action", "sees potential"],
+        "motto": "Every decision opens new doors"
+    },
+    "realist": {
+        "name": "Realist", 
+        "icon": "⚖️",
+        "avatar": "📏",
+        "color": "blue",
+        "description": "Balanced, practical, objective analysis with measured approach",
+        "tone": "neutral and analytical",
+        "decision_weight": "balanced consideration",
+        "language_style": "structured and efficient",
+        "framework": "Weighted Pros/Cons Analysis",
+        "traits": ["balanced", "practical", "objective", "efficient"],
+        "motto": "Clear thinking leads to clear choices"
+    },
+    "skeptical": {
+        "name": "Skeptical",
+        "icon": "🔍", 
+        "avatar": "🛡️",
+        "color": "red",
+        "description": "Cautious, thorough, risk-focused with deep analysis",
+        "tone": "careful and questioning",
+        "decision_weight": "risk-averse",
+        "language_style": "detailed with caveats",
+        "framework": "Risk Assessment & Mitigation",
+        "traits": ["cautious", "thorough", "risk-aware", "validates assumptions"],
+        "motto": "Better safe than sorry - let's examine the risks"
+    },
+    "creative": {
+        "name": "Creative",
+        "icon": "🎨",
+        "avatar": "💡",
+        "color": "purple",
+        "description": "Imaginative, lateral thinking, out-of-the-box ideas",
+        "tone": "playful and imaginative",
+        "decision_weight": "innovation-focused",
+        "language_style": "metaphor-rich and inspiring",
+        "framework": "Creative Exploration & Reframing",
+        "traits": ["imaginative", "metaphor-rich", "reframes problems", "suggests alternatives"],
+        "motto": "What if we looked at this completely differently?"
+    },
+    "analytical": {
+        "name": "Analytical",
+        "icon": "📊",
+        "avatar": "🔢",
+        "color": "indigo",
+        "description": "Data-heavy, methodical, logic-first approach",
+        "tone": "precise and methodical",
+        "decision_weight": "data-driven",
+        "language_style": "structured with numbers",
+        "framework": "Quantitative Decision Matrix",
+        "traits": ["precise", "data-focused", "methodical", "evidence-based"],
+        "motto": "Let the numbers guide us to the right answer"
+    },
+    "intuitive": {
+        "name": "Intuitive",
+        "icon": "🌙",
+        "avatar": "💫",
+        "color": "pink",
+        "description": "Emotion-led, gut feeling, holistic understanding",
+        "tone": "warm and insightful",
+        "decision_weight": "feeling-based",
+        "language_style": "empathetic and flowing",
+        "framework": "Gut Check & Alignment Analysis",
+        "traits": ["empathetic", "emotionally attuned", "holistic", "intuitive"],
+        "motto": "What does your heart tell you?"
+    },
+    "visionary": {
+        "name": "Visionary",
+        "icon": "🚀",
+        "avatar": "🔮",
+        "color": "emerald",
+        "description": "Future-oriented, strategic, high-impact thinking",
+        "tone": "inspiring and strategic",
+        "decision_weight": "future-focused",
+        "language_style": "bold and forward-thinking",
+        "framework": "Strategic Future Mapping",
+        "traits": ["strategic", "future-oriented", "bold", "transformative"],
+        "motto": "How will this decision shape your future?"
+    },
+    "supportive": {
+        "name": "Supportive",
+        "icon": "🤝",
+        "avatar": "💙",
+        "color": "green",
+        "description": "Empathetic, validating, emotionally intelligent",
+        "tone": "warm and understanding",
+        "decision_weight": "emotional well-being",
+        "language_style": "gentle and affirming",
+        "framework": "Emotional Alignment & Well-being",
+        "traits": ["empathetic", "validating", "supportive", "understanding"],
+        "motto": "You've got this - let's find what feels right"
+    }
+}
+
 # Decision session and chat models
 class DecisionRequest(BaseModel):
     message: str
@@ -54,7 +162,7 @@ class DecisionRequest(BaseModel):
     category: Optional[str] = None
     preferences: Optional[dict] = None
     llm_preference: Optional[Literal["auto", "claude", "gpt4o"]] = "auto"
-    advisor_style: Optional[Literal["optimistic", "realist", "skeptical"]] = "realist"
+    advisor_style: Optional[Literal["optimistic", "realist", "skeptical", "creative", "analytical", "intuitive", "visionary", "supportive"]] = "realist"
 
 class DecisionResponse(BaseModel):
     decision_id: str
@@ -63,6 +171,7 @@ class DecisionResponse(BaseModel):
     llm_used: str
     confidence_score: float
     reasoning_type: str
+    advisor_personality: dict
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class ConversationHistory(BaseModel):
@@ -74,6 +183,7 @@ class ConversationHistory(BaseModel):
     preferences: Optional[dict] = None
     llm_used: str
     advisor_style: str
+    advisor_personality: Optional[dict] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class DecisionSession(BaseModel):
@@ -99,25 +209,6 @@ DECISION_CATEGORIES = {
     "lifestyle": "Health, fitness, and lifestyle decisions",
     "entertainment": "Movies, books, games, and entertainment",
     "financial": "Financial planning and investment decisions"
-}
-
-# Advisor styles
-ADVISOR_STYLES = {
-    "optimistic": {
-        "personality": "Encouraging, positive, focuses on opportunities and best-case scenarios",
-        "tone": "upbeat and confident",
-        "approach": "highlights benefits and possibilities"
-    },
-    "realist": {
-        "personality": "Balanced, practical, weighs pros and cons objectively",
-        "tone": "measured and analytical",
-        "approach": "provides balanced perspective with practical considerations"
-    },
-    "skeptical": {
-        "personality": "Cautious, thorough, focuses on risks and potential downsides",
-        "tone": "careful and questioning",
-        "approach": "emphasizes due diligence and risk assessment"
-    }
 }
 
 class LLMRouter:
@@ -147,7 +238,6 @@ class LLMRouter:
         elif any(keyword in message_lower for keyword in creative_keywords):
             return "gpt4o"
         
-        # Default to Claude for structured decision-making
         return "claude"
     
     @staticmethod
@@ -170,7 +260,6 @@ class LLMRouter:
                 
         except Exception as e:
             logging.warning(f"Primary LLM ({llm_choice}) failed: {str(e)}")
-            # Fallback to the other LLM
             fallback_llm = "gpt4o" if llm_choice == "claude" else "claude"
             try:
                 if fallback_llm == "claude":
@@ -179,13 +268,11 @@ class LLMRouter:
                     return await LLMRouter._get_gpt4o_response(message, session_id, system_message, conversation_history)
             except Exception as fallback_error:
                 logging.error(f"Both LLMs failed. Claude: {str(e)}, GPT-4o: {str(fallback_error)}")
-                # Final fallback to demo response
                 return generate_demo_response(message), 0.6
     
     @staticmethod
     async def _get_claude_response(message: str, session_id: str, system_message: str, conversation_history: List[dict] = None) -> tuple[str, float]:
         """Get response from Claude"""
-        # Add conversation context to the user message if available
         context_message = message
         if conversation_history:
             context = format_conversation_context(conversation_history)
@@ -200,14 +287,12 @@ class LLMRouter:
         user_message = UserMessage(text=context_message)
         response = await chat.send_message(user_message)
         
-        # Claude typically provides high-confidence structured responses
         confidence = 0.9
         return response, confidence
     
     @staticmethod
     async def _get_gpt4o_response(message: str, session_id: str, system_message: str, conversation_history: List[dict] = None) -> tuple[str, float]:
         """Get response from GPT-4o"""
-        # Add conversation context to the user message if available
         context_message = message
         if conversation_history:
             context = format_conversation_context(conversation_history)
@@ -222,49 +307,114 @@ class LLMRouter:
         user_message = UserMessage(text=context_message)
         response = await chat.send_message(user_message)
         
-        # GPT-4o provides good conversational responses
         confidence = 0.85
         return response, confidence
 
 def get_system_message(category: str = "general", preferences: dict = None, advisor_style: str = "realist") -> str:
-    """Generate a tailored system message based on category, preferences, and advisor style"""
+    """Generate a tailored system message based on category, preferences, and enhanced advisor style"""
     
-    style_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
+    advisor_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
     
-    base_prompt = f"""You are ChoicePilot, an AI-powered personal decision assistant designed to help users make stress-free, confident decisions. 
+    base_prompt = f"""You are ChoicePilot's {advisor_config['name']} Advisor, an AI-powered personal decision assistant.
 
-Your advisor personality: {style_config['personality']}
-Your communication tone should be {style_config['tone']}.
-Your approach: {style_config['approach']}.
+🎭 YOUR ADVISOR PERSONALITY:
+Name: {advisor_config['name']} Advisor
+Motto: "{advisor_config['motto']}"
+Core Traits: {', '.join(advisor_config['traits'])}
+Communication Tone: {advisor_config['tone']}
+Decision Framework: {advisor_config['framework']}
+Decision Weighting: {advisor_config['decision_weight']}
+Language Style: {advisor_config['language_style']}
 
-Core Principles:
-1. Always provide clear, personalized recommendations with transparent rationale
-2. Remember the conversation context and build upon previous exchanges
-3. Ask clarifying questions when you need more context about preferences, budget, or constraints
-4. Consider the user's lifestyle, past choices, and stated preferences
-5. Explain WHY you're recommending something - build trust through transparency
-6. Provide actionable next steps, not just advice
-7. Be concise but thorough in your explanations
-8. Maintain your {advisor_style} advisor personality throughout the conversation
+🎯 PERSONALITY-SPECIFIC BEHAVIOR:
+"""
 
-Your decision-making framework:
-1. Understand the decision context and constraints
-2. Extract user preferences and priorities
-3. Consider practical factors (budget, timeline, location, etc.)
-4. Provide 2-3 specific recommendations with clear rationale
-5. Suggest next steps for implementation
+    # Add personality-specific instructions
+    if advisor_style == "optimistic":
+        base_prompt += """
+- Always lead with possibilities and positive outcomes
+- Reframe challenges as opportunities for growth
+- Use encouraging language and action-oriented suggestions
+- Focus on potential benefits and success scenarios
+- End responses with motivational next steps"""
+    
+    elif advisor_style == "skeptical":
+        base_prompt += """
+- Thoroughly examine potential risks and downsides
+- Ask "what could go wrong?" for each option
+- Provide detailed caveats and considerations
+- Validate assumptions with evidence
+- Emphasize due diligence and careful planning"""
+    
+    elif advisor_style == "creative":
+        base_prompt += """
+- Use rich metaphors and imaginative language
+- Suggest unconventional approaches and alternatives
+- Reframe problems from multiple creative angles
+- Think outside traditional decision frameworks
+- Inspire with innovative possibilities"""
+    
+    elif advisor_style == "analytical":
+        base_prompt += """
+- Use data, numbers, and quantifiable metrics
+- Structure responses with clear logical frameworks
+- Provide step-by-step methodical analysis
+- Reference evidence and concrete facts
+- Create scoring matrices when appropriate"""
+    
+    elif advisor_style == "intuitive":
+        base_prompt += """
+- Trust and validate emotional responses
+- Ask about gut feelings and inner wisdom
+- Consider how decisions align with values
+- Use warm, empathetic language
+- Focus on holistic well-being and fulfillment"""
+    
+    elif advisor_style == "visionary":
+        base_prompt += """
+- Think in terms of long-term impact and legacy
+- Paint bold pictures of future possibilities
+- Consider strategic implications and transformative potential
+- Use inspiring, forward-thinking language
+- Challenge conventional thinking with big-picture perspective"""
+    
+    elif advisor_style == "supportive":
+        base_prompt += """
+- Provide emotional validation and encouragement
+- Acknowledge the difficulty of decision-making
+- Use gentle, understanding language
+- Focus on emotional well-being throughout the process
+- Build confidence while providing guidance"""
+    
+    else:  # realist
+        base_prompt += """
+- Provide balanced, objective analysis
+- Weigh pros and cons systematically
+- Use practical, straightforward language
+- Focus on realistic outcomes and expectations
+- Deliver efficient, well-structured guidance"""
 
-Important: This is a continuing conversation. Reference previous messages and build upon the information the user has already provided. Don't ask for information they've already given you."""
+    base_prompt += f"""
+
+🎯 CORE DECISION-MAKING PRINCIPLES:
+1. Embody your {advisor_style} personality consistently throughout the conversation
+2. Use your specific decision framework: {advisor_config['framework']}
+3. Maintain your communication style: {advisor_config['language_style']}
+4. Remember previous conversation context and build upon it
+5. Provide clear, actionable recommendations with transparent rationale
+6. Ask clarifying questions that align with your advisory approach
+
+Important: This is a continuing conversation. Reference previous messages and build upon the information the user has already provided."""
 
     if category and category != "general":
         category_context = DECISION_CATEGORIES.get(category, "")
-        base_prompt += f"\n\nYou are currently helping with {category} decisions. Focus on: {category_context}"
+        base_prompt += f"\n\n🎯 DECISION CATEGORY: You are helping with {category} decisions. Focus on: {category_context}"
     
     if preferences:
         pref_text = ", ".join([f"{k}: {v}" for k, v in preferences.items() if v])
-        base_prompt += f"\n\nUser preferences to consider: {pref_text}"
+        base_prompt += f"\n\n🎯 USER PREFERENCES: Consider these preferences: {pref_text}"
     
-    base_prompt += f"\n\nRespond in a friendly, helpful tone that reflects your {advisor_style} personality. Be the decision assistant that eliminates stress and provides clarity."
+    base_prompt += f"\n\nMaintain your {advisor_config['name']} personality while being helpful and building user confidence in their decision-making process."
     
     return base_prompt
 
@@ -274,7 +424,7 @@ def format_conversation_context(conversations: List[dict]) -> str:
         return ""
     
     context = "\n\nPrevious conversation context:\n"
-    for conv in conversations[-5:]:  # Last 5 exchanges for context
+    for conv in conversations[-5:]:
         context += f"User: {conv['user_message']}\n"
         context += f"Assistant: {conv['ai_response']}\n\n"
     
@@ -283,15 +433,12 @@ def format_conversation_context(conversations: List[dict]) -> str:
 
 @api_router.post("/chat", response_model=DecisionResponse)
 async def chat_with_assistant(request: DecisionRequest):
-    """Main chat endpoint with LLM routing"""
+    """Main chat endpoint with enhanced advisor personas"""
     try:
-        # Generate or use existing decision ID
         decision_id = request.decision_id or str(uuid.uuid4())
         
-        # Get or create decision session
         existing_session = await db.decision_sessions.find_one({"decision_id": decision_id})
         if not existing_session:
-            # Create new decision session with auto-generated title
             title = generate_decision_title(request.message, request.category)
             session_obj = DecisionSession(
                 decision_id=decision_id, 
@@ -303,7 +450,6 @@ async def chat_with_assistant(request: DecisionRequest):
             )
             await db.decision_sessions.insert_one(session_obj.dict())
         else:
-            # Update existing session
             update_data = {
                 "last_active": datetime.utcnow(),
                 "message_count": existing_session.get("message_count", 0) + 1,
@@ -318,24 +464,19 @@ async def chat_with_assistant(request: DecisionRequest):
                 {"$set": update_data}
             )
         
-        # Get conversation history for this decision
         conversation_history = await db.conversations.find(
             {"decision_id": decision_id}
         ).sort("timestamp", 1).to_list(20)
         
-        # Get user preferences and settings for context
         session_data = await db.decision_sessions.find_one({"decision_id": decision_id})
         user_preferences = session_data.get("user_preferences", {}) if session_data else {}
         category = session_data.get("category", "general") if session_data else (request.category or "general")
         advisor_style = session_data.get("advisor_style", "realist") if session_data else request.advisor_style
         
-        # Determine which LLM to use
         llm_choice = LLMRouter.determine_best_llm(category, request.message, request.llm_preference)
         
-        # Generate system message with advisor style
         system_message = get_system_message(category, user_preferences, advisor_style)
         
-        # Get AI response using the routing engine
         ai_response, confidence = await LLMRouter.get_llm_response(
             request.message, 
             llm_choice, 
@@ -344,10 +485,11 @@ async def chat_with_assistant(request: DecisionRequest):
             conversation_history
         )
         
-        # Determine reasoning type based on content
-        reasoning_type = determine_reasoning_type(request.message, category)
+        reasoning_type = determine_reasoning_type(request.message, category, advisor_style)
         
-        # Store conversation in database
+        # Get advisor personality info
+        advisor_personality = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
+        
         conversation = ConversationHistory(
             decision_id=decision_id,
             user_message=request.message,
@@ -355,7 +497,8 @@ async def chat_with_assistant(request: DecisionRequest):
             category=category,
             preferences=request.preferences,
             llm_used=llm_choice,
-            advisor_style=advisor_style
+            advisor_style=advisor_style,
+            advisor_personality=advisor_personality
         )
         await db.conversations.insert_one(conversation.dict())
         
@@ -365,31 +508,41 @@ async def chat_with_assistant(request: DecisionRequest):
             category=category,
             llm_used=llm_choice,
             confidence_score=confidence,
-            reasoning_type=reasoning_type
+            reasoning_type=reasoning_type,
+            advisor_personality=advisor_personality
         )
         
     except Exception as e:
         logging.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
-def determine_reasoning_type(message: str, category: str) -> str:
-    """Determine the type of reasoning being used"""
+def determine_reasoning_type(message: str, category: str, advisor_style: str) -> str:
+    """Determine the type of reasoning being used based on message, category, and advisor style"""
     message_lower = message.lower()
     
+    # Advisor-specific reasoning types
+    advisor_reasoning = {
+        "optimistic": "Opportunity-Focused Analysis",
+        "skeptical": "Risk Assessment & Mitigation", 
+        "creative": "Creative Exploration & Reframing",
+        "analytical": "Quantitative Decision Matrix",
+        "intuitive": "Gut Check & Alignment Analysis",
+        "visionary": "Strategic Future Mapping",
+        "supportive": "Emotional Alignment & Well-being",
+        "realist": "Weighted Pros/Cons Analysis"
+    }
+    
+    base_reasoning = advisor_reasoning.get(advisor_style, "General Decision Analysis")
+    
+    # Add context-specific modifiers
     if any(word in message_lower for word in ["compare", "vs", "versus", "better", "worse"]):
-        return "Comparative Analysis"
+        return f"{base_reasoning} - Comparative"
     elif any(word in message_lower for word in ["budget", "cost", "price", "money", "afford"]):
-        return "Financial Analysis"
-    elif any(word in message_lower for word in ["pros", "cons", "advantages", "disadvantages"]):
-        return "Risk-Benefit Analysis"
+        return f"{base_reasoning} - Financial"
     elif any(word in message_lower for word in ["step", "process", "how to", "guide"]):
-        return "Step-by-Step Planning"
-    elif category in ["career", "education"]:
-        return "Strategic Planning"
-    elif category in ["lifestyle", "health"]:
-        return "Lifestyle Optimization"
-    else:
-        return "General Decision Analysis"
+        return f"{base_reasoning} - Process-Oriented"
+    
+    return base_reasoning
 
 def generate_decision_title(message: str, category: str = None) -> str:
     """Generate a user-friendly title for a decision based on the first message"""
@@ -403,6 +556,11 @@ def generate_decision_title(message: str, category: str = None) -> str:
         title = f"[{category.title()}] {title}"
     
     return title
+
+@api_router.get("/advisor-styles")
+async def get_advisor_styles():
+    """Get available advisor styles with enhanced personality information"""
+    return {"advisor_styles": ADVISOR_STYLES}
 
 @api_router.get("/llm-options")
 async def get_llm_options():
@@ -493,28 +651,37 @@ async def get_decision_info(decision_id: str):
         logging.error(f"Error getting decision info: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving decision information")
 
-# Enhanced demo response with advisor styles
 def generate_demo_response(message: str, category: str = "general", user_preferences: dict = None, conversation_history: List[dict] = None, advisor_style: str = "realist") -> str:
     """Generate demo responses when both LLMs fail"""
     
-    style_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
+    advisor_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
     
-    response = f"I understand you're facing a decision, and as your {advisor_style} advisor, I'm here to help! "
+    response = f"As your {advisor_config['name']} Advisor, I'm here to help! {advisor_config['motto']}\n\n"
     
     if advisor_style == "optimistic":
-        response += "This is a great opportunity to make a positive change! Here's how I see your options:\n\n"
+        response += "This is a wonderful opportunity to make a positive change! Here's how I see your options with excitement:\n\n"
     elif advisor_style == "skeptical":
         response += "Let's carefully examine all aspects of this decision to avoid potential pitfalls:\n\n"
+    elif advisor_style == "creative":
+        response += "What an interesting challenge! Let me help you explore this from some creative angles:\n\n"
+    elif advisor_style == "analytical":
+        response += "Let's break this down systematically with data and logical frameworks:\n\n"
+    elif advisor_style == "intuitive":
+        response += "Let's tune into your inner wisdom and see what feels right for you:\n\n"
+    elif advisor_style == "visionary":
+        response += "Let's think big picture and consider how this decision shapes your future:\n\n"
+    elif advisor_style == "supportive":
+        response += "I understand this decision feels important to you. Let's work through this together:\n\n"
     else:  # realist
         response += "Let's approach this systematically and consider all the practical factors:\n\n"
     
-    response += """**Key Factors to Consider:**
+    response += f"""**Using My {advisor_config['framework']}:**
 1. **Your values and priorities** - What matters most to you in this situation?
-2. **Long-term implications** - How will this decision affect your future goals?
-3. **Available resources** - What's your budget, time, and energy constraints?
+2. **Key considerations** - {advisor_config['decision_weight']} factors
+3. **{advisor_config['name']} perspective** - {advisor_config['description']}
 
 **My Recommendation:**
-I suggest taking a structured approach: List your options, weigh the pros and cons of each, and consider which option best aligns with your core values and long-term objectives.
+I suggest taking a structured approach that aligns with your {advisor_style} needs and my expertise in {advisor_config['framework'].lower()}.
 
 *Note: This is a demo response. Both Claude and GPT-4o are temporarily unavailable.*"""
     
@@ -523,7 +690,7 @@ I suggest taking a structured approach: List your options, weigh the pros and co
 # Legacy endpoints for compatibility
 @api_router.get("/")
 async def root():
-    return {"message": "ChoicePilot API - Your Personal AI Decision Assistant with LLM Routing"}
+    return {"message": "ChoicePilot API - Your Personal AI Decision Assistant with Enhanced Advisor Personas"}
 
 # Include the router in the main app
 app.include_router(api_router)
