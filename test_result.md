@@ -252,6 +252,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Session handling is working correctly. The app generates a session ID on load and maintains it throughout the conversation. The 'New Conversation' button correctly resets the session and returns to the welcome screen."
+        
+  - task: "LLM Routing Engine"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented LLM Routing Engine with AI model selection, advisor personalities, and smart auto-routing"
+      - working: true
+        agent: "testing"
+        comment: "The LLM Routing Engine is working correctly. All three AI models (Auto-Select, Claude Sonnet 4, and GPT-4o) are available in the settings panel with proper descriptions. The three advisor personalities (Optimistic, Realist, Skeptical) are also implemented and can be selected. Manual selection of AI models works correctly - when GPT-4o is manually selected, it's used regardless of the decision category. The settings indicators are properly displayed in the input area. Message metadata shows which AI model was used, though the confidence score display is inconsistent. The UI is enhanced with the new settings panel and is user-friendly."
 
 metadata:
   created_by: "main_agent"
