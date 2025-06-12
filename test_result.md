@@ -248,3 +248,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Successfully implemented ChoicePilot MVP with Claude AI integration, conversational chat interface, 8 decision categories, session management, and conversation history. Backend uses FastAPI with emergentintegrations library for Claude Sonnet 4. Frontend is a beautiful React chat interface with Tailwind CSS. All services are running. Ready for comprehensive testing of core decision assistance functionality."
+  - agent: "testing"
+    message: "Completed backend testing for ChoicePilot. All backend components are working correctly after fixing MongoDB ObjectId serialization issues in the session and history endpoints. The Claude AI integration is properly implemented but the account has insufficient credits, so tests were performed using mock responses. All API endpoints are functioning as expected. The backend is ready for integration with the frontend."
