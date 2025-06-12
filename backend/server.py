@@ -44,6 +44,9 @@ api_router = APIRouter(prefix="/api")
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-this')
+DODO_API_KEY = os.environ.get('DODO_API_KEY')
+DODO_WEBHOOK_SECRET = os.environ.get('DODO_WEBHOOK_SECRET')
+FRONTEND_URL = os.environ.get('FRONTEND_URL')
 
 # Security
 security = HTTPBearer()
