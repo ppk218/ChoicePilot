@@ -6,14 +6,14 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const DECISION_CATEGORIES = {
-  general: { icon: "🤔", label: "General Advice", color: "bg-blue-100 text-blue-800" },
-  consumer: { icon: "🛍️", label: "Shopping & Products", color: "bg-green-100 text-green-800" },
-  travel: { icon: "✈️", label: "Travel Planning", color: "bg-purple-100 text-purple-800" },
-  career: { icon: "💼", label: "Career Decisions", color: "bg-orange-100 text-orange-800" },
-  education: { icon: "📚", label: "Education & Learning", color: "bg-indigo-100 text-indigo-800" },
-  lifestyle: { icon: "🏃‍♂️", label: "Health & Lifestyle", color: "bg-pink-100 text-pink-800" },
-  entertainment: { icon: "🎬", label: "Entertainment", color: "bg-yellow-100 text-yellow-800" },
-  financial: { icon: "💰", label: "Financial Planning", color: "bg-emerald-100 text-emerald-800" }
+  general: { icon: "🤔", label: "General Advice", color: "bg-blue-100 text-blue-800", accent: "blue" },
+  consumer: { icon: "🛍️", label: "Shopping & Products", color: "bg-green-100 text-green-800", accent: "green" },
+  travel: { icon: "✈️", label: "Travel Planning", color: "bg-purple-100 text-purple-800", accent: "purple" },
+  career: { icon: "💼", label: "Career Decisions", color: "bg-orange-100 text-orange-800", accent: "orange" },
+  education: { icon: "📚", label: "Education & Learning", color: "bg-indigo-100 text-indigo-800", accent: "indigo" },
+  lifestyle: { icon: "🏃‍♂️", label: "Health & Lifestyle", color: "bg-pink-100 text-pink-800", accent: "pink" },
+  entertainment: { icon: "🎬", label: "Entertainment", color: "bg-yellow-100 text-yellow-800", accent: "yellow" },
+  financial: { icon: "💰", label: "Financial Planning", color: "bg-emerald-100 text-emerald-800", accent: "emerald" }
 };
 
 const LLM_MODELS = {
@@ -39,7 +39,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showToolsPanel, setShowToolsPanel] = useState(false);
   const [currentDecisionTitle, setCurrentDecisionTitle] = useState("");
+  const [activeToolTab, setActiveToolTab] = useState("summary");
   
   // Voice-related state
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -56,7 +58,6 @@ function App() {
     loadDecisions();
     checkVoiceSupport();
     return () => {
-      // Cleanup speech synthesis on component unmount
       if (speechSynthesisRef.current) {
         window.speechSynthesis.cancel();
       }
@@ -125,14 +126,13 @@ function App() {
 
   const speakText = (text, messageId) => {
     if ('speechSynthesis' in window && text) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9; // Slightly slower for clarity
-      utterance.pitch = 1.0; // Neutral pitch
-      utterance.volume = 0.8; // Comfortable volume
-      utterance.lang = 'en-US'; // Neutral English
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.8;
+      utterance.lang = 'en-US';
       
       utterance.onstart = () => {
         setSpeaking(messageId);
@@ -200,7 +200,6 @@ function App() {
 
       setMessages(formattedMessages);
       
-      // Get decision info for title and settings
       const decisionResponse = await axios.get(`${API}/decisions/${decisionId}`);
       setCurrentDecisionTitle(decisionResponse.data.title || "Untitled Decision");
       setSelectedCategory(decisionResponse.data.category || "general");
@@ -283,13 +282,14 @@ function App() {
     setSelectedCategory("general");
     setLlmPreference("auto");
     setAdvisorStyle("realist");
-    stopSpeaking(); // Stop any ongoing speech
+    setShowToolsPanel(false);
+    stopSpeaking();
   };
 
   const switchToDecision = (decision) => {
     setCurrentDecisionId(decision.decision_id);
     setShowWelcome(false);
-    stopSpeaking(); // Stop any ongoing speech when switching
+    stopSpeaking();
   };
 
   const handleKeyPress = (e) => {
@@ -301,6 +301,54 @@ function App() {
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getConfidenceColor = (score) => {
+    if (score >= 0.8) return "green";
+    if (score >= 0.6) return "yellow";
+    return "red";
+  };
+
+  const ConfidenceBar = ({ score, size = "default" }) => {
+    const color = getConfidenceColor(score);
+    const percentage = Math.round(score * 100);
+    
+    if (size === "compact") {
+      return (
+        <span className={`px-2 py-1 rounded text-xs font-medium bg-${color}-100 text-${color}-800`}>
+          {percentage}%
+        </span>
+      );
+    }
+    
+    return (
+      <div className="w-full">
+        <div className="flex justify-between text-xs mb-1">
+          <span className="font-medium">Confidence</span>
+          <span className={`font-bold text-${color}-600`}>{percentage}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className={`bg-${color}-500 h-2 rounded-full transition-all duration-500`}
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
+  const VoiceStarRating = ({ score }) => {
+    const stars = Math.round(score * 5);
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map(star => (
+          <span key={star} className={star <= stars ? "text-yellow-400" : "text-gray-300"}>
+            ⭐
+          </span>
+        ))}
+        <span className="text-xs text-gray-600 ml-1">({Math.round(score * 100)}%)</span>
+      </div>
+    );
   };
 
   const VoiceControls = () => (
@@ -327,14 +375,231 @@ function App() {
     </div>
   );
 
+  const ToolsPanel = () => {
+    const currentDecision = messages.filter(m => !m.isUser).pop();
+    
+    return (
+      <div className={`fixed top-0 right-0 h-full w-96 bg-white shadow-2xl transform transition-transform duration-300 z-50 ${
+        showToolsPanel ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <div className="h-full flex flex-col">
+          {/* Tools Panel Header */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Decision Tools</h3>
+              <button
+                onClick={() => setShowToolsPanel(false)}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex space-x-2 mt-3">
+              {["summary", "logic", "proscons", "history"].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveToolTab(tab)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    activeToolTab === tab 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {tab === "summary" && "📊 Summary"}
+                  {tab === "logic" && "🪵 Logic"}
+                  {tab === "proscons" && "⚖️ Pros/Cons"}
+                  {tab === "history" && "📚 History"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tools Panel Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {activeToolTab === "summary" && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Decision Summary</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-600">Title:</span>
+                      <p className="font-medium">{currentDecisionTitle || "Untitled Decision"}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Category:</span>
+                      <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${DECISION_CATEGORIES[selectedCategory]?.color}`}>
+                        {DECISION_CATEGORIES[selectedCategory]?.icon} {DECISION_CATEGORIES[selectedCategory]?.label}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Advisor Style:</span>
+                      <span className="ml-2 px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                        {ADVISOR_STYLES[advisorStyle]?.icon} {ADVISOR_STYLES[advisorStyle]?.name}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">AI Model:</span>
+                      <span className="ml-2 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {LLM_MODELS[llmPreference]?.icon} {LLM_MODELS[llmPreference]?.name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {currentDecision && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">Latest Recommendation</h4>
+                    {currentDecision.confidenceScore && (
+                      <div className="mb-3">
+                        <ConfidenceBar score={currentDecision.confidenceScore} />
+                      </div>
+                    )}
+                    {voiceEnabled && currentDecision.confidenceScore && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600">Voice Rating:</span>
+                        <VoiceStarRating score={currentDecision.confidenceScore} />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm text-gray-600">Reasoning Type:</span>
+                        <span className="ml-2 text-sm font-medium">{currentDecision.reasoningType}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Generated By:</span>
+                        <span className="ml-2 text-sm font-medium">{LLM_MODELS[currentDecision.llmUsed]?.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                    📤 Export Decision
+                  </button>
+                  <button className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">
+                    🔄 Re-run Analysis
+                  </button>
+                  <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                    📅 Save to Calendar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeToolTab === "logic" && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">Decision Logic Tree</h4>
+                  <div className="space-y-3">
+                    <div className="border-l-4 border-blue-500 pl-3">
+                      <div className="font-medium text-gray-900">Final Recommendation</div>
+                      <div className="text-sm text-gray-600">Based on {messages.filter(m => !m.isUser).length} AI analysis steps</div>
+                    </div>
+                    <div className="ml-4 space-y-2">
+                      <div className="border-l-2 border-gray-300 pl-3">
+                        <div className="text-sm font-medium text-gray-800">Key Factors</div>
+                        <div className="text-xs text-gray-600">
+                          • {selectedCategory === "consumer" ? "Budget constraints" : "Decision criteria"}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          • {selectedCategory === "career" ? "Long-term growth" : "Practical considerations"}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          • User preferences and constraints
+                        </div>
+                      </div>
+                      <div className="ml-4 border-l-2 border-gray-300 pl-3">
+                        <div className="text-sm font-medium text-gray-800">AI Analysis</div>
+                        <div className="text-xs text-gray-600">
+                          Processed by {LLM_MODELS[llmPreference]?.name} using {advisorStyle} approach
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center text-sm text-gray-500">
+                  💡 Interactive logic tree coming in next update
+                </div>
+              </div>
+            )}
+
+            {activeToolTab === "proscons" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+                      ✅ Pros
+                    </h4>
+                    <div className="space-y-2 text-sm text-green-800">
+                      <div>AI-powered analysis</div>
+                      <div>Contextual recommendations</div>
+                      <div>Multiple advisor styles</div>
+                      <div>Voice integration</div>
+                    </div>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-3">
+                    <h4 className="font-semibold text-red-900 mb-2 flex items-center">
+                      ❌ Cons
+                    </h4>
+                    <div className="space-y-2 text-sm text-red-800">
+                      <div>Requires clear input</div>
+                      <div>AI limitations</div>
+                      <div>Decision complexity</div>
+                      <div>Personal context needed</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center text-sm text-gray-500">
+                  📊 Dynamic pros/cons analysis coming in next update
+                </div>
+              </div>
+            )}
+
+            {activeToolTab === "history" && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">Decision History</h4>
+                  <div className="space-y-3">
+                    {decisions.slice(0, 5).map(decision => (
+                      <div key={decision.decision_id} className="bg-white rounded-lg p-3 border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {decision.title}
+                            </div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs text-gray-500">
+                                {DECISION_CATEGORIES[decision.category]?.icon} {DECISION_CATEGORIES[decision.category]?.label}
+                              </span>
+                              <ConfidenceBar score={0.85} size="compact" />
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => switchToDecision(decision)}
+                            className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const SettingsPanel = () => (
     <div className="mb-6 p-4 bg-gray-50 rounded-xl">
       <h3 className="text-sm font-medium text-gray-700 mb-4">Decision Settings</h3>
       
-      {/* Voice Controls */}
       {voiceSupported && <VoiceControls />}
       
-      {/* Category Selection */}
       <div className="mb-4">
         <label className="text-xs font-medium text-gray-600 mb-2 block">Decision Category</label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -355,7 +620,6 @@ function App() {
         </div>
       </div>
 
-      {/* LLM Selection */}
       <div className="mb-4">
         <label className="text-xs font-medium text-gray-600 mb-2 block">AI Model Preference</label>
         <div className="grid grid-cols-3 gap-2">
@@ -377,7 +641,6 @@ function App() {
         </div>
       </div>
 
-      {/* Advisor Style */}
       <div className="mb-4">
         <label className="text-xs font-medium text-gray-600 mb-2 block">Advisor Personality</label>
         <div className="grid grid-cols-3 gap-2">
@@ -424,12 +687,15 @@ function App() {
                 <span>{DECISION_CATEGORIES[decision.category]?.label}</span>
                 <span className="ml-auto">{decision.message_count} messages</span>
               </div>
-              <div className="text-xs text-gray-400 mt-1 flex items-center">
-                <span className="mr-2">{LLM_MODELS[decision.llm_preference]?.icon}</span>
-                <span>{LLM_MODELS[decision.llm_preference]?.name}</span>
-                <span className="mx-2">•</span>
-                <span>{ADVISOR_STYLES[decision.advisor_style]?.icon}</span>
-                <span className="ml-1">{ADVISOR_STYLES[decision.advisor_style]?.name}</span>
+              <div className="text-xs text-gray-400 mt-1 flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="mr-2">{LLM_MODELS[decision.llm_preference]?.icon}</span>
+                  <span>{LLM_MODELS[decision.llm_preference]?.name}</span>
+                  <span className="mx-2">•</span>
+                  <span>{ADVISOR_STYLES[decision.advisor_style]?.icon}</span>
+                  <span className="ml-1">{ADVISOR_STYLES[decision.advisor_style]?.name}</span>
+                </div>
+                <ConfidenceBar score={0.85} size="compact" />
               </div>
             </button>
           ))
@@ -445,13 +711,13 @@ function App() {
           Welcome to <span className="text-blue-600">ChoicePilot</span>
         </h1>
         <p className="text-xl text-gray-600">Your Personal AI Guide for Stress-Free Decisions</p>
-        <p className="text-sm text-gray-500">Now with voice input and intelligent AI routing</p>
+        <p className="text-sm text-gray-500">Now with voice integration, AI routing, and decision analysis tools</p>
       </div>
       
       <div className="max-w-2xl mx-auto space-y-4 text-gray-700">
         <p className="text-lg">
           Stop struggling with decision fatigue. Get personalized, actionable recommendations 
-          from our advanced AI system with voice capabilities.
+          from our advanced AI system with comprehensive analysis tools.
         </p>
         
         <div className="grid md:grid-cols-3 gap-4 text-sm">
@@ -466,9 +732,9 @@ function App() {
             <p className="text-green-700">Speak your questions and hear responses with natural voice</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">⚡</div>
-            <h3 className="font-semibold text-purple-900">Contextual Memory</h3>
-            <p className="text-purple-700">Remembers your preferences and builds on previous conversations</p>
+            <div className="text-2xl mb-2">📊</div>
+            <h3 className="font-semibold text-purple-900">Decision Analysis</h3>
+            <p className="text-purple-700">Visual tools for logic trees, confidence scores, and history</p>
           </div>
         </div>
       </div>
@@ -519,6 +785,12 @@ function App() {
           
           <div className="flex items-center space-x-2">
             <button
+              onClick={() => setShowToolsPanel(true)}
+              className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              📊 Tools
+            </button>
+            <button
               onClick={() => setShowSettings(!showSettings)}
               className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
             >
@@ -534,7 +806,9 @@ function App() {
         </div>
 
         {/* Chat Area */}
-        <div className="bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col">
+        <div className={`bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col transition-all duration-300 ${
+          showToolsPanel ? 'mr-96' : ''
+        }`}>
           
           {/* Messages */}
           <div className="flex-1 p-6 overflow-y-auto max-h-[500px]">
@@ -560,7 +834,6 @@ function App() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="whitespace-pre-wrap break-words flex-1">{message.text}</div>
-                        {/* Voice Controls for AI messages */}
                         {!message.isUser && !message.isError && voiceEnabled && (
                           <div className="ml-3 flex-shrink-0">
                             <button
@@ -577,7 +850,9 @@ function App() {
                           </div>
                         )}
                       </div>
-                      <div className={`text-xs mt-2 ${
+                      
+                      {/* Enhanced Message Metadata */}
+                      <div className={`text-xs mt-3 ${
                         message.isUser ? 'text-blue-100' : 'text-gray-500'
                       }`}>
                         <div className="flex items-center justify-between">
@@ -588,17 +863,25 @@ function App() {
                                 {LLM_MODELS[message.llmUsed]?.icon} 
                                 <span className="ml-1">{LLM_MODELS[message.llmUsed]?.name}</span>
                               </span>
-                              {message.confidenceScore && (
-                                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                  {Math.round(message.confidenceScore * 100)}% confidence
-                                </span>
-                              )}
                             </div>
                           )}
                         </div>
+                        
+                        {/* Confidence Score Display */}
+                        {!message.isUser && message.confidenceScore && (
+                          <div className="mt-2 space-y-1">
+                            <ConfidenceBar score={message.confidenceScore} />
+                            {voiceEnabled && (
+                              <VoiceStarRating score={message.confidenceScore} />
+                            )}
+                          </div>
+                        )}
+                        
                         {message.reasoningType && (
                           <div className="text-xs text-gray-400 mt-1">
-                            {message.reasoningType}
+                            <span className="bg-gray-200 px-2 py-1 rounded">
+                              {message.reasoningType}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -628,7 +911,7 @@ function App() {
             )}
           </div>
 
-          {/* Input Area */}
+          {/* Enhanced Input Area */}
           <div className="border-t border-gray-200 p-4">
             {!showWelcome && (
               <div className="mb-3 flex flex-wrap gap-2 items-center">
@@ -667,7 +950,6 @@ function App() {
                   rows="1"
                   disabled={isLoading}
                 />
-                {/* Voice Input Button */}
                 {voiceEnabled && voiceSupported && (
                   <button
                     onMouseDown={startVoiceRecording}
@@ -706,6 +988,17 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Tools Panel Overlay */}
+      {showToolsPanel && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-25 z-40"
+          onClick={() => setShowToolsPanel(false)}
+        />
+      )}
+
+      {/* Tools Panel */}
+      <ToolsPanel />
     </div>
   );
 }
