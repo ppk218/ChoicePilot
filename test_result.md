@@ -183,11 +183,11 @@ backend:
 frontend:
   - task: "Chat Interface"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -198,6 +198,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "The chat interface is now working correctly with the fallback mechanism. When the Claude API fails due to insufficient credits, the backend now returns demo responses that are category-specific and informative. The UI displays these responses properly with appropriate formatting and styling. The loading indicators work correctly, and the conversation history is maintained."
+      - working: false
+        agent: "user"
+        comment: "User reports critical issues: 1) AI doesn't remember previous responses in conversation, keeps asking same questions already answered 2) All conversations are in same chat thread, need to segregate different decisions into separate buckets/sessions"
 
   - task: "Category Selection"
     implemented: true
