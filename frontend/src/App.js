@@ -40,10 +40,27 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [currentDecisionTitle, setCurrentDecisionTitle] = useState("");
+  
+  // Voice-related state
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setSpeaking] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  
   const messagesEndRef = useRef(null);
+  const speechSynthesisRef = useRef(null);
 
   useEffect(() => {
     loadDecisions();
+    checkVoiceSupport();
+    return () => {
+      // Cleanup speech synthesis on component unmount
+      if (speechSynthesisRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -55,6 +72,92 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const checkVoiceSupport = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechSynthesisSupported = 'speechSynthesis' in window;
+    
+    if (SpeechRecognition && speechSynthesisSupported) {
+      setVoiceSupported(true);
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        setIsRecording(false);
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+        setIsRecording(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  };
+
+  const startVoiceRecording = () => {
+    if (recognition && !isListening) {
+      setIsRecording(true);
+      recognition.start();
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const speakText = (text, messageId) => {
+    if ('speechSynthesis' in window && text) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9; // Slightly slower for clarity
+      utterance.pitch = 1.0; // Neutral pitch
+      utterance.volume = 0.8; // Comfortable volume
+      utterance.lang = 'en-US'; // Neutral English
+      
+      utterance.onstart = () => {
+        setSpeaking(messageId);
+      };
+      
+      utterance.onend = () => {
+        setSpeaking(false);
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setSpeaking(false);
+      };
+      
+      speechSynthesisRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -180,11 +283,13 @@ function App() {
     setSelectedCategory("general");
     setLlmPreference("auto");
     setAdvisorStyle("realist");
+    stopSpeaking(); // Stop any ongoing speech
   };
 
   const switchToDecision = (decision) => {
     setCurrentDecisionId(decision.decision_id);
     setShowWelcome(false);
+    stopSpeaking(); // Stop any ongoing speech when switching
   };
 
   const handleKeyPress = (e) => {
@@ -198,9 +303,36 @@ function App() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const VoiceControls = () => (
+    <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-blue-800">🎤 Voice Features</span>
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={voiceEnabled}
+              onChange={(e) => setVoiceEnabled(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-sm text-blue-700">Enable Voice</span>
+          </label>
+        </div>
+        {voiceEnabled && (
+          <div className="text-xs text-blue-600">
+            Hold mic button to speak • Click speaker icons to hear responses
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const SettingsPanel = () => (
     <div className="mb-6 p-4 bg-gray-50 rounded-xl">
       <h3 className="text-sm font-medium text-gray-700 mb-4">Decision Settings</h3>
+      
+      {/* Voice Controls */}
+      {voiceSupported && <VoiceControls />}
       
       {/* Category Selection */}
       <div className="mb-4">
@@ -313,13 +445,13 @@ function App() {
           Welcome to <span className="text-blue-600">ChoicePilot</span>
         </h1>
         <p className="text-xl text-gray-600">Your Personal AI Guide for Stress-Free Decisions</p>
-        <p className="text-sm text-gray-500">Now with intelligent AI routing and advisor personalities</p>
+        <p className="text-sm text-gray-500">Now with voice input and intelligent AI routing</p>
       </div>
       
       <div className="max-w-2xl mx-auto space-y-4 text-gray-700">
         <p className="text-lg">
           Stop struggling with decision fatigue. Get personalized, actionable recommendations 
-          from our advanced AI system.
+          from our advanced AI system with voice capabilities.
         </p>
         
         <div className="grid md:grid-cols-3 gap-4 text-sm">
@@ -329,9 +461,9 @@ function App() {
             <p className="text-blue-700">Claude for logic & analysis, GPT-4o for creativity & conversation</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">🔍</div>
-            <h3 className="font-semibold text-green-900">Advisor Personalities</h3>
-            <p className="text-green-700">Choose optimistic, realistic, or skeptical decision guidance</p>
+            <div className="text-2xl mb-2">🎤</div>
+            <h3 className="font-semibold text-green-900">Voice Integration</h3>
+            <p className="text-green-700">Speak your questions and hear responses with natural voice</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">⚡</div>
@@ -380,6 +512,7 @@ function App() {
               <h1 className="text-xl font-bold text-gray-900">ChoicePilot</h1>
               <p className="text-sm text-gray-500">
                 {currentDecisionTitle ? currentDecisionTitle : "AI Decision Assistant"}
+                {voiceEnabled && <span className="ml-2 text-blue-600">🎤</span>}
               </p>
             </div>
           </div>
@@ -425,7 +558,25 @@ function App() {
                           : 'bg-gray-100 text-gray-800 rounded-bl-lg'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap break-words">{message.text}</div>
+                      <div className="flex items-start justify-between">
+                        <div className="whitespace-pre-wrap break-words flex-1">{message.text}</div>
+                        {/* Voice Controls for AI messages */}
+                        {!message.isUser && !message.isError && voiceEnabled && (
+                          <div className="ml-3 flex-shrink-0">
+                            <button
+                              onClick={() => isSpeaking === message.id ? stopSpeaking() : speakText(message.text, message.id)}
+                              className={`p-1 rounded-full transition-colors ${
+                                isSpeaking === message.id 
+                                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                              }`}
+                              title={isSpeaking === message.id ? "Stop speaking" : "Listen to response"}
+                            >
+                              {isSpeaking === message.id ? "⏹️" : "🔊"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <div className={`text-xs mt-2 ${
                         message.isUser ? 'text-blue-100' : 'text-gray-500'
                       }`}>
@@ -491,6 +642,11 @@ function App() {
                 <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
                   {ADVISOR_STYLES[advisorStyle]?.icon} {ADVISOR_STYLES[advisorStyle]?.name}
                 </span>
+                {voiceEnabled && (
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                    🎤 Voice Enabled
+                  </span>
+                )}
                 <button
                   onClick={() => setShowSettings(!showSettings)}
                   className="text-xs text-blue-600 hover:text-blue-800 underline"
@@ -501,15 +657,36 @@ function App() {
             )}
             
             <div className="flex space-x-3">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`Ask your ${ADVISOR_STYLES[advisorStyle]?.name.toLowerCase()} advisor about your ${DECISION_CATEGORIES[selectedCategory]?.label.toLowerCase()} decision...`}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows="1"
-                disabled={isLoading}
-              />
+              <div className="flex-1 relative">
+                <textarea
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={`${voiceEnabled ? 'Type or speak your ' : 'Ask your '}${ADVISOR_STYLES[advisorStyle]?.name.toLowerCase()} advisor about your ${DECISION_CATEGORIES[selectedCategory]?.label.toLowerCase()} decision...`}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none pr-12"
+                  rows="1"
+                  disabled={isLoading}
+                />
+                {/* Voice Input Button */}
+                {voiceEnabled && voiceSupported && (
+                  <button
+                    onMouseDown={startVoiceRecording}
+                    onMouseUp={stopVoiceRecording}
+                    onMouseLeave={stopVoiceRecording}
+                    onTouchStart={startVoiceRecording}
+                    onTouchEnd={stopVoiceRecording}
+                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
+                      isRecording || isListening
+                        ? 'bg-red-500 text-white shadow-lg scale-110'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    }`}
+                    title="Hold to speak"
+                    disabled={isLoading}
+                  >
+                    {isListening ? "🎙️" : "🎤"}
+                  </button>
+                )}
+              </div>
               <button
                 onClick={sendMessage}
                 disabled={!inputMessage.trim() || isLoading}
@@ -520,8 +697,11 @@ function App() {
             </div>
             
             <div className="text-xs text-gray-500 mt-2 text-center">
-              Press Enter to send • Shift+Enter for new line • 
+              Press Enter to send • Shift+Enter for new line
+              {voiceEnabled && " • Hold mic button to speak"}
+              <br />
               Using {LLM_MODELS[llmPreference]?.name} with {ADVISOR_STYLES[advisorStyle]?.name} style
+              {voiceEnabled && " • Voice features enabled"}
             </div>
           </div>
         </div>
