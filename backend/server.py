@@ -19,6 +19,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
 import sys
+import io
 
 # Add the backend directory to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
