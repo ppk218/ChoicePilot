@@ -1,38 +1,198 @@
-.App {
-    text-align: center;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Custom animations */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.animate-bounce {
+  animation: bounce 1s infinite;
 }
 
-.App-link {
-    color: #61dafb;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Message animation */
+.message-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.message-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover effects */
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+/* Focus effects */
+textarea:focus {
+  outline: none;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading dots animation */
+@keyframes loading-dots {
+  0%, 20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%, 100% {
+    opacity: 0;
+  }
+}
+
+.loading-dot {
+  animation: loading-dots 1.4s infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium;
+}
+
+/* Message bubble styles */
+.message-bubble {
+  @apply p-4 rounded-2xl max-w-[80%] break-words;
+}
+
+.message-user {
+  @apply bg-blue-600 text-white rounded-br-lg;
+}
+
+.message-ai {
+  @apply bg-gray-100 text-gray-800 rounded-bl-lg;
+}
+
+.message-error {
+  @apply bg-red-50 text-red-800 border border-red-200 rounded-bl-lg;
+}
+
+/* Category selector styles */
+.category-button {
+  @apply p-3 rounded-lg text-xs font-medium transition-all duration-200 border-2;
+}
+
+.category-button-active {
+  @apply border-current scale-105 shadow-md;
+}
+
+.category-button-inactive {
+  @apply bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:scale-102;
+}
+
+/* Welcome screen styles */
+.welcome-feature {
+  @apply p-4 rounded-lg;
+}
+
+.welcome-feature-blue {
+  @apply bg-blue-50;
+}
+
+.welcome-feature-green {
+  @apply bg-green-50;
+}
+
+.welcome-feature-purple {
+  @apply bg-purple-50;
+}
+
+/* Chat container styles */
+.chat-container {
+  @apply bg-white rounded-xl shadow-sm min-h-[600px] flex flex-col;
+}
+
+.chat-messages {
+  @apply flex-1 p-6 overflow-y-auto max-h-[500px];
+}
+
+.chat-input-area {
+  @apply border-t border-gray-200 p-4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chat-container {
+    min-height: 70vh;
+  }
+  
+  .chat-messages {
+    max-height: 60vh;
+  }
+  
+  .message-bubble {
+    max-width: 90%;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles if needed */
 }
