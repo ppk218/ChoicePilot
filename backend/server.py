@@ -229,73 +229,73 @@ def generate_decision_title(message: str, category: str = None) -> str:
 def generate_demo_response(message: str, category: str = "general", user_preferences: dict = None, conversation_history: List[dict] = None) -> str:
     """Generate demo responses with conversation context when Claude API is unavailable"""
     
+    # Extract key information from conversation history
+    context_info = extract_conversation_context(conversation_history) if conversation_history else {}
+    
     # Check if this is a follow-up question based on conversation history
     if conversation_history and len(conversation_history) > 0:
         # This is a continuing conversation
         last_response = conversation_history[-1]['ai_response']
         
         # Create a context-aware response
-        response = f"Thank you for that additional information! Building on our previous discussion:\n\n"
+        response = f"Thank you for that additional information! Building on our previous discussion"
+        
+        # Add specific context from previous messages
+        if context_info:
+            specific_refs = []
+            if 'budget' in context_info:
+                specific_refs.append(f"your ${context_info['budget']} budget")
+            if 'preferences' in context_info:
+                for pref in context_info['preferences'][:2]:  # Top 2 preferences
+                    specific_refs.append(f"your preference for {pref}")
+            if 'requirements' in context_info:
+                for req in context_info['requirements'][:2]:  # Top 2 requirements
+                    specific_refs.append(f"your need for {req}")
+            
+            if specific_refs:
+                response += f" where you mentioned {', '.join(specific_refs)}"
+        
+        response += ":\n\n"
         
         # Add context-specific follow-up based on what was discussed
-        if "budget" in message.lower():
-            response += "**Budget Considerations:**\nNow that you've mentioned your budget, I can provide more targeted recommendations..."
-        elif any(word in message.lower() for word in ["yes", "no", "prefer", "like", "don't like"]):
-            response += "**Based on Your Preferences:**\nGiven what you've shared, let me refine my recommendations..."
-        elif "tell me more" in message.lower() or "more details" in message.lower():
-            response += "**Detailed Analysis:**\nLet me provide more specific information about the options we discussed..."
+        if any(word in message.lower() for word in ["budget", "price", "cost", "money", "expensive", "cheap"]):
+            response += "**Budget-Focused Recommendations:**\n"
+            if context_info.get('budget'):
+                response += f"Within your {context_info['budget']} budget range, here are the best options:\n"
+            else:
+                response += "Now that you've mentioned budget considerations, here are cost-effective options:\n"
+        elif any(word in message.lower() for word in ["yes", "no", "prefer", "like", "don't like", "interested"]):
+            response += "**Based on Your Preferences:**\n"
+            response += "Given what you've shared about your preferences, let me refine my recommendations:\n"
+        elif any(phrase in message.lower() for phrase in ["tell me more", "more details", "explain", "elaborate"]):
+            response += "**Detailed Analysis:**\n"
+            response += "Let me provide more specific information about the options we discussed:\n"
+        elif any(word in message.lower() for word in ["specs", "specifications", "features", "performance"]):
+            response += "**Technical Specifications:**\n"
+            response += "Based on your technical requirements, here are the detailed specifications:\n"
         else:
-            response += "**Continuing Our Analysis:**\nTaking into account everything we've discussed so far..."
+            response += "**Continuing Our Analysis:**\n"
+            response += "Taking into account everything we've discussed so far:\n"
         
-        # Add relevant follow-up content based on category
+        # Add relevant follow-up content based on category and context
         if category == "consumer":
-            response += """
-Based on our conversation, here are more specific recommendations:
-
-**Top Recommendations:**
-1. **For your use case** - This aligns with what you mentioned about your needs
-2. **Within your parameters** - Considering the constraints we discussed
-3. **Best value option** - Balancing your priorities from our conversation
-
-**Next Steps:**
-- Compare these options against the criteria we established
-- Check current pricing and availability
-- Read recent reviews focusing on the aspects that matter to you
-
-Would you like me to dive deeper into any of these recommendations or help you compare specific models?"""
-        
+            response += generate_consumer_followup(context_info, message)
         elif category == "travel":
-            response += """
-Based on what we've discussed about your travel preferences:
-
-**Refined Recommendations:**
-1. **Destination match** - Aligns with your interests and travel style
-2. **Practical considerations** - Fits your timeline and budget parameters
-3. **Experience optimization** - Maximizes the type of experiences you're seeking
-
-**Planning Next Steps:**
-- Research the best time to visit based on your schedule
-- Look into accommodation options that match your preferences
-- Plan activities that align with what you've told me you enjoy
-
-What specific aspect of the trip planning would you like to focus on next?"""
-        
+            response += generate_travel_followup(context_info, message)
+        elif category == "career":
+            response += generate_career_followup(context_info, message)
+        elif category == "education":
+            response += generate_education_followup(context_info, message)
+        elif category == "lifestyle":
+            response += generate_lifestyle_followup(context_info, message)
+        elif category == "entertainment":
+            response += generate_entertainment_followup(context_info, message)
+        elif category == "financial":
+            response += generate_financial_followup(context_info, message)
         else:
-            response += """
-Considering everything we've covered in our conversation:
-
-**Updated Recommendations:**
-1. **Personalized for you** - Based on the preferences you've shared
-2. **Practical approach** - Considering your specific situation
-3. **Next level strategy** - Building on the foundation we've established
-
-**Action Items:**
-- Take the next step we discussed
-- Consider the factors that are most important to you
-- Move forward with confidence based on our analysis
-
-Is there a particular aspect you'd like to explore further or are you ready to move forward with a decision?"""
+            response += generate_general_followup(context_info, message)
         
+        # Add reference to ongoing conversation
         response += f"\n\n*This response builds on our ongoing conversation about your {category} decision.*"
         
     else:
@@ -483,6 +483,184 @@ What specific financial decision are you working on, and what's your investment 
     # Add a note about the demo mode
     if category != "general":
         response += f"\n\n**Category:** {DECISION_CATEGORIES.get(category, category).title()}"
+    
+    return response
+
+def extract_conversation_context(conversation_history: List[dict]) -> dict:
+    """Extract key information from conversation history"""
+    context = {
+        'budget': None,
+        'preferences': [],
+        'requirements': [],
+        'concerns': [],
+        'timeline': None
+    }
+    
+    if not conversation_history:
+        return context
+    
+    # Combine all user messages for analysis
+    all_user_text = " ".join([conv['user_message'].lower() for conv in conversation_history])
+    
+    # Extract budget information
+    import re
+    budget_patterns = [
+        r'\$([0-9,]+)',
+        r'([0-9,]+)\s*dollars?',
+        r'budget.*?([0-9,]+)',
+        r'under\s*\$?([0-9,]+)',
+        r'around\s*\$?([0-9,]+)'
+    ]
+    
+    for pattern in budget_patterns:
+        match = re.search(pattern, all_user_text)
+        if match:
+            context['budget'] = match.group(1).replace(',', '')
+            break
+    
+    # Extract preferences (brand names, product types, features)
+    preference_keywords = [
+        'macbook', 'dell', 'hp', 'lenovo', 'thinkpad', 'surface', 'asus',
+        'programming', 'gaming', 'design', 'work', 'business', 'personal',
+        'portable', 'lightweight', 'powerful', 'fast', 'reliable',
+        'prefer', 'like', 'want', 'need', 'looking for'
+    ]
+    
+    for keyword in preference_keywords:
+        if keyword in all_user_text:
+            context['preferences'].append(keyword)
+    
+    # Extract requirements
+    requirement_keywords = [
+        '16gb', '32gb', 'ram', 'memory', 'ssd', 'storage', 'intel', 'amd', 'processor',
+        'screen size', 'battery life', 'warranty', 'support'
+    ]
+    
+    for keyword in requirement_keywords:
+        if keyword in all_user_text:
+            context['requirements'].append(keyword)
+    
+    # Extract timeline information
+    timeline_patterns = [
+        r'by ([a-z]+ [0-9]+)',
+        r'within ([0-9]+ [a-z]+)',
+        r'need.*?([a-z]+)',
+        r'asap|urgent|soon|immediately'
+    ]
+    
+    for pattern in timeline_patterns:
+        match = re.search(pattern, all_user_text)
+        if match:
+            context['timeline'] = match.group(0)
+            break
+    
+    return context
+
+def generate_consumer_followup(context_info: dict, message: str) -> str:
+    """Generate consumer category follow-up responses"""
+    response = ""
+    
+    if context_info.get('budget'):
+        response += f"**Within your ${context_info['budget']} budget:**\n"
+        budget_num = int(context_info['budget'].replace(',', ''))
+        if budget_num >= 2000:
+            response += "- **MacBook Pro 14\" M3** - Premium performance for development\n"
+            response += "- **Dell XPS 15** - Excellent Windows alternative with dedicated graphics\n"
+            response += "- **ThinkPad X1 Carbon** - Business-grade build quality\n"
+        elif budget_num >= 1000:
+            response += "- **MacBook Air M3** - Great balance of performance and portability\n"
+            response += "- **Dell XPS 13** - Compact and powerful\n"
+            response += "- **ASUS ZenBook** - Good value with solid performance\n"
+        else:
+            response += "- **Refurbished MacBook Air** - Apple quality at lower cost\n"
+            response += "- **Acer Swift 3** - Best value in this price range\n"
+            response += "- **Lenovo IdeaPad** - Reliable and affordable\n"
+    
+    if 'macbook' in context_info.get('preferences', []):
+        response += "\n**Since you prefer MacBook:**\n"
+        response += "- The M3 chip offers excellent performance for programming\n"
+        response += "- macOS provides great development tools and Unix environment\n"
+        response += "- Consider AppleCare+ for extended warranty coverage\n"
+    
+    if 'programming' in context_info.get('preferences', []):
+        response += "\n**For programming specifically:**\n"
+        response += "- Prioritize at least 16GB RAM for smooth multitasking\n"
+        response += "- SSD storage is essential for fast compilation\n"
+        response += "- Consider multiple monitor support for productivity\n"
+    
+    response += "\n**Next steps based on our discussion:**\n"
+    response += "- Compare the specific models that fit your criteria\n"
+    response += "- Check current promotions and educational discounts\n"
+    response += "- Read recent reviews focusing on programming performance\n"
+    
+    return response
+
+def generate_travel_followup(context_info: dict, message: str) -> str:
+    """Generate travel category follow-up responses"""
+    response = "**Based on your travel preferences:**\n"
+    
+    if context_info.get('budget'):
+        response += f"With your ${context_info['budget']} budget:\n"
+        response += "- I can recommend destinations that fit this range\n"
+        response += "- We can prioritize experiences vs. luxury accommodations\n"
+    
+    response += "- Let me refine destination suggestions based on what you've shared\n"
+    response += "- Consider the best travel dates for your preferred activities\n"
+    response += "- Plan the right balance of scheduled vs. spontaneous time\n"
+    
+    return response
+
+def generate_career_followup(context_info: dict, message: str) -> str:
+    """Generate career category follow-up responses"""
+    response = "**Considering your career priorities:**\n"
+    response += "- Let's weigh the options against your long-term goals\n"
+    response += "- Consider both immediate and future growth opportunities\n"
+    response += "- Factor in work-life balance and company culture fit\n"
+    
+    return response
+
+def generate_education_followup(context_info: dict, message: str) -> str:
+    """Generate education category follow-up responses"""
+    response = "**For your educational decision:**\n"
+    response += "- Let's compare the ROI of different options\n"
+    response += "- Consider how each program fits your schedule\n"
+    response += "- Evaluate the practical skills vs. theoretical knowledge balance\n"
+    
+    return response
+
+def generate_lifestyle_followup(context_info: dict, message: str) -> str:
+    """Generate lifestyle category follow-up responses"""
+    response = "**For your lifestyle change:**\n"
+    response += "- Let's create a sustainable implementation plan\n"
+    response += "- Start with small, manageable steps\n"
+    response += "- Consider your current schedule and constraints\n"
+    
+    return response
+
+def generate_entertainment_followup(context_info: dict, message: str) -> str:
+    """Generate entertainment category follow-up responses"""
+    response = "**For your entertainment choice:**\n"
+    response += "- Based on your preferences, here are tailored recommendations\n"
+    response += "- Consider your current mood and available time\n"
+    response += "- I can suggest similar options if you enjoyed previous recommendations\n"
+    
+    return response
+
+def generate_financial_followup(context_info: dict, message: str) -> str:
+    """Generate financial category follow-up responses"""
+    response = "**For your financial decision:**\n"
+    response += "- Let's consider your risk tolerance and timeline\n"
+    response += "- Evaluate the tax implications of different options\n"
+    response += "- Consider diversification and long-term growth potential\n"
+    
+    return response
+
+def generate_general_followup(context_info: dict, message: str) -> str:
+    """Generate general category follow-up responses"""
+    response = "**Continuing our decision analysis:**\n"
+    response += "- Let's build on the information you've provided\n"
+    response += "- Consider the factors that are most important to you\n"
+    response += "- Weigh the pros and cons of each option systematically\n"
     
     return response
 
