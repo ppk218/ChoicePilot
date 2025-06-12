@@ -1116,6 +1116,41 @@ function MainApp() {
           </div>
         </div>
       </div>
+
+      {/* Billing Dashboard Modal */}
+      {showBillingDashboard && (
+        <BillingDashboard
+          user={user}
+          subscriptionInfo={subscriptionInfo}
+          onClose={() => {
+            setShowBillingDashboard(false);
+            loadSubscriptionInfo(); // Refresh subscription info after billing operations
+          }}
+        />
+      )}
+
+      {/* Payment Success Modal */}
+      {showPaymentSuccess && (
+        <PaymentSuccess
+          onClose={() => {
+            setShowPaymentSuccess(false);
+            loadSubscriptionInfo(); // Refresh subscription info after successful payment
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }}
+        />
+      )}
+
+      {/* Payment Error Modal */}
+      {showPaymentError && (
+        <PaymentError
+          onClose={() => {
+            setShowPaymentError(false);
+            // Clear URL parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }}
+        />
+      )}
     </div>
   );
 }
