@@ -990,6 +990,380 @@ I suggest taking a structured approach that aligns with your {advisor_style} nee
     
     return response
 
+# Payment and Billing Endpoints
+@api_router.post("/payments/create-payment-link", response_model=PaymentResponse)
+async def create_payment_link(request: PaymentRequest, current_user: dict = Depends(get_current_user)):
+    """Create a payment link for credit pack purchase"""
+    try:
+        if not dodo_payments:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Payment service not available")
+        
+        # Validate product
+        if request.product_id not in CREDIT_PACKS:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Invalid product ID: {request.product_id}")
+        
+        # Create payment link
+        payment_response = await dodo_payments.create_payment_link(
+            request, 
+            current_user["id"],
+            f"{FRONTEND_URL}/billing/success"
+        )
+        
+        # Store payment record
+        product = CREDIT_PACKS[request.product_id]
+        payment_doc = PaymentDocument(
+            payment_id=payment_response.payment_id,
+            user_id=current_user["id"],
+            user_email=request.user_email,
+            product_id=request.product_id,
+            product_name=product["name"],
+            amount=payment_response.amount,
+            quantity=request.quantity,
+            credits_amount=product["credits"] * request.quantity,
+            status="pending",
+            metadata={
+                "payment_link": payment_response.payment_link,
+                "dodo_product_id": product["id"]
+            }
+        )
+        
+        await db.payments.insert_one(payment_doc.dict())
+        
+        return payment_response
+        
+    except Exception as e:
+        logging.error(f"Error creating payment link: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to create payment link: {str(e)}")
+
+@api_router.post("/payments/create-subscription", response_model=SubscriptionResponse)
+async def create_subscription(request: SubscriptionRequest, current_user: dict = Depends(get_current_user)):
+    """Create a Pro plan subscription"""
+    try:
+        if not dodo_payments:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Payment service not available")
+        
+        # Check if user already has active subscription
+        existing_sub = await db.subscriptions.find_one({
+            "user_id": current_user["id"],
+            "status": {"$in": ["active", "trialing"]}
+        })
+        
+        if existing_sub:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "User already has an active subscription")
+        
+        # Create subscription
+        subscription_response = await dodo_payments.create_subscription(
+            request,
+            current_user["id"],
+            f"{FRONTEND_URL}/billing/success"
+        )
+        
+        # Store subscription record
+        plan = SUBSCRIPTION_PRODUCTS[request.plan_id]
+        subscription_doc = SubscriptionDocument(
+            subscription_id=subscription_response.subscription_id,
+            user_id=current_user["id"],
+            user_email=request.user_email,
+            plan_id=request.plan_id,
+            plan_name=plan["name"],
+            amount=plan["price"],
+            billing_cycle=request.billing_cycle,
+            status="active",
+            current_period_start=datetime.utcnow(),
+            current_period_end=subscription_response.current_period_end
+        )
+        
+        await db.subscriptions.insert_one(subscription_doc.dict())
+        
+        # Upgrade user to Pro plan
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"plan": "pro", "subscription_expires": subscription_response.current_period_end}}
+        )
+        
+        return subscription_response
+        
+    except Exception as e:
+        logging.error(f"Error creating subscription: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to create subscription: {str(e)}")
+
+@api_router.get("/payments/billing-history")
+async def get_billing_history(current_user: dict = Depends(get_current_user)):
+    """Get user's billing history including payments and subscriptions"""
+    try:
+        # Get payments
+        payments_cursor = db.payments.find({"user_id": current_user["id"]}).sort("created_at", -1)
+        payments = await payments_cursor.to_list(50)
+        
+        # Get subscriptions
+        subscriptions_cursor = db.subscriptions.find({"user_id": current_user["id"]}).sort("created_at", -1)
+        subscriptions = await subscriptions_cursor.to_list(10)
+        
+        # Find active subscription
+        active_subscription = None
+        for sub in subscriptions:
+            if sub.get("status") == "active":
+                active_subscription = sub
+                break
+        
+        # Calculate total spent
+        total_spent = 0
+        for payment in payments:
+            if payment.get("status") == "succeeded":
+                total_spent += float(payment.get("amount", 0))
+        
+        for sub in subscriptions:
+            if sub.get("status") in ["active", "cancelled"]:
+                total_spent += float(sub.get("amount", 0))
+        
+        # Clean up ObjectIds
+        for payment in payments:
+            if "_id" in payment:
+                payment["_id"] = str(payment["_id"])
+        
+        for sub in subscriptions:
+            if "_id" in sub:
+                sub["_id"] = str(sub["_id"])
+        
+        if active_subscription and "_id" in active_subscription:
+            active_subscription["_id"] = str(active_subscription["_id"])
+        
+        return {
+            "payments": payments,
+            "subscriptions": subscriptions,
+            "active_subscription": active_subscription,
+            "total_spent": total_spent
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting billing history: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve billing history")
+
+@api_router.get("/payments/credit-packs")
+async def get_credit_packs():
+    """Get available credit packs"""
+    return {"credit_packs": CREDIT_PACKS}
+
+@api_router.get("/payments/subscription-plans")
+async def get_subscription_plans():
+    """Get available subscription plans"""
+    return {"subscription_plans": SUBSCRIPTION_PRODUCTS}
+
+@api_router.post("/payments/cancel-subscription")
+async def cancel_subscription(current_user: dict = Depends(get_current_user)):
+    """Cancel user's active subscription"""
+    try:
+        # Find active subscription
+        subscription = await db.subscriptions.find_one({
+            "user_id": current_user["id"],
+            "status": "active"
+        })
+        
+        if not subscription:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No active subscription found")
+        
+        # Cancel with Dodo Payments if we have the subscription ID
+        if subscription.get("dodo_subscription_id") and dodo_payments:
+            success = await dodo_payments.cancel_subscription(subscription["dodo_subscription_id"])
+            if not success:
+                raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to cancel subscription with payment provider")
+        
+        # Update subscription status
+        await db.subscriptions.update_one(
+            {"id": subscription["id"]},
+            {
+                "$set": {
+                    "status": "cancelled",
+                    "cancel_at_period_end": True,
+                    "cancelled_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Downgrade user to free plan at period end
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"plan": "free"}}
+        )
+        
+        return {"message": "Subscription cancelled successfully"}
+        
+    except Exception as e:
+        logging.error(f"Error cancelling subscription: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to cancel subscription: {str(e)}")
+
+@api_router.post("/webhooks/dodo", include_in_schema=False)
+async def handle_dodo_webhook(request):
+    """Handle webhooks from Dodo Payments"""
+    try:
+        body = await request.body()
+        signature = request.headers.get("webhook-signature", "")
+        timestamp = request.headers.get("webhook-timestamp", "")
+        
+        # Verify webhook signature
+        if dodo_payments and not await dodo_payments.verify_webhook_signature(body, signature, timestamp):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook signature")
+        
+        payload = await request.json()
+        event_type = payload.get("type")
+        data = payload.get("data", {})
+        
+        logging.info(f"Received Dodo webhook: {event_type}")
+        
+        if event_type == "payment.succeeded":
+            await process_successful_payment(data)
+        elif event_type == "payment.failed":
+            await process_failed_payment(data)
+        elif event_type == "subscription.created":
+            await process_subscription_created(data)
+        elif event_type == "subscription.cancelled":
+            await process_subscription_cancelled(data)
+        elif event_type == "subscription.updated":
+            await process_subscription_updated(data)
+        
+        return {"status": "received"}
+        
+    except Exception as e:
+        logging.error(f"Error processing webhook: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Webhook processing failed")
+
+async def process_successful_payment(data: dict):
+    """Process successful payment webhook"""
+    try:
+        payment_id = data.get("payment_id") or data.get("id")
+        
+        # Find payment record
+        payment = await db.payments.find_one({"dodo_payment_id": payment_id})
+        if not payment:
+            logging.warning(f"Payment not found for Dodo payment ID: {payment_id}")
+            return
+        
+        # Update payment status
+        await db.payments.update_one(
+            {"id": payment["id"]},
+            {
+                "$set": {
+                    "status": "succeeded",
+                    "updated_at": datetime.utcnow(),
+                    "payment_method": data.get("payment_method")
+                }
+            }
+        )
+        
+        # Add credits to user account
+        if payment.get("credits_amount", 0) > 0:
+            await db.users.update_one(
+                {"id": payment["user_id"]},
+                {"$inc": {"credits": payment["credits_amount"]}}
+            )
+            
+        logging.info(f"Payment processed successfully: {payment_id}")
+        
+    except Exception as e:
+        logging.error(f"Error processing successful payment: {str(e)}")
+
+async def process_failed_payment(data: dict):
+    """Process failed payment webhook"""
+    try:
+        payment_id = data.get("payment_id") or data.get("id")
+        
+        await db.payments.update_one(
+            {"dodo_payment_id": payment_id},
+            {
+                "$set": {
+                    "status": "failed",
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logging.info(f"Payment marked as failed: {payment_id}")
+        
+    except Exception as e:
+        logging.error(f"Error processing failed payment: {str(e)}")
+
+async def process_subscription_created(data: dict):
+    """Process subscription created webhook"""
+    try:
+        subscription_id = data.get("subscription_id") or data.get("id")
+        
+        # Find subscription record
+        subscription = await db.subscriptions.find_one({"dodo_subscription_id": subscription_id})
+        if not subscription:
+            logging.warning(f"Subscription not found for Dodo subscription ID: {subscription_id}")
+            return
+        
+        # Upgrade user to Pro plan
+        await db.users.update_one(
+            {"id": subscription["user_id"]},
+            {"$set": {"plan": "pro"}}
+        )
+        
+        await db.subscriptions.update_one(
+            {"id": subscription["id"]},
+            {
+                "$set": {
+                    "status": "active",
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logging.info(f"Subscription activated: {subscription_id}")
+        
+    except Exception as e:
+        logging.error(f"Error processing subscription created: {str(e)}")
+
+async def process_subscription_cancelled(data: dict):
+    """Process subscription cancelled webhook"""
+    try:
+        subscription_id = data.get("subscription_id") or data.get("id")
+        
+        # Update subscription status
+        await db.subscriptions.update_one(
+            {"dodo_subscription_id": subscription_id},
+            {
+                "$set": {
+                    "status": "cancelled",
+                    "cancelled_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Find user and downgrade to free plan
+        subscription = await db.subscriptions.find_one({"dodo_subscription_id": subscription_id})
+        if subscription:
+            await db.users.update_one(
+                {"id": subscription["user_id"]},
+                {"$set": {"plan": "free"}}
+            )
+        
+        logging.info(f"Subscription cancelled: {subscription_id}")
+        
+    except Exception as e:
+        logging.error(f"Error processing subscription cancelled: {str(e)}")
+
+async def process_subscription_updated(data: dict):
+    """Process subscription updated webhook"""
+    try:
+        subscription_id = data.get("subscription_id") or data.get("id")
+        
+        await db.subscriptions.update_one(
+            {"dodo_subscription_id": subscription_id},
+            {
+                "$set": {
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logging.info(f"Subscription updated: {subscription_id}")
+        
+    except Exception as e:
+        logging.error(f"Error processing subscription updated: {str(e)}")
+
 # Legacy endpoints for compatibility
 @api_router.get("/")
 async def root():
