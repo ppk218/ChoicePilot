@@ -249,12 +249,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Claude AI Integration"
-    - "Chat API Endpoint"
     - "Chat Interface"
-    - "Category Selection"
-  stuck_tasks: []
-  test_all: true
+  stuck_tasks:
+    - "Chat Interface"
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
