@@ -65,6 +65,42 @@ def run_test(test_name, test_func):
         print(f"❌ Test ERROR: {test_name} - {str(e)}")
         return False
 
+# Authentication helper functions
+def register_test_user():
+    """Register a test user and return the auth token"""
+    try:
+        # Check if user already exists by trying to login
+        login_response = requests.post(f"{API_URL}/auth/login", json=TEST_USER)
+        if login_response.status_code == 200:
+            # User exists, return token
+            return login_response.json().get("access_token")
+        
+        # User doesn't exist, register
+        register_response = requests.post(f"{API_URL}/auth/register", json=TEST_USER)
+        if register_response.status_code == 200:
+            return register_response.json().get("access_token")
+        else:
+            print(f"Failed to register test user: {register_response.status_code} - {register_response.text}")
+            return None
+    except Exception as e:
+        print(f"Error registering test user: {str(e)}")
+        return None
+
+def get_auth_headers(token=None):
+    """Get authorization headers for authenticated requests"""
+    global AUTH_TOKEN
+    
+    if token:
+        AUTH_TOKEN = token
+    elif not AUTH_TOKEN:
+        AUTH_TOKEN = register_test_user()
+    
+    if not AUTH_TOKEN:
+        print("Warning: No auth token available")
+        return {}
+    
+    return {"Authorization": f"Bearer {AUTH_TOKEN}"}
+
 # Mock response generator for Claude AI
 def generate_mock_claude_response(message, category=None):
     """Generate a mock response based on the message and category"""
