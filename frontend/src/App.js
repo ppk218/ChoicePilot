@@ -806,9 +806,9 @@ function App() {
             <p className="text-blue-700">Claude for logic & analysis, GPT-4o for creativity & conversation</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-2xl mb-2">🎤</div>
-            <h3 className="font-semibold text-green-900">Voice Integration</h3>
-            <p className="text-green-700">Speak your questions and hear responses with natural voice</p>
+            <div className="text-2xl mb-2">🎭</div>
+            <h3 className="font-semibold text-green-900">8 Advisor Personalities</h3>
+            <p className="text-green-700">From Creative to Analytical, each with unique decision-making styles</p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-2xl mb-2">📊</div>
