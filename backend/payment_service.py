@@ -103,12 +103,13 @@ class DodoPaymentsService:
             plan = SUBSCRIPTION_PRODUCTS[request.plan_id]
             
             # For Dodo Payments, we'll use their subscription API
+            customer_data = {"email": request.user_email}
+            if request.customer_info:
+                customer_data.update(request.customer_info)
+                
             subscription_data = {
                 "product_id": plan["id"],  # This should be the actual Dodo subscription product ID
-                "customer": {
-                    "email": request.user_email,
-                    **request.customer_info if request.customer_info else {}
-                },
+                "customer": customer_data,
                 "billing_cycle": request.billing_cycle,
                 "metadata": json.dumps({
                     "user_id": user_id,
