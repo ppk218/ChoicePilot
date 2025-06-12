@@ -712,7 +712,7 @@ function MainApp() {
     
     return (
       <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 relative">
-        {!isProUser && <ProFeatureLock feature="Voice features" onUpgrade={() => {}} />}
+        {!isProUser && <ProFeatureLock feature="Voice features" onUpgrade={() => setShowBillingDashboard(true)} />}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <span className="text-sm font-medium text-blue-800">🎤 Voice Features</span>
