@@ -868,10 +868,10 @@ function MainApp() {
               </div>
             </div>
             <button
-              onClick={() => setShowToolsPanel(true)}
-              className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors duration-200 text-sm font-medium"
+              onClick={() => setShowBillingDashboard(true)}
+              className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors duration-200 text-sm font-medium"
             >
-              📊 Tools
+              💳 Billing
             </button>
             <button
               onClick={() => setShowSettings(!showSettings)}
