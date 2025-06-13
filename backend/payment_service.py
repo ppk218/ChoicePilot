@@ -164,24 +164,27 @@ class DodoPaymentsService:
             raise
     
     async def verify_webhook_signature(self, payload: bytes, signature: str, timestamp: str) -> bool:
-        """Verify webhook signature from Dodo Payments"""
+        """Verify webhook signature from Dodo Payments with proper security"""
         try:
-            # Implement webhook signature verification
-            # This would use the webhook secret to verify the signature
             webhook_secret = os.getenv("DODO_WEBHOOK_SECRET")
             
-            # For now, we'll implement basic verification
-            # In production, you'd use the standardwebhooks library
-            import hmac
-            import hashlib
+            if not webhook_secret:
+                logger.error("DODO_WEBHOOK_SECRET not configured")
+                return False
             
+            # Remove 'whsec_' prefix if present
+            if webhook_secret.startswith('whsec_'):
+                webhook_secret = webhook_secret[6:]
+            
+            # Create expected signature using HMAC-SHA256
             expected_signature = hmac.new(
-                webhook_secret.encode(),
+                webhook_secret.encode('utf-8'),
                 payload,
                 hashlib.sha256
             ).hexdigest()
             
-            return hmac.compare_digest(signature, expected_signature)
+            # Use constant-time comparison to prevent timing attacks
+            return hmac.compare_digest(expected_signature, signature)
             
         except Exception as e:
             logger.error(f"Error verifying webhook signature: {str(e)}")
