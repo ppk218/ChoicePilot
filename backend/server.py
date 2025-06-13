@@ -1328,23 +1328,46 @@ async def cancel_subscription(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to cancel subscription: {str(e)}")
 
 @api_router.post("/webhooks/dodo", include_in_schema=False)
-async def handle_dodo_webhook(request):
-    """Handle webhooks from Dodo Payments"""
+async def handle_dodo_webhook(request: Request):
+    """Handle webhooks from Dodo Payments with enhanced security"""
     try:
         body = await request.body()
         signature = request.headers.get("webhook-signature", "")
         timestamp = request.headers.get("webhook-timestamp", "")
         
+        # Enhanced webhook verification
+        if not signature or not timestamp:
+            logger.warning("Webhook received without proper signature headers")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing webhook signature")
+        
+        # Check timestamp to prevent replay attacks
+        try:
+            webhook_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            time_diff = datetime.utcnow() - webhook_time
+            if time_diff.total_seconds() > 300:  # 5 minutes tolerance
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Webhook timestamp too old")
+        except ValueError:
+            logger.warning(f"Invalid webhook timestamp: {timestamp}")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook timestamp")
+        
         # Verify webhook signature
         if dodo_payments and not await dodo_payments.verify_webhook_signature(body, signature, timestamp):
+            logger.warning("Webhook signature verification failed")
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook signature")
         
-        payload = await request.json()
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON in webhook payload")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid JSON payload")
+        
         event_type = payload.get("type")
         data = payload.get("data", {})
         
-        logging.info(f"Received Dodo webhook: {event_type}")
+        # Log webhook received
+        logger.info(f"Verified Dodo webhook received: {event_type}")
         
+        # Process webhook events
         if event_type == "payment.succeeded":
             await process_successful_payment(data)
         elif event_type == "payment.failed":
@@ -1355,11 +1378,15 @@ async def handle_dodo_webhook(request):
             await process_subscription_cancelled(data)
         elif event_type == "subscription.updated":
             await process_subscription_updated(data)
+        else:
+            logger.warning(f"Unknown webhook event type: {event_type}")
         
-        return {"status": "received"}
+        return {"status": "received", "event_type": event_type}
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logging.error(f"Error processing webhook: {str(e)}")
+        logger.error(f"Error processing webhook: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Webhook processing failed")
 
 async def process_successful_payment(data: dict):
