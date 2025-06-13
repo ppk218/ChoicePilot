@@ -156,45 +156,62 @@ class EmailService:
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify Your ChoicePilot Account</title>
+            <title>Verify Your getgingee Account</title>
         </head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">🎯 ChoicePilot</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Your AI Decision Assistant</p>
+        <body style="font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #2C2C2E; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FFF8F0;">
+            <div style="background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #FFF8F0; margin: 0; font-size: 32px; font-weight: bold;">🌶️ getgingee</h1>
+                <p style="color: rgba(255,248,240,0.9); margin: 10px 0 0 0; font-size: 18px;">Talk it out. Think it through. Getgingee it.</p>
             </div>
             
-            <div style="background: #f8fafc; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
-                <h2 style="color: #2d3748; margin-top: 0;">Welcome, {user_name}! 👋</h2>
-                <p style="font-size: 16px; margin-bottom: 25px;">
-                    Thank you for joining ChoicePilot! We're excited to help you make better decisions with the power of AI.
+            <div style="background: #FFF8F0; padding: 30px; border-radius: 16px; margin-bottom: 30px; border: 2px solid #C6F6D5;">
+                <h2 style="color: #2C2C2E; margin-top: 0;">Welcome, {user_name}! 👋</h2>
+                <p style="font-size: 16px; margin-bottom: 25px; color: #2C2C2E;">
+                    Thanks for joining the getgingee crew! We're excited to help you make spicy smart decisions with your AI squad.
                 </p>
                 
-                <div style="background: white; padding: 25px; border-radius: 8px; border-left: 4px solid #667eea; margin: 25px 0;">
-                    <p style="margin: 0 0 15px 0; font-weight: 600;">Your verification code:</p>
-                    <div style="font-size: 32px; font-weight: bold; color: #667eea; text-align: center; letter-spacing: 8px; font-family: 'Courier New', monospace; background: #f7fafc; padding: 15px; border-radius: 6px;">
+                <div style="background: white; padding: 25px; border-radius: 12px; border-left: 4px solid #F15A29; margin: 25px 0;">
+                    <p style="margin: 0 0 15px 0; font-weight: 600; color: #2C2C2E;">Your verification code:</p>
+                    <div style="font-size: 32px; font-weight: bold; color: #F15A29; text-align: center; letter-spacing: 8px; font-family: 'Courier New', monospace; background: #FFF8F0; padding: 15px; border-radius: 8px; border: 2px dashed #F15A29;">
                         {verification_code}
                     </div>
-                    <p style="margin: 15px 0 0 0; font-size: 14px; color: #666;">
-                        This code will expire in 24 hours. Enter it in the ChoicePilot app to verify your account.
+                    <p style="margin: 15px 0 0 0; font-size: 14px; color: #2C2C2E;">
+                        This code will expire in 24 hours. Enter it in getgingee to activate your account and start making confident choices!
                     </p>
                 </div>
                 
-                <div style="margin: 25px 0;">
-                    <h3 style="color: #2d3748; margin-bottom: 15px;">🚀 What's Next?</h3>
-                    <ul style="padding-left: 20px; margin: 0;">
-                        <li style="margin-bottom: 8px;">Verify your account with the code above</li>
-                        <li style="margin-bottom: 8px;">Start making smarter decisions with AI guidance</li>
-                        <li style="margin-bottom: 8px;">Explore our 8 different advisor personalities</li>
-                        <li>Consider upgrading to Pro for unlimited decisions</li>
+                <div style="margin: 25px 0; background: #C6F6D5; padding: 20px; border-radius: 12px;">
+                    <h3 style="color: #2C2C2E; margin-bottom: 15px;">🚀 What's cooking in your Lite Bite plan:</h3>
+                    <ul style="padding-left: 20px; margin: 0; color: #2C2C2E;">
+                        <li style="margin-bottom: 8px;">🌶️ 3 spicy decisions per month</li>
+                        <li style="margin-bottom: 8px;">🤖 Chat with Grounded, your practical AI advisor</li>
+                        <li style="margin-bottom: 8px;">💬 Text-based decision brewing</li>
+                        <li>🧠 Smart AI-powered insights</li>
                     </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); padding: 20px; border-radius: 12px; margin: 25px 0;">
+                    <h3 style="color: #FFF8F0; margin: 0 0 15px 0;">✨ Want the Full Plate? Upgrade to Pro!</h3>
+                    <ul style="color: rgba(255,248,240,0.9); padding-left: 20px; margin: 0;">
+                        <li style="margin-bottom: 8px;">🚀 Unlimited decisions with extra spice</li>
+                        <li style="margin-bottom: 8px;">👥 Meet all 8 advisor personalities (Sunny, Spice, Twist & more!)</li>
+                        <li style="margin-bottom: 8px;">🎤 Voice input & output</li>
+                        <li style="margin-bottom: 8px;">📊 Advanced decision tools</li>
+                        <li>📄 PDF exports & sharing</li>
+                    </ul>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{os.environ.get('FRONTEND_URL')}" style="display: inline-block; background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); color: #FFF8F0; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px;">
+                        Let's Get Gingee! 🌶️
+                    </a>
                 </div>
             </div>
             
-            <div style="text-align: center; padding: 20px; color: #666; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 0 0 10px 0;">If you didn't create this account, please ignore this email.</p>
+            <div style="text-align: center; padding: 20px; color: #2C2C2E; border-top: 1px solid #C6F6D5;">
+                <p style="margin: 0 0 10px 0;">Didn't sign up? Just ignore this email - no worries!</p>
                 <p style="margin: 0; font-size: 14px;">
-                    © 2025 ChoicePilot. Making decisions easier with AI.
+                    © 2025 getgingee. Making confident choices — with a kick. 🌶️
                 </p>
             </div>
         </body>
