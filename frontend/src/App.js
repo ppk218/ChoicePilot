@@ -360,7 +360,6 @@ function MainApp() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
   
   // Voice-related state
   const [voiceEnabled, setVoiceEnabled] = useState(false);
