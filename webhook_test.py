@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 
 # Use local server for testing
-API_URL = "http://localhost:8001/api"
+API_URL = "http://localhost:8002/api"
 print(f"Using API URL: {API_URL}")
 
 # Webhook secret from backend/.env
