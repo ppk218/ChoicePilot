@@ -103,4 +103,4 @@ def verify_webhook_signature(payload: bytes, signature: str, timestamp: str) -> 
         return False
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8002)
