@@ -187,6 +187,28 @@ const ADVISOR_STYLES = {
   }
 };
 
+// Subscription Plans with getgingee branding
+const SUBSCRIPTION_PLANS = {
+  free: {
+    name: "Lite Bite",
+    price: 0,
+    monthlyDecisions: 3,
+    features: ["Basic GPT-4o chat", "1 advisor persona (Grounded)", "Text input only"],
+    restrictions: ["No voice", "No exports", "No tools panel", "No AI model selection"]
+  },
+  pro: {
+    name: "Full Plate", 
+    price: 12.00,
+    monthlyDecisions: -1,  // Unlimited
+    features: [
+      "Unlimited decisions", "All 8 advisor personas", "Voice input/output",
+      "Claude + GPT-4o smart switching", "Visual tools panel", "PDF exports",
+      "Decision scoring matrix", "Smart simulations"
+    ],
+    restrictions: []
+  }
+};
+
 // Login/Register Component
 const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
   const [email, setEmail] = useState("");
