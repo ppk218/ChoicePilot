@@ -1162,7 +1162,7 @@ def generate_demo_response(message: str, category: str = "general", user_prefere
     
     advisor_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
     
-    response = f"As your {advisor_config['name']} Advisor, I'm here to help! {advisor_config['motto']}\n\n"
+    response = f"As your getgingee {advisor_config['name']} Advisor, I'm here to help! {advisor_config['motto']}\n\n"
     
     if advisor_style == "optimistic":
         response += "This is a wonderful opportunity to make a positive change! Here's how I see your options with excitement:\n\n"
