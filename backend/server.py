@@ -75,6 +75,12 @@ comparison_service = DecisionComparisonService(db)
 email_service = EmailService()
 email_verification_service = EmailVerificationService(db, email_service)
 
+# Initialize monitoring and security services
+security_monitor = SecurityMonitor(db, email_service)
+system_monitor = SystemMonitor(db)
+backup_manager = BackupManager(db)
+audit_logger = AuditLogger(db)
+
 # Basic security features
 class BasicSecurityService:
     @staticmethod
