@@ -1263,7 +1263,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
                 }}
                 className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold text-lg"
               >
-                Start Free Trial
+                Start Free - 3 decisions, no card needed
               </button>
               <button
                 onClick={() => {
