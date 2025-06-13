@@ -534,9 +534,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Decision Export PDF Endpoint"
-    - "Decision Sharing Endpoints"
-    - "Decision Comparison Endpoint"
+    - "Email Service Integration"
+    - "Email Verification Endpoints"
+    - "Password Reset Email"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
