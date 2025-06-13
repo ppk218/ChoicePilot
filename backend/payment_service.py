@@ -1,6 +1,8 @@
 import os
 import json
 import httpx
+import hmac
+import hashlib
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
