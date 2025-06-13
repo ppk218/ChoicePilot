@@ -243,8 +243,6 @@ def test_register_invalid_email():
 
 def test_password_validation():
     """Test enhanced password validation"""
-    test_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
-    
     # Test various password strengths
     password_tests = [
         {"password": "short", "should_pass": False, "reason": "too short"},
@@ -256,6 +254,9 @@ def test_password_validation():
     
     all_passed = True
     for test_case in password_tests:
+        # Generate a unique email for each test case
+        test_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+        
         register_data = {
             "email": test_email,
             "password": test_case["password"]
