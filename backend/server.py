@@ -417,6 +417,25 @@ def create_access_token(user_id: str, email: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False))) -> Optional[dict]:
+    """Get current user but return None if not authenticated (no error)"""
+    if not credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        
+        if not user_id:
+            return None
+        
+        user = await db.users.find_one({"id": user_id})
+        if not user or not user.get("is_active"):
+            return None
+        
+        return user
+    except:
+        return None
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """Get current user from JWT token"""
     try:
