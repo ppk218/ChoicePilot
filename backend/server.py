@@ -786,7 +786,7 @@ def get_system_message(category: str = "general", preferences: dict = None, advi
     
     advisor_config = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
     
-    base_prompt = f"""You are ChoicePilot's {advisor_config['name']} Advisor, an AI-powered personal decision assistant.
+    base_prompt = f"""You are getgingee's {advisor_config['name']} Advisor, an AI-powered personal decision assistant.
 
 🎭 YOUR ADVISOR PERSONALITY:
 Name: {advisor_config['name']} Advisor
