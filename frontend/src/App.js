@@ -874,10 +874,10 @@ function MainApp() {
         <div className="flex items-center justify-between mb-6 bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 gingee-bg-orange rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 gingee-bg-coral rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">🌶️</span>
               </div>
-              <h1 className="text-2xl font-bold gingee-orange">getgingee</h1>
+              <h1 className="text-2xl font-bold gingee-coral">getgingee</h1>
             </div>
             <div className="hidden md:block text-sm text-gray-600 italic">
               One decision, many perspectives.
