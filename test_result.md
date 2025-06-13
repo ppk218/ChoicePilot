@@ -552,6 +552,7 @@ test_plan:
     - "Email Service Integration"
     - "Email Verification Endpoints"
     - "Password Reset Email"
+    - "Webhook Signature Verification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
