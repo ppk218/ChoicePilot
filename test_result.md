@@ -105,6 +105,51 @@
 user_problem_statement: "Build ChoicePilot - an AI-powered personal decision assistant that helps users make stress-free decisions with personalized recommendations"
 
 backend:
+  - task: "Email Service Integration"
+    implemented: true
+    working: true
+    file: "email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented email service with Titan email settings for verification emails and password reset"
+      - working: true
+        agent: "testing"
+        comment: "Email service is properly implemented with correct SMTP configuration for Titan email (smtp.titan.email on port 465). The EmailService and EmailVerificationService classes are well-implemented with all required methods. Verification code generation uses secure random tokens with proper expiry and attempts tracking. The email templates are well-designed and include all necessary information."
+
+  - task: "Email Verification Endpoints"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented email verification endpoints for account verification and resending verification codes"
+      - working: true
+        agent: "testing"
+        comment: "Email verification endpoints are properly implemented. The /api/auth/verify-email endpoint correctly handles verification codes with proper validation for expiry, attempts, and code correctness. The /api/auth/resend-verification endpoint works as expected, generating new verification codes and sending emails. The registration endpoint correctly sends verification emails upon account creation."
+
+  - task: "Password Reset Email"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented password reset functionality with secure token generation and email delivery"
+      - working: true
+        agent: "testing"
+        comment: "Password reset functionality is properly implemented. The /api/auth/password-reset-request endpoint correctly generates secure tokens with proper expiry and sends reset emails. The /api/auth/password-reset endpoint correctly validates tokens and updates passwords. The implementation follows security best practices by not revealing if an email exists in the system."
+
   - task: "Claude AI Integration"
     implemented: true
     working: true
