@@ -1749,13 +1749,9 @@ async def export_user_data(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Data export failed")
 
 @api_router.post("/account/delete")
-async def delete_account(request: AccountDeletionRequest, current_user: dict = Depends(get_current_user)):
-    """Permanently delete user account and all data"""
-    return await account_security.delete_user_account(
-        current_user["id"], 
-        request.password, 
-        request.confirmation
-    )
+async def delete_account(current_user: dict = Depends(get_current_user)):
+    """Delete user account - placeholder"""
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Account deletion not yet implemented")
 
 @api_router.get("/account/privacy-settings")
 async def get_privacy_settings(current_user: dict = Depends(get_current_user)):
