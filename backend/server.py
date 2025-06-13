@@ -496,14 +496,14 @@ async def register_user(user_data: UserRegistration):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
 
 @api_router.post("/auth/verify-email")
-async def verify_email(request: EmailVerificationConfirm):
-    """Verify user email address"""
-    return await account_security.verify_email(request.email, request.verification_code)
+async def verify_email(request):
+    """Verify user email address - placeholder"""
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Email verification not yet implemented")
 
 @api_router.post("/auth/resend-verification")
-async def resend_verification(request: EmailVerificationRequest):
-    """Resend email verification"""
-    return await account_security.send_email_verification(request.email)
+async def resend_verification(request):
+    """Resend email verification - placeholder"""
+    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Email verification not yet implemented")
 
 @api_router.post("/auth/login")
 async def login_user(login_data: UserLogin):
