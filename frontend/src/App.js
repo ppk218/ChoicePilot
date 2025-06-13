@@ -1244,10 +1244,10 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
               <span className="text-white font-bold text-2xl">🌶️</span>
             </div>
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Welcome to <span className="gingee-orange">getgingee</span>
+              One decision, many perspectives.
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              One decision, many perspectives.
+              Let 8 AI advisors guide your next big call with voice, logic, and personality. No pressure — just clarity.
             </p>
             <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto">
               Stop struggling with decision fatigue. Get personalized, actionable recommendations 
