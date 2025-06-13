@@ -114,20 +114,19 @@ account_security = AccountSecurityService(db)
 # Subscription Plans
 SUBSCRIPTION_PLANS = {
     "free": {
-        "name": "Lite Bite",
+        "name": "Free Plan",
         "price": 0,
         "monthly_decisions": 3,
-        "features": ["Basic GPT-4o chat", "1 advisor persona (Grounded)", "Text input only"],
-        "restrictions": ["No voice", "No exports", "No tools panel", "No AI model selection"]
+        "features": ["3 decision sessions per month", "Basic AI guidance", "Core decision flow"],
+        "restrictions": ["Limited sessions", "No advanced features"]
     },
     "pro": {
-        "name": "Full Plate", 
-        "price": 12.00,
+        "name": "Pro Plan", 
+        "price": 7.00,  # Updated from 12.00 to 7.00
         "monthly_decisions": -1,  # Unlimited
         "features": [
-            "Unlimited decisions", "All 8 advisor personas", "Voice input/output",
-            "Claude + GPT-4o smart switching", "Visual tools panel", "PDF exports",
-            "Decision scoring matrix", "Smart simulations"
+            "Unlimited decision sessions", "Advanced AI analysis", "Decision history & export",
+            "Priority support", "Advanced reasoning insights"
         ],
         "restrictions": []
     }
