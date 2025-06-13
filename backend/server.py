@@ -405,11 +405,15 @@ async def check_usage_and_permissions(user: dict, use_voice: bool = False, advis
     
     return {"allowed": True, "errors": [], "credit_cost": credit_cost}
 
-# Authentication endpoints
+# Enhanced authentication endpoints with security
 @api_router.post("/auth/register")
 async def register_user(user_data: UserRegistration):
-    """Register a new user"""
+    """Register a new user with enhanced security"""
     try:
+        # Input validation
+        if len(user_data.password) < 8:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+        
         # Check if user already exists
         existing_user = await db.users.find_one({"email": user_data.email})
         if existing_user:
@@ -422,38 +426,67 @@ async def register_user(user_data: UserRegistration):
             password_hash=password_hash,
             plan="free",
             credits=0,
-            monthly_decisions_used=0
+            monthly_decisions_used=0,
+            email_verified=False  # Require email verification
         )
         
         await db.users.insert_one(user.dict())
+        
+        # Send verification email
+        try:
+            await account_security.send_email_verification(user.email)
+        except Exception as e:
+            logger.warning(f"Failed to send verification email: {str(e)}")
         
         # Create access token
         token = create_access_token(user.id, user.email)
         
         return {
-            "message": "User registered successfully",
+            "message": "User registered successfully. Please check your email for verification.",
             "access_token": token,
+            "email_verification_required": True,
             "user": {
                 "id": user.id,
                 "email": user.email,
                 "plan": user.plan,
-                "credits": user.credits
+                "credits": user.credits,
+                "email_verified": False
             }
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        logging.error(f"Registration error: {str(e)}")
+        logger.error(f"Registration error: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
+
+@api_router.post("/auth/verify-email")
+async def verify_email(request: EmailVerificationConfirm):
+    """Verify user email address"""
+    return await account_security.verify_email(request.email, request.verification_code)
+
+@api_router.post("/auth/resend-verification")
+async def resend_verification(request: EmailVerificationRequest):
+    """Resend email verification"""
+    return await account_security.send_email_verification(request.email)
 
 @api_router.post("/auth/login")
 async def login_user(login_data: UserLogin):
-    """Login user and return access token"""
+    """Enhanced login with security checks"""
     try:
         user = await db.users.find_one({"email": login_data.email})
         if not user or not verify_password(login_data.password, user["password_hash"]):
+            # Log failed login attempt
+            logger.warning(f"Failed login attempt for email: {login_data.email}")
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
         
         if not user.get("is_active", True):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Account is inactive")
+        
+        # Update last login
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"last_login": datetime.utcnow()}}
+        )
         
         token = create_access_token(user["id"], user["email"])
         
@@ -464,14 +497,85 @@ async def login_user(login_data: UserLogin):
                 "id": user["id"],
                 "email": user["email"],
                 "plan": user["plan"],
-                "credits": user["credits"]
+                "credits": user["credits"],
+                "email_verified": user.get("email_verified", False)
             }
         }
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Login error: {str(e)}")
+        logger.error(f"Login error: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Login failed")
+
+@api_router.post("/auth/password-reset-request")
+async def request_password_reset(request: PasswordResetRequest):
+    """Request password reset"""
+    try:
+        user = await db.users.find_one({"email": request.email})
+        if not user:
+            # Don't reveal if email exists
+            return {"message": "If the email exists, a reset link has been sent"}
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        reset_doc = {
+            "email": request.email,
+            "reset_token": reset_token,
+            "created_at": datetime.utcnow(),
+            "expires_at": datetime.utcnow() + timedelta(hours=1),
+            "is_used": False
+        }
+        
+        await db.password_resets.insert_one(reset_doc)
+        
+        # Send reset email (implement email service)
+        # await email_service.send_password_reset_email(request.email, reset_token)
+        
+        return {"message": "If the email exists, a reset link has been sent"}
+        
+    except Exception as e:
+        logger.error(f"Password reset request error: {str(e)}")
+        return {"message": "If the email exists, a reset link has been sent"}
+
+@api_router.post("/auth/password-reset")
+async def reset_password(request: PasswordReset):
+    """Reset password with token"""
+    try:
+        # Find reset record
+        reset_record = await db.password_resets.find_one({
+            "email": request.email,
+            "reset_token": request.reset_token,
+            "is_used": False
+        })
+        
+        if not reset_record or reset_record["expires_at"] < datetime.utcnow():
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired reset token")
+        
+        # Validate new password
+        if len(request.new_password) < 8:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+        
+        # Update password
+        password_hash = hash_password(request.new_password)
+        await db.users.update_one(
+            {"email": request.email},
+            {"$set": {"password_hash": password_hash, "updated_at": datetime.utcnow()}}
+        )
+        
+        # Mark reset token as used
+        await db.password_resets.update_one(
+            {"_id": reset_record["_id"]},
+            {"$set": {"is_used": True, "used_at": datetime.utcnow()}}
+        )
+        
+        logger.info(f"Password reset successful for email: {request.email}")
+        return {"message": "Password reset successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset error: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Password reset failed")
 
 @api_router.get("/auth/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
