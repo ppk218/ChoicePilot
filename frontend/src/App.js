@@ -851,15 +851,14 @@ function MainApp() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6 bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">CP</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 gingee-bg-orange rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">🌶️</span>
+              </div>
+              <h1 className="text-2xl font-bold gingee-orange">getgingee</h1>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">ChoicePilot</h1>
-              <p className="text-sm text-gray-500">
-                {currentDecisionTitle ? currentDecisionTitle : "AI Decision Assistant"}
-                {voiceEnabled && <span className="ml-2 text-blue-600">🎤</span>}
-              </p>
+            <div className="hidden md:block text-sm text-gray-600 italic">
+              Talk it out. Think it through. Getgingee it.
             </div>
           </div>
           
