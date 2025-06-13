@@ -253,7 +253,7 @@ const BillingDashboard = ({ user, subscriptionInfo, onClose }) => {
 
           {/* Credit Packs */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Buy Credit Packs</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Buy Extra Gingee</h3>
             <div className="grid md:grid-cols-3 gap-4">
               {Object.entries(creditPacks).map(([key, pack]) => (
                 <div key={key} className={`bg-white border-2 rounded-xl p-6 relative ${
