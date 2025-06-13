@@ -2,11 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* getgingee Brand Styling */
+:root {
+  --gingee-orange: #F15A29;
+  --ash-charcoal: #2C2C2E;
+  --mint-green: #C6F6D5;
+  --creamy-white: #FFF8F0;
+  --gingee-gradient: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%);
+}
+
 body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--creamy-white);
+  color: var(--ash-charcoal);
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
