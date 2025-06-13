@@ -339,9 +339,27 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Your password"
               required
-              minLength={6}
+              minLength={8}
             />
+            {mode === 'register' && (
+              <PasswordStrengthMeter password={password} />
+            )}
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Confirm your password"
+                required
+                minLength={8}
+              />
+            </div>
+          )}
 
           {error && (
             <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>
