@@ -1264,7 +1264,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
           <div className="text-center mb-16">
             <div className="mb-6 mx-auto flex justify-center">
               <img 
-                src="/logos/getgingee-full/logo-getgingee-full-1.png" 
+                src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_500x500 px (general web)__TextLogo.png" 
                 alt="getgingee"
                 className="h-20 w-auto"
                 onError={(e) => {
