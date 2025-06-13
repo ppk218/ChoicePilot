@@ -215,6 +215,14 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    email: EmailStr
+    reset_token: str
+    new_password: str
+
 class SubscriptionInfo(BaseModel):
     plan: str
     monthly_decisions_used: int
