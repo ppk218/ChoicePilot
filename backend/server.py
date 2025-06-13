@@ -730,6 +730,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information"""
     return {
         "id": current_user["id"],
+        "name": current_user.get("name", ""),  # Added name field
         "email": current_user["email"],
         "plan": current_user["plan"],
         "credits": current_user["credits"],
