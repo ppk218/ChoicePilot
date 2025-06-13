@@ -327,6 +327,60 @@ class DecisionSession(BaseModel):
     last_active: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
 
+# New Decision Session Models for structured flow
+class DecisionStepRequest(BaseModel):
+    message: str
+    decision_id: Optional[str] = None
+    step: Literal["initial", "followup", "adjust"] = "initial"
+    step_number: Optional[int] = None
+
+class DecisionFollowUpQuestion(BaseModel):
+    question: str
+    step_number: int
+    context: str
+
+class DecisionRecommendation(BaseModel):
+    recommendation: str
+    confidence_score: float  # 0-100
+    reasoning: str
+    action_link: Optional[str] = None
+
+class DecisionSessionNew(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: Optional[str] = None  # Can be None for anonymous
+    initial_question: str
+    category: Optional[str] = None
+    current_step: Literal["collecting", "followup", "complete"] = "collecting"
+    step_number: int = 0
+    
+    # Follow-up questions and answers
+    followup_questions: List[DecisionFollowUpQuestion] = []
+    followup_answers: List[str] = []
+    
+    # Final recommendation
+    recommendation: Optional[DecisionRecommendation] = None
+    
+    # Feedback
+    feedback_helpful: Optional[bool] = None
+    feedback_text: Optional[str] = None
+    
+    # Adjustments
+    adjustment_count: int = 0
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = None
+    last_active: datetime = Field(default_factory=datetime.utcnow)
+
+class DecisionStepResponse(BaseModel):
+    decision_id: str
+    step: str
+    step_number: int
+    response: str
+    is_complete: bool = False
+    followup_question: Optional[DecisionFollowUpQuestion] = None
+    recommendation: Optional[DecisionRecommendation] = None
+
 # Decision categories
 DECISION_CATEGORIES = {
     "general": "General decision making and advice",
