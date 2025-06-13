@@ -945,7 +945,7 @@ function MainApp() {
                   <h1 className="text-4xl font-bold text-gray-900">
                     Welcome to <span className="gingee-orange">getgingee</span>
                   </h1>
-                  <p className="text-xl text-gray-600">Talk it out. Think it through. Getgingee it.</p>
+                  <p className="text-xl text-gray-600">One decision, many perspectives.</p>
                   <p className="text-sm text-gray-500">Smart monetization with 8 advisor personalities and premium features</p>
                 </div>
                 
