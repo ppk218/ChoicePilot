@@ -1886,10 +1886,92 @@ async def get_terms_of_service():
                 "limitation_of_liability": "Service is provided as-is without warranties.",
                 "termination": "Either party may terminate the agreement at any time.",
                 "governing_law": "Agreement governed by laws of jurisdiction where service operates.",
-                "contact": "Contact legal@choicepilot.ai for legal questions."
+                "contact": "Contact legal@getgingee.com for legal questions."
             }
         }
     }
+
+# Security & Monitoring Endpoints
+@api_router.get("/admin/health")
+async def get_system_health():
+    """Get system health status (admin endpoint)"""
+    return await system_monitor.check_system_health()
+
+@api_router.get("/admin/security-events")
+async def get_security_events(limit: int = 50, current_user: dict = Depends(get_current_user)):
+    """Get recent security events (admin only)"""
+    # TODO: Add admin role check
+    try:
+        events = await db.security_events.find().sort("timestamp", -1).limit(limit).to_list(limit)
+        
+        # Clean up ObjectIds
+        for event in events:
+            if "_id" in event:
+                event["_id"] = str(event["_id"])
+        
+        return {"security_events": events}
+    except Exception as e:
+        logger.error(f"Error getting security events: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve security events")
+
+@api_router.get("/admin/performance-metrics")
+async def get_performance_metrics(hours: int = 24):
+    """Get performance metrics for the last N hours"""
+    try:
+        since = datetime.utcnow() - timedelta(hours=hours)
+        
+        # Get metrics from database
+        metrics = await db.performance_metrics.find({
+            "timestamp": {"$gte": since}
+        }).sort("timestamp", -1).limit(1000).to_list(1000)
+        
+        # Calculate summary statistics
+        if metrics:
+            response_times = [m["response_time"] for m in metrics]
+            avg_response_time = sum(response_times) / len(response_times)
+            max_response_time = max(response_times)
+            error_count = sum(1 for m in metrics if m.get("is_error"))
+            error_rate = error_count / len(metrics) if metrics else 0
+        else:
+            avg_response_time = max_response_time = error_rate = 0
+        
+        # Clean up ObjectIds
+        for metric in metrics:
+            if "_id" in metric:
+                metric["_id"] = str(metric["_id"])
+        
+        return {
+            "period_hours": hours,
+            "total_requests": len(metrics),
+            "avg_response_time": round(avg_response_time, 3),
+            "max_response_time": round(max_response_time, 3),
+            "error_rate": round(error_rate, 4),
+            "error_count": error_count,
+            "metrics": metrics[:100]  # Return only recent 100 for display
+        }
+    except Exception as e:
+        logger.error(f"Error getting performance metrics: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve performance metrics")
+
+@api_router.get("/admin/backup-status")
+async def get_backup_status():
+    """Get backup status and recommendations"""
+    return await backup_manager.get_backup_status()
+
+@api_router.post("/admin/audit-report")
+async def generate_audit_report(start_date: str, end_date: str):
+    """Generate audit report for date range"""
+    try:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+        
+        report = await audit_logger.generate_audit_report(start, end)
+        return report
+    except ValueError:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid date format. Use ISO format: YYYY-MM-DD")
+    except Exception as e:
+        logger.error(f"Error generating audit report: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to generate audit report")
 
 # Legacy endpoints for compatibility
 @api_router.get("/")
