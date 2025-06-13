@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* getgingee Brand Styling */
+/* getgingee Brand Styling - Updated */
 :root {
-  --gingee-orange: #F15A29;
+  --gingee-coral: #FF9966;
   --ash-charcoal: #2C2C2E;
-  --mint-green: #C6F6D5;
-  --creamy-white: #FFF8F0;
-  --gingee-gradient: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%);
+  --mint-cool: #C6F6D5;
+  --creamy-sand: #FFF8F0;
+  --gingee-gradient: linear-gradient(135deg, #FF9966 0%, #FFB380 100%);
 }
 
 body {
