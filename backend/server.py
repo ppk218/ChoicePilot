@@ -1777,6 +1777,26 @@ async def get_privacy_settings(current_user: dict = Depends(get_current_user)):
         logging.error(f"Error getting privacy settings: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to get privacy settings")
 
+@api_router.get("/account/privacy-settings")
+async def get_privacy_settings(current_user: dict = Depends(get_current_user)):
+    """Get user privacy settings"""
+    try:
+        user = await db.users.find_one({"id": current_user["id"]})
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+        
+        privacy_settings = user.get("privacy_settings", {})
+        
+        return {
+            "data_sharing": privacy_settings.get("data_sharing", False),
+            "analytics_tracking": privacy_settings.get("analytics_tracking", True),
+            "marketing_emails": privacy_settings.get("marketing_emails", False),
+            "security_notifications": privacy_settings.get("security_notifications", True)
+        }
+    except Exception as e:
+        logging.error(f"Error getting privacy settings: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to get privacy settings")
+
 @api_router.put("/account/privacy-settings")
 async def update_privacy_settings(settings: PrivacySettings, current_user: dict = Depends(get_current_user)):
     """Update user privacy settings"""
