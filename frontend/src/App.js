@@ -1250,8 +1250,20 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
         <div className="max-w-6xl mx-auto px-4 py-16">
           {/* Landing Page Header */}
           <div className="text-center mb-16">
-            <div className="w-16 h-16 gingee-bg-orange rounded-full flex items-center justify-center mb-6 mx-auto">
-              <span className="text-white font-bold text-2xl">🌶️</span>
+            <div className="mb-6 mx-auto flex justify-center">
+              <img 
+                src="/logos/getgingee-full/logo-getgingee-full-1.png" 
+                alt="getgingee"
+                className="h-20 w-auto"
+                onError={(e) => {
+                  // Fallback to styled div if image not found
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="w-16 h-16 gingee-bg-orange rounded-full items-center justify-center" style={{display: 'none'}}>
+                <span className="text-white font-bold text-2xl">🌶️</span>
+              </div>
             </div>
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
               One decision, many perspectives.
