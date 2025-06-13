@@ -68,6 +68,7 @@ dodo_payments = DodoPaymentsService(DODO_API_KEY) if DODO_API_KEY else None
 pdf_exporter = DecisionPDFExporter()
 sharing_service = DecisionSharingService(db)
 comparison_service = DecisionComparisonService(db)
+account_security = AccountSecurityService(db)
 
 # Subscription Plans
 SUBSCRIPTION_PLANS = {
