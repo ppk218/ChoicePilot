@@ -360,6 +360,21 @@ backend:
         agent: "testing"
         comment: "The decision comparison endpoint is correctly implemented. It requires authentication and validates that the request contains between 2 and 5 decision IDs. The endpoint structure is correct, returning appropriate validation errors for invalid requests. The response structure includes the expected fields (comparisons, insights, comparison_id, generated_at). There are some issues with the request format validation, but the core functionality appears to be implemented correctly."
 
+  - task: "Webhook Signature Verification"
+    implemented: true
+    working: true
+    file: "payment_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented webhook signature verification for Dodo Payments webhooks"
+      - working: true
+        agent: "testing"
+        comment: "The webhook signature verification is properly implemented with good security practices. The verify_webhook_signature function correctly removes the 'whsec_' prefix from the webhook secret, uses HMAC-SHA256 for signature generation, and employs constant-time comparison to prevent timing attacks. Tests confirmed that valid signatures are accepted, invalid signatures are rejected, and modified payloads are detected. The implementation also handles the webhook secret prefix correctly and uses secure comparison methods to prevent timing attacks."
+
 frontend:
   - task: "Chat Interface"
     implemented: true
