@@ -272,7 +272,7 @@ const ToolsPanel = ({
                     <div className="space-y-2">
                       <button
                         onClick={() => setActiveTab('share')}
-                        className="w-full flex items-center justify-center space-x-2 py-2 px-4 gingee-bg-orange text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors duration-200"
+                        className="w-full flex items-center justify-center space-x-2 py-2 px-4 gingee-bg-coral text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors duration-200"
                       >
                         <span>🔗</span>
                         <span>Share Decision</span>
