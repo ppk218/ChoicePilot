@@ -48,7 +48,7 @@ code {
 
 .spicy-button {
   background: var(--gingee-gradient);
-  color: var(--creamy-white);
+  color: var(--creamy-sand);
   font-weight: 600;
   transition: all 0.3s ease;
   border-radius: 12px;
@@ -56,7 +56,7 @@ code {
 
 .spicy-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(241, 90, 41, 0.3);
+  box-shadow: 0 8px 20px rgba(255, 153, 102, 0.3);
 }
 
 /* Advisor persona colors - getgingee style */
