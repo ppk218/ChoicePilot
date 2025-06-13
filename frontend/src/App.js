@@ -254,6 +254,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login, register } = useAuth();
 
   // Clear form when modal closes
@@ -263,6 +265,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
       setPassword("");
       setConfirmPassword("");
       setError("");
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     }
   }, [isOpen]);
 
@@ -299,6 +303,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     } else {
       setError(result.error);
     }
