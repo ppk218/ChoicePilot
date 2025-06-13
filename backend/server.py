@@ -1844,14 +1844,23 @@ async def root():
 # Include the router in the main app
 app.include_router(api_router)
 
-# Add security middleware
-app.add_middleware(SecurityMiddleware)
-
-# Add enhanced CORS middleware
-cors_config = CORSSecurityMiddleware.get_cors_config()
+# Add secure CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    **cors_config
+    allow_origins=[
+        "https://a3afc75c-858c-4f4f-b1c5-cd9fc2d2bc83.preview.emergentagent.com",
+        "http://localhost:3000",  # Development only
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type", 
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+    ],
+    expose_headers=["Content-Disposition"],
 )
 
 # Configure logging
