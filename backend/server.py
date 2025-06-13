@@ -471,11 +471,11 @@ async def register_user(user_data: UserRegistration):
         
         await db.users.insert_one(user.dict())
         
-        # Send verification email (placeholder)
-        # try:
-        #     await account_security.send_email_verification(user.email)
-        # except Exception as e:
-        #     logger.warning(f"Failed to send verification email: {str(e)}")
+        # Send verification email
+        try:
+            await email_verification_service.send_verification_email(user.email)
+        except Exception as e:
+            logger.warning(f"Failed to send verification email: {str(e)}")
         
         # Create access token
         token = create_access_token(user.id, user.email)
