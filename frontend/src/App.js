@@ -116,32 +116,10 @@ const DECISION_CATEGORIES = {
   financial: { icon: "💰", label: "Financial Planning", color: "bg-emerald-100 text-emerald-800", accent: "emerald" }
 };
 
-// Subscription Plans with getgingee branding
-const SUBSCRIPTION_PLANS = {
-  free: {
-    name: "Lite Bite",
-    price: 0,
-    monthlyDecisions: 3,
-    features: ["Basic GPT-4o chat", "1 advisor persona (Grounded)", "Text input only"],
-    restrictions: ["No voice", "No exports", "No tools panel", "No AI model selection"]
-  },
-  pro: {
-    name: "Full Plate", 
-    price: 12.00,
-    monthlyDecisions: -1,  // Unlimited
-    features: [
-      "Unlimited decisions", "All 8 advisor personas", "Voice input/output",
-      "Claude + GPT-4o smart switching", "Visual tools panel", "PDF exports",
-      "Decision scoring matrix", "Smart simulations"
-    ],
-    restrictions: []
-  }
-};
-
 const LLM_MODELS = {
   claude: { name: "Claude Sonnet 4", icon: "🧠", description: "Best for logical reasoning & structured analysis", proOnly: true },
   gpt4o: { name: "GPT-4o", icon: "⚡", description: "Best for creative & conversational decisions", proOnly: false },
-  auto: { name: "Auto-Select", icon: "🎯", description: "Automatically chooses the best AI for your decision", proOnly: false }
+  auto: { name: "Auto-Select", icon: "🎯", description: "Smart routing based on decision type", proOnly: false }
 };
 
 const ADVISOR_STYLES = {
