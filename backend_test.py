@@ -1633,6 +1633,9 @@ def test_plan_names_rebrand():
 
 def test_email_branding():
     """Test that email templates use getgingee branding"""
+    # Load environment variables from backend/.env
+    load_dotenv("backend/.env")
+    
     # We'll check the SMTP settings to ensure they're using getgingee.com domain
     smtp_username = os.environ.get("SMTP_USERNAME", "")
     from_email = os.environ.get("FROM_EMAIL", "")
