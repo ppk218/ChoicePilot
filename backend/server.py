@@ -478,25 +478,25 @@ async def register_user(user_data: UserRegistration):
         
         await db.users.insert_one(user.dict())
         
+        # Temporarily disable email verification
         # Send verification email
-        try:
-            await email_verification_service.send_verification_email(user.email)
-        except Exception as e:
-            logger.warning(f"Failed to send verification email: {str(e)}")
+        # try:
+        #     await email_verification_service.send_verification_email(user.email)
+        # except Exception as e:
+        #     logger.warning(f"Failed to send verification email: {str(e)}")
         
         # Create access token
         token = create_access_token(user.id, user.email)
         
         return {
-            "message": "User registered successfully. Please check your email for verification.",
+            "message": "User registered successfully.",
             "access_token": token,
-            "email_verification_required": True,
             "user": {
                 "id": user.id,
                 "email": user.email,
                 "plan": user.plan,
                 "credits": user.credits,
-                "email_verified": False
+                "email_verified": True
             }
         }
     except HTTPException:
