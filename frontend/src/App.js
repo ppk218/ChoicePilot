@@ -1300,12 +1300,12 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-white p-8 rounded-xl shadow-sm border">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Free Plan</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Lite Bite</h3>
                 <div className="text-4xl font-bold text-gray-900 mb-4">$0<span className="text-lg text-gray-500">/month</span></div>
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> 3 decisions per month</li>
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Basic GPT-4o chat</li>
-                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> 1 advisor persona (Realist)</li>
+                  <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> 1 advisor persona (Grounded)</li>
                   <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Text input only</li>
                 </ul>
                 <button
@@ -1320,12 +1320,12 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-8 rounded-xl shadow-sm text-white relative">
+            <div className="gingee-gradient p-8 rounded-xl shadow-sm text-white relative">
               <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
                 POPULAR
               </div>
               <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">Pro Plan</h3>
+                <h3 className="text-2xl font-bold mb-2">Full Plate</h3>
                 <div className="text-4xl font-bold mb-4">$12<span className="text-lg opacity-75">/month</span></div>
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-center"><span className="text-green-300 mr-2">✓</span> Unlimited decisions</li>
@@ -1340,7 +1340,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
                     setAuthMode('register');
                     setAuthModalOpen(true);
                   }}
-                  className="w-full py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium"
+                  className="w-full py-3 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium"
                 >
                   Start Free Trial
                 </button>
