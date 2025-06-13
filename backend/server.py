@@ -38,6 +38,7 @@ from payment_models import (
 )
 from payment_service import DodoPaymentsService
 from export_service import DecisionPDFExporter, DecisionSharingService, DecisionComparisonService
+from email_service import EmailService, EmailVerificationService
 
 
 ROOT_DIR = Path(__file__).parent
