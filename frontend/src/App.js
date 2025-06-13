@@ -49,7 +49,9 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('Login attempt:', { email, backend_url: API });
       const response = await axios.post(`${API}/auth/login`, { email, password });
+      console.log('Login response:', response.data);
       const { access_token, user: userData } = response.data;
       
       localStorage.setItem('token', access_token);
@@ -59,9 +61,11 @@ const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error details:', error.response?.data);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
+        error: error.response?.data?.detail || error.response?.data?.message || 'Login failed' 
       };
     }
   };
