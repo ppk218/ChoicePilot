@@ -1719,11 +1719,34 @@ async def get_decision_shares(decision_id: str, current_user: dict = Depends(get
         logging.error(f"Error getting decision shares: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve shares")
 
-# Account Security & Privacy Endpoints
+# Account Security & Privacy Endpoints (Simplified)
 @api_router.post("/account/export-data")
-async def export_user_data(request: DataExportRequest, current_user: dict = Depends(get_current_user)):
-    """Export all user data for GDPR compliance"""
-    return await account_security.export_user_data(current_user["id"], request.export_format)
+async def export_user_data(current_user: dict = Depends(get_current_user)):
+    """Export all user data for GDPR compliance (simplified)"""
+    try:
+        user = await db.users.find_one({"id": current_user["id"]})
+        decisions = await db.decision_sessions.find({"user_id": current_user["id"]}).to_list(None)
+        conversations = await db.conversations.find({"user_id": current_user["id"]}).to_list(None)
+        
+        # Remove sensitive data
+        if user and "_id" in user:
+            user["_id"] = str(user["_id"])
+        for d in decisions:
+            if "_id" in d:
+                d["_id"] = str(d["_id"])
+        for c in conversations:
+            if "_id" in c:
+                c["_id"] = str(c["_id"])
+        
+        return {
+            "user_profile": user,
+            "decisions": decisions,
+            "conversations": conversations,
+            "export_date": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logging.error(f"Error exporting user data: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Data export failed")
 
 @api_router.post("/account/delete")
 async def delete_account(request: AccountDeletionRequest, current_user: dict = Depends(get_current_user)):
