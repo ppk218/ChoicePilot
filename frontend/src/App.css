@@ -30,20 +30,20 @@ code {
   background: var(--gingee-gradient);
 }
 
-.gingee-orange {
-  color: var(--gingee-orange);
+.gingee-coral {
+  color: var(--gingee-coral);
 }
 
-.gingee-bg-orange {
-  background-color: var(--gingee-orange);
+.gingee-bg-coral {
+  background-color: var(--gingee-coral);
 }
 
-.gingee-border-orange {
-  border-color: var(--gingee-orange);
+.gingee-border-coral {
+  border-color: var(--gingee-coral);
 }
 
 .mint-accent {
-  background-color: var(--mint-green);
+  background-color: var(--mint-cool);
 }
 
 .spicy-button {
