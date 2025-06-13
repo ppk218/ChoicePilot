@@ -25,6 +25,70 @@ code {
     monospace;
 }
 
+/* getgingee specific component styles */
+.gingee-gradient {
+  background: var(--gingee-gradient);
+}
+
+.gingee-orange {
+  color: var(--gingee-orange);
+}
+
+.gingee-bg-orange {
+  background-color: var(--gingee-orange);
+}
+
+.gingee-border-orange {
+  border-color: var(--gingee-orange);
+}
+
+.mint-accent {
+  background-color: var(--mint-green);
+}
+
+.spicy-button {
+  background: var(--gingee-gradient);
+  color: var(--creamy-white);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.spicy-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(241, 90, 41, 0.3);
+}
+
+/* Advisor persona colors - getgingee style */
+.advisor-sunny { color: #F59E0B; }
+.advisor-grounded { color: #6B7280; }
+.advisor-spice { color: #EF4444; }
+.advisor-twist { color: #8B5CF6; }
+.advisor-stat { color: #059669; }
+.advisor-vibe { color: var(--mint-green); }
+.advisor-sky { color: #3B82F6; }
+.advisor-hug { color: #F472B6; }
+
+/* Loading animations with gingee flair */
+.gingee-loading {
+  animation: spicy-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spicy-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.gingee-bounce {
+  animation: spicy-bounce 1s ease-in-out infinite;
+}
+
+@keyframes spicy-bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
 /* Enhanced animations */
 @keyframes bounce {
   0%, 80%, 100% {
