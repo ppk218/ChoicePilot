@@ -203,7 +203,12 @@ class User(BaseModel):
     credits: int = 0
     monthly_decisions_used: int = 0
     subscription_expires: Optional[datetime] = None
+    email_verified: bool = False
+    email_verified_at: Optional[datetime] = None
+    privacy_settings: Optional[dict] = None
+    last_login: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_reset: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
 
