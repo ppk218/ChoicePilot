@@ -187,18 +187,108 @@ const SUBSCRIPTION_PLANS = {
   }
 };
 
+// Password Strength Helper Functions
+const getPasswordStrength = (password) => {
+  let score = 0;
+  const checks = {
+    length: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    numbers: /\d/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  };
+  
+  score = Object.values(checks).filter(Boolean).length;
+  
+  if (score <= 2) return { strength: 'weak', color: 'bg-red-500', width: '20%' };
+  if (score === 3) return { strength: 'fair', color: 'bg-yellow-500', width: '40%' };
+  if (score === 4) return { strength: 'good', color: 'bg-blue-500', width: '70%' };
+  if (score === 5) return { strength: 'strong', color: 'bg-green-500', width: '100%' };
+  
+  return { strength: 'weak', color: 'bg-red-500', width: '20%' };
+};
+
+const PasswordStrengthMeter = ({ password }) => {
+  const { strength, color, width } = getPasswordStrength(password);
+  
+  const rules = [
+    { text: 'At least 8 characters', met: password.length >= 8 },
+    { text: 'One lowercase letter', met: /[a-z]/.test(password) },
+    { text: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { text: 'One number', met: /\d/.test(password) },
+    { text: 'One special character (!@#$%^&*)', met: /[!@#$%^&*(),.?":{}|<>]/.test(password) }
+  ];
+  
+  if (!password) return null;
+  
+  return (
+    <div className="mt-2">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex-1 bg-gray-200 rounded-full h-2">
+          <div className={`h-2 rounded-full transition-all duration-300 ${color}`} style={{ width }}></div>
+        </div>
+        <span className={`text-sm font-medium capitalize ${
+          strength === 'strong' ? 'text-green-600' : 
+          strength === 'good' ? 'text-blue-600' : 
+          strength === 'fair' ? 'text-yellow-600' : 'text-red-600'
+        }`}>
+          {strength}
+        </span>
+      </div>
+      <div className="text-xs space-y-1">
+        {rules.map((rule, index) => (
+          <div key={index} className={`flex items-center gap-1 ${rule.met ? 'text-green-600' : 'text-gray-500'}`}>
+            <span className="w-3 h-3 text-center">{rule.met ? '✓' : '○'}</span>
+            {rule.text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Login/Register Component
 const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
+
+  // Clear form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setError("");
+    }
+  }, [isOpen]);
+
+  const validatePassword = (password) => {
+    const { strength } = getPasswordStrength(password);
+    return strength === 'good' || strength === 'strong';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Registration validation
+    if (mode === 'register') {
+      if (!validatePassword(password)) {
+        setError("Password must be at least 'Good' strength");
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
+      }
+    }
 
     const result = mode === 'login' 
       ? await login(email, password)
@@ -208,6 +298,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
       onClose();
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
     } else {
       setError(result.error);
     }
