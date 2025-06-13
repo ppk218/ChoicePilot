@@ -880,7 +880,7 @@ function MainApp() {
               <h1 className="text-2xl font-bold gingee-orange">getgingee</h1>
             </div>
             <div className="hidden md:block text-sm text-gray-600 italic">
-              Talk it out. Think it through. Getgingee it.
+              One decision, many perspectives.
             </div>
           </div>
           
