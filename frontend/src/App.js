@@ -1235,8 +1235,20 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 gingee-bg-orange rounded-full flex items-center justify-center mb-4 mx-auto">
-            <span className="text-white font-bold text-xl">🌶️</span>
+          <div className="mb-4 mx-auto flex justify-center">
+            <img 
+              src="/logos/ge-square/logo-ge-square-1.png" 
+              alt="getgingee"
+              className="h-12 w-auto"
+              onError={(e) => {
+                // Fallback to styled div if image not found
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="w-12 h-12 gingee-bg-coral rounded-full items-center justify-center" style={{display: 'none'}}>
+              <span className="text-white font-bold text-xl">🌶️</span>
+            </div>
           </div>
           <div className="text-lg font-medium text-gray-900">Loading getgingee...</div>
         </div>
