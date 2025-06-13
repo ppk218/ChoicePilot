@@ -1342,7 +1342,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
                   }}
                   className="w-full py-3 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium"
                 >
-                  Start Free Trial
+                  Start Free - 3 decisions, no card needed
                 </button>
               </div>
             </div>
