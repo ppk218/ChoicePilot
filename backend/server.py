@@ -70,6 +70,35 @@ dodo_payments = DodoPaymentsService(DODO_API_KEY) if DODO_API_KEY else None
 pdf_exporter = DecisionPDFExporter()
 sharing_service = DecisionSharingService(db)
 comparison_service = DecisionComparisonService(db)
+
+# Basic security features
+class BasicSecurityService:
+    @staticmethod
+    def sanitize_input(text: str) -> str:
+        """Basic input sanitization"""
+        if not text:
+            return text
+        
+        # Remove dangerous patterns
+        dangerous_patterns = [
+            r'(?i)ignore\s+previous\s+instructions',
+            r'(?i)system\s*:',
+            r'(?i)assistant\s*:',
+            r'(?i)you\s+are\s+now',
+            r'<script[^>]*>.*?</script>',
+            r'javascript:',
+        ]
+        
+        for pattern in dangerous_patterns:
+            text = re.sub(pattern, '[FILTERED]', text)
+        
+        # Limit length
+        if len(text) > 10000:
+            text = text[:10000] + "... [TRUNCATED]"
+        
+        return text.strip()
+
+security_service = BasicSecurityService()
 account_security = AccountSecurityService(db)
 
 # Subscription Plans
