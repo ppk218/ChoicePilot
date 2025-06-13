@@ -2,6 +2,11 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from security_middleware import SecurityMiddleware, CORSSecurityMiddleware
+from account_management import (
+    AccountSecurityService, EmailVerificationRequest, EmailVerificationConfirm,
+    AccountDeletionRequest, DataExportRequest, PrivacySettings
+)
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
