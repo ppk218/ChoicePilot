@@ -1262,14 +1262,14 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
         <div className="max-w-6xl mx-auto px-4 py-16">
           {/* Landing Page Header */}
           <div className="text-center mb-16">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-6 mx-auto">
-              <span className="text-white font-bold text-2xl">CP</span>
+            <div className="w-16 h-16 gingee-bg-orange rounded-full flex items-center justify-center mb-6 mx-auto">
+              <span className="text-white font-bold text-2xl">🌶️</span>
             </div>
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Welcome to <span className="text-blue-600">ChoicePilot</span>
+              Welcome to <span className="gingee-orange">getgingee</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Your Personal AI Guide for Stress-Free Decisions
+              Talk it out. Think it through. Getgingee it.
             </p>
             <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto">
               Stop struggling with decision fatigue. Get personalized, actionable recommendations 
