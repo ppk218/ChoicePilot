@@ -1250,7 +1250,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
           <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
             <span className="text-white font-bold text-xl">CP</span>
           </div>
-          <div className="text-lg font-medium text-gray-900">Loading ChoicePilot...</div>
+          <div className="text-lg font-medium text-gray-900">Loading getgingee...</div>
         </div>
       </div>
     );
