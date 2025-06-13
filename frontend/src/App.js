@@ -1028,15 +1028,9 @@ function MainApp() {
                 {isLoading && (
                   <div className="flex justify-start">
                     <div className="bg-gray-100 text-gray-800 p-4 rounded-2xl rounded-bl-lg">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                        <span className="text-sm text-gray-600">
-                          {LLM_MODELS[llmPreference]?.icon} {LLM_MODELS[llmPreference]?.name} is thinking...
-                        </span>
+                      <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 gingee-border-orange mb-4"></div>
+                        <p className="text-gray-600">Brewing a decision... it's almost ginger tea time 🍵</p>
                       </div>
                     </div>
                   </div>
