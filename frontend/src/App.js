@@ -875,7 +875,7 @@ function MainApp() {
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
               <img 
-                src="/logos/getgingee-horizontal/logo-getgingee-horizontal-1.png" 
+                src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_1584x396 px (LinkedIn banner)__TextLogo.png" 
                 alt="getgingee logo"
                 className="h-10 w-auto"
                 onError={(e) => {
