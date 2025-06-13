@@ -207,9 +207,9 @@ const BillingDashboard = ({ user, subscriptionInfo, onClose }) => {
                 <button
                   onClick={handleUpgradeToPro}
                   disabled={processingPayment}
-                  className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 font-medium transition-all duration-200"
+                  className="w-full mt-4 gingee-gradient text-white py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium transition-all duration-200"
                 >
-                  {processingPayment ? 'Processing...' : 'Upgrade to Pro - $12/month'}
+                  {processingPayment ? 'Processing...' : 'Upgrade to Full Plate - $12/month'}
                 </button>
               ) : (
                 <button
