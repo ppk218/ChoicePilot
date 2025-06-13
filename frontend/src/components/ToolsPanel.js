@@ -368,7 +368,7 @@ const ToolsPanel = ({
                 
                 {loading ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 gingee-border-orange border-b-2 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 gingee-border-coral border-b-2 mx-auto"></div>
                     <p className="text-sm text-gray-600 mt-2">Loading...</p>
                   </div>
                 ) : decisions.length > 0 ? (
