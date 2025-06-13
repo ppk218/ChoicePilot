@@ -542,6 +542,7 @@ async def register_user(user_data: UserRegistration):
         # Create new user
         password_hash = hash_password(user_data.password)
         user = User(
+            name=user_data.name,  # Added name field
             email=user_data.email,
             password_hash=password_hash,
             plan="free",
