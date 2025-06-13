@@ -130,7 +130,7 @@ const BillingDashboard = ({ user, subscriptionInfo, onClose }) => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 gingee-border-orange border-b-2 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 gingee-border-coral border-b-2 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading billing information...</p>
           </div>
         </div>
