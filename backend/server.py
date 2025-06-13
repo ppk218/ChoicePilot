@@ -1783,12 +1783,14 @@ async def root():
 # Include the router in the main app
 app.include_router(api_router)
 
+# Add security middleware
+app.add_middleware(SecurityMiddleware)
+
+# Add enhanced CORS middleware
+cors_config = CORSSecurityMiddleware.get_cors_config()
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **cors_config
 )
 
 # Configure logging
