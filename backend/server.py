@@ -1984,11 +1984,7 @@ app.include_router(api_router)
 # Add secure CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://fc4807d5-82dc-4b26-8dd2-bc18ac3b05d5.preview.emergentagent.com",
-        "https://*.preview.emergentagent.com",  # Allow all preview URLs
-        "http://localhost:3000",  # Development only
-    ],
+    allow_origins=["*"],  # Allow all origins for testing
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=[
