@@ -75,6 +75,10 @@ def test_valid_webhook_signature():
     # Generate valid signature
     signature = generate_signature(payload, timestamp)
     
+    print(f"Payload: {payload}")
+    print(f"Timestamp: {timestamp}")
+    print(f"Generated signature: {signature}")
+    
     # Send webhook request
     headers = {
         "Content-Type": "application/json",
@@ -87,6 +91,10 @@ def test_valid_webhook_signature():
         headers=headers,
         data=payload
     )
+    
+    print(f"Response status code: {response.status_code}")
+    print(f"Response headers: {response.headers}")
+    print(f"Response body: {response.text}")
     
     # Should return 200 OK
     if response.status_code != 200:
