@@ -1225,8 +1225,8 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
-            <span className="text-white font-bold text-xl">CP</span>
+          <div className="w-12 h-12 gingee-bg-orange rounded-full flex items-center justify-center mb-4 mx-auto">
+            <span className="text-white font-bold text-xl">🌶️</span>
           </div>
           <div className="text-lg font-medium text-gray-900">Loading getgingee...</div>
         </div>
