@@ -870,6 +870,9 @@ def format_conversation_context(conversations: List[dict]) -> str:
 async def chat_with_assistant(request: DecisionRequest, current_user: dict = Depends(get_current_user)):
     """Main chat endpoint with monetization and feature gating"""
     try:
+        # Security: Sanitize user input
+        request.message = security_service.sanitize_input(request.message)
+        
         # Check permissions and usage
         permission_check = await check_usage_and_permissions(
             current_user, 
