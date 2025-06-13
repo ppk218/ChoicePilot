@@ -6,19 +6,9 @@ import hashlib
 import time
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 
-# Load environment variables from frontend/.env
-load_dotenv("frontend/.env")
-
-# Get backend URL from environment
-BACKEND_URL = os.environ.get("REACT_APP_BACKEND_URL")
-if not BACKEND_URL:
-    print("Error: REACT_APP_BACKEND_URL not found in environment variables")
-    exit(1)
-
-# Ensure URL ends with /api for all requests
-API_URL = f"{BACKEND_URL}/api"
+# Use local server for testing
+API_URL = "http://localhost:8001/api"
 print(f"Using API URL: {API_URL}")
 
 # Webhook secret from backend/.env
