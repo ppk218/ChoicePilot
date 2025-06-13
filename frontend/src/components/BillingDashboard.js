@@ -175,7 +175,7 @@ const BillingDashboard = ({ user, subscriptionInfo, onClose }) => {
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {subscriptionInfo?.plan === 'pro' ? '💎 Pro Plan' : '🆓 Free Plan'}
+                    {subscriptionInfo?.plan === 'pro' ? '💎 Full Plate' : '🆓 Lite Bite'}
                   </span>
                 </div>
                 
