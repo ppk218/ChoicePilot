@@ -123,44 +123,44 @@ const LLM_MODELS = {
 };
 
 const ADVISOR_STYLES = {
-  optimistic: { 
-    name: "Optimistic", icon: "🌟", avatar: "✨", color: "amber",
-    description: "Encouraging, focuses on opportunities and positive outcomes",
+  optimistic: {
+    name: "Sunny", icon: "☀️", avatar: "✨", color: "amber",
+    description: "You got this! energy - encouraging and opportunity-focused",
     motto: "Every decision opens new doors", theme: "bg-amber-50 border-amber-200 text-amber-800", proOnly: true
   },
-  realist: { 
-    name: "Realist", icon: "⚖️", avatar: "📏", color: "blue",
-    description: "Balanced, practical, objective analysis with measured approach",
+  realist: {
+    name: "Grounded", icon: "⚖️", avatar: "📏", color: "blue",
+    description: "Practical insight with balanced, objective analysis",
     motto: "Clear thinking leads to clear choices", theme: "bg-blue-50 border-blue-200 text-blue-800", proOnly: false
   },
-  skeptical: { 
-    name: "Skeptical", icon: "🔍", avatar: "🛡️", color: "red",
-    description: "Cautious, thorough, risk-focused with deep analysis",
+  skeptical: {
+    name: "Spice", icon: "🌶️", avatar: "🛡️", color: "red",
+    description: "Hard questions - cautious and thorough risk analysis",
     motto: "Better safe than sorry - let's examine the risks", theme: "bg-red-50 border-red-200 text-red-800", proOnly: true
   },
   creative: {
-    name: "Creative", icon: "🎨", avatar: "💡", color: "purple",
-    description: "Imaginative, lateral thinking, out-of-the-box ideas",
+    name: "Twist", icon: "🌪️", avatar: "💡", color: "purple",
+    description: "Out-of-box thinking with imaginative lateral approaches",
     motto: "What if we looked at this completely differently?", theme: "bg-purple-50 border-purple-200 text-purple-800", proOnly: true
   },
   analytical: {
-    name: "Analytical", icon: "📊", avatar: "🔢", color: "indigo",
-    description: "Data-heavy, methodical, logic-first approach",
+    name: "Stat", icon: "📈", avatar: "🔢", color: "indigo",
+    description: "Data-driven decisions with methodical logic-first approach",
     motto: "Let the numbers guide us to the right answer", theme: "bg-indigo-50 border-indigo-200 text-indigo-800", proOnly: true
   },
   intuitive: {
-    name: "Intuitive", icon: "🌙", avatar: "💫", color: "pink",
-    description: "Emotion-led, gut feeling, holistic understanding",
+    name: "Vibe", icon: "✨", avatar: "💫", color: "pink",
+    description: "Gut feelings - emotion-led with holistic understanding",
     motto: "What does your heart tell you?", theme: "bg-pink-50 border-pink-200 text-pink-800", proOnly: true
   },
   visionary: {
-    name: "Visionary", icon: "🚀", avatar: "🔮", color: "emerald",
-    description: "Future-oriented, strategic, high-impact thinking",
+    name: "Sky", icon: "🌌", avatar: "🔮", color: "emerald",
+    description: "Long-term thinking - future-oriented strategic approach",
     motto: "How will this decision shape your future?", theme: "bg-emerald-50 border-emerald-200 text-emerald-800", proOnly: true
   },
   supportive: {
-    name: "Supportive", icon: "🤝", avatar: "💙", color: "green",
-    description: "Empathetic, validating, emotionally intelligent",
+    name: "Hug", icon: "🤗", avatar: "💙", color: "green",
+    description: "Emotional support - empathetic and validating guidance",
     motto: "You've got this - let's find what feels right", theme: "bg-green-50 border-green-200 text-green-800", proOnly: true
   }
 };
