@@ -1653,6 +1653,123 @@ async def get_decision_shares(decision_id: str, current_user: dict = Depends(get
         logging.error(f"Error getting decision shares: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to retrieve shares")
 
+# Account Security & Privacy Endpoints
+@api_router.post("/account/export-data")
+async def export_user_data(request: DataExportRequest, current_user: dict = Depends(get_current_user)):
+    """Export all user data for GDPR compliance"""
+    return await account_security.export_user_data(current_user["id"], request.export_format)
+
+@api_router.post("/account/delete")
+async def delete_account(request: AccountDeletionRequest, current_user: dict = Depends(get_current_user)):
+    """Permanently delete user account and all data"""
+    return await account_security.delete_user_account(
+        current_user["id"], 
+        request.password, 
+        request.confirmation
+    )
+
+@api_router.get("/account/privacy-settings")
+async def get_privacy_settings(current_user: dict = Depends(get_current_user)):
+    """Get user privacy settings"""
+    try:
+        user = await db.users.find_one({"id": current_user["id"]})
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+        
+        privacy_settings = user.get("privacy_settings", {})
+        
+        return {
+            "data_sharing": privacy_settings.get("data_sharing", False),
+            "analytics_tracking": privacy_settings.get("analytics_tracking", True),
+            "marketing_emails": privacy_settings.get("marketing_emails", False),
+            "security_notifications": privacy_settings.get("security_notifications", True)
+        }
+    except Exception as e:
+        logging.error(f"Error getting privacy settings: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to get privacy settings")
+
+@api_router.put("/account/privacy-settings")
+async def update_privacy_settings(settings: PrivacySettings, current_user: dict = Depends(get_current_user)):
+    """Update user privacy settings"""
+    try:
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {
+                "$set": {
+                    "privacy_settings": settings.dict(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {"message": "Privacy settings updated successfully"}
+    except Exception as e:
+        logging.error(f"Error updating privacy settings: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to update privacy settings")
+
+@api_router.get("/account/security-log")
+async def get_security_log(current_user: dict = Depends(get_current_user), limit: int = 20):
+    """Get user's security activity log"""
+    try:
+        # Get recent security events for this user
+        security_events = await db.audit_logs.find({
+            "user_id": current_user["id"]
+        }).sort("timestamp", -1).limit(limit).to_list(limit)
+        
+        # Clean sensitive data
+        for event in security_events:
+            if "_id" in event:
+                event["_id"] = str(event["_id"])
+            
+            # Remove sensitive fields but keep relevant security info
+            event.pop("requester_ip", None)
+            event.pop("deletion_results", None)
+        
+        return {"security_events": security_events}
+    except Exception as e:
+        logging.error(f"Error getting security log: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to get security log")
+
+# Privacy Policy and Terms Endpoints
+@api_router.get("/legal/privacy-policy")
+async def get_privacy_policy():
+    """Get privacy policy"""
+    return {
+        "privacy_policy": {
+            "last_updated": "2025-01-15",
+            "version": "1.0",
+            "content": {
+                "data_collection": "We collect only essential data needed to provide our decision-making services.",
+                "data_usage": "Your data is used to improve AI responses and provide personalized recommendations.",
+                "data_sharing": "We do not share personal data with third parties except as required by law.",
+                "data_retention": "Decision data is retained until you delete your account.",
+                "user_rights": "You can export, modify, or delete your data at any time.",
+                "cookies": "We use essential cookies for authentication and functionality.",
+                "contact": "Contact privacy@choicepilot.ai for privacy-related questions."
+            }
+        }
+    }
+
+@api_router.get("/legal/terms-of-service")
+async def get_terms_of_service():
+    """Get terms of service"""
+    return {
+        "terms_of_service": {
+            "last_updated": "2025-01-15",
+            "version": "1.0",
+            "content": {
+                "service_description": "ChoicePilot provides AI-powered decision assistance.",
+                "user_responsibilities": "Users must provide accurate information and use the service ethically.",
+                "acceptable_use": "Service must not be used for illegal activities or harmful content.",
+                "subscription_terms": "Subscriptions auto-renew unless cancelled.",
+                "limitation_of_liability": "Service is provided as-is without warranties.",
+                "termination": "Either party may terminate the agreement at any time.",
+                "governing_law": "Agreement governed by laws of jurisdiction where service operates.",
+                "contact": "Contact legal@choicepilot.ai for legal questions."
+            }
+        }
+    }
+
 # Legacy endpoints for compatibility
 @api_router.get("/")
 async def root():
