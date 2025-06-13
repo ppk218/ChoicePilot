@@ -5,6 +5,7 @@ import BillingDashboard from "./components/BillingDashboard";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentError from "./components/PaymentError";
 import ToolsPanel from "./components/ToolsPanel";
+import EmailVerification from "./components/EmailVerification";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
