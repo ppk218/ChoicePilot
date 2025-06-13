@@ -51,6 +51,24 @@ TEST_PRO_USER = {
 AUTH_TOKEN = None
 PRO_AUTH_TOKEN = None
 
+# Expected rebranded advisor names
+EXPECTED_ADVISOR_NAMES = {
+    "optimistic": "Sunny",
+    "realist": "Grounded",
+    "skeptical": "Spice",
+    "creative": "Creative",
+    "analytical": "Analytical",
+    "intuitive": "Intuitive",
+    "visionary": "Visionary",
+    "supportive": "Supportive"
+}
+
+# Expected rebranded plan names
+EXPECTED_PLAN_NAMES = {
+    "free": "Lite Bite",
+    "pro": "Full Plate"
+}
+
 def run_test(test_name, test_func):
     """Run a test and track results"""
     test_results["total"] += 1
