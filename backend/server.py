@@ -568,6 +568,7 @@ async def register_user(user_data: UserRegistration):
             "access_token": token,
             "user": {
                 "id": user.id,
+                "name": user.name,  # Added name field
                 "email": user.email,
                 "plan": user.plan,
                 "credits": user.credits,
