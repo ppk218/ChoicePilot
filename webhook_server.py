@@ -76,10 +76,9 @@ def verify_webhook_signature(payload: bytes, signature: str, timestamp: str) -> 
             webhook_secret = webhook_secret[6:]
         
         # Create expected signature using HMAC-SHA256
-        message = f"{timestamp}.{payload.decode('utf-8')}"
         expected_signature = hmac.new(
             webhook_secret.encode('utf-8'),
-            message.encode('utf-8'),
+            payload,
             hashlib.sha256
         ).hexdigest()
         
