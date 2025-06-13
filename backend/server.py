@@ -170,7 +170,7 @@ LLM_MODELS = {
 # Enhanced Advisor Personas
 ADVISOR_STYLES = {
     "optimistic": {
-        "name": "Optimistic", "icon": "🌟", "avatar": "✨", "color": "amber",
+        "name": "Sunny", "icon": "🌟", "avatar": "✨", "color": "amber",
         "description": "Encouraging, focuses on opportunities and positive outcomes",
         "tone": "upbeat and encouraging", "decision_weight": "opportunity-focused",
         "language_style": "inspiring and action-oriented", "framework": "Opportunity-First Analysis",
@@ -178,7 +178,7 @@ ADVISOR_STYLES = {
         "motto": "Every decision opens new doors", "pro_only": True
     },
     "realist": {
-        "name": "Realist", "icon": "⚖️", "avatar": "📏", "color": "blue",
+        "name": "Grounded", "icon": "⚖️", "avatar": "📏", "color": "blue",
         "description": "Balanced, practical, objective analysis with measured approach",
         "tone": "neutral and analytical", "decision_weight": "balanced consideration",
         "language_style": "structured and efficient", "framework": "Weighted Pros/Cons Analysis",
@@ -186,7 +186,7 @@ ADVISOR_STYLES = {
         "motto": "Clear thinking leads to clear choices", "pro_only": False
     },
     "skeptical": {
-        "name": "Skeptical", "icon": "🔍", "avatar": "🛡️", "color": "red",
+        "name": "Spice", "icon": "🔍", "avatar": "🛡️", "color": "red",
         "description": "Cautious, thorough, risk-focused with deep analysis",
         "tone": "careful and questioning", "decision_weight": "risk-averse",
         "language_style": "detailed with caveats", "framework": "Risk Assessment & Mitigation",
