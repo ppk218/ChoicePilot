@@ -237,6 +237,7 @@ ADVISOR_STYLES = {
 # User and Subscription Models
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Added name field
     email: EmailStr
     password_hash: str
     plan: Literal["free", "pro"] = "free"
@@ -253,6 +254,7 @@ class User(BaseModel):
     is_active: bool = True
 
 class UserRegistration(BaseModel):
+    name: str  # Added name field
     email: EmailStr
     password: str
 
