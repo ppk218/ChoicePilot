@@ -943,9 +943,9 @@ function MainApp() {
               <div className="text-center space-y-6 py-8">
                 <div className="space-y-2">
                   <h1 className="text-4xl font-bold text-gray-900">
-                    Welcome to <span className="gingee-orange">getgingee</span>
+                    One decision, many perspectives.
                   </h1>
-                  <p className="text-xl text-gray-600">One decision, many perspectives.</p>
+                  <p className="text-xl text-gray-600">Let 8 AI advisors guide your next big call with voice, logic, and personality. No pressure — just clarity.</p>
                   <p className="text-sm text-gray-500">Smart monetization with 8 advisor personalities and premium features</p>
                 </div>
                 
