@@ -590,8 +590,11 @@ async def request_password_reset(request: PasswordResetRequest):
         
         await db.password_resets.insert_one(reset_doc)
         
-        # Send reset email (implement email service)
-        # await email_service.send_password_reset_email(request.email, reset_token)
+        # Send reset email
+        try:
+            await email_service.send_password_reset_email(request.email, reset_token)
+        except Exception as e:
+            logger.warning(f"Failed to send password reset email: {str(e)}")
         
         return {"message": "If the email exists, a reset link has been sent"}
         
