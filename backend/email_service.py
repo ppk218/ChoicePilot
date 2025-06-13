@@ -275,52 +275,60 @@ class EmailService:
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Welcome to ChoicePilot!</title>
+            <title>Welcome to getgingee!</title>
         </head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Account Verified!</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Welcome to ChoicePilot</p>
+        <body style="font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #2C2C2E; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FFF8F0;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #FFF8F0; margin: 0; font-size: 32px; font-weight: bold;">🎉 Welcome to getgingee!</h1>
+                <p style="color: rgba(255,248,240,0.9); margin: 10px 0 0 0; font-size: 18px;">Your verification was spicy successful!</p>
             </div>
             
-            <div style="background: #f8fafc; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
-                <h2 style="color: #2d3748; margin-top: 0;">You're all set, {user_name}! 🚀</h2>
-                <p style="font-size: 16px; margin-bottom: 25px;">
-                    Your account has been successfully verified. You now have full access to ChoicePilot's AI-powered decision assistance.
+            <div style="background: #FFF8F0; padding: 30px; border-radius: 16px; margin-bottom: 30px; border: 2px solid #C6F6D5;">
+                <h2 style="color: #2C2C2E; margin-top: 0;">You're all set, {user_name}! 🚀</h2>
+                <p style="font-size: 16px; margin-bottom: 25px; color: #2C2C2E;">
+                    Your account is verified and ready to spice up your decision-making! Time to meet your AI crew.
                 </p>
                 
-                <div style="margin: 25px 0;">
-                    <h3 style="color: #2d3748; margin-bottom: 15px;">🎯 Your Free Plan Includes:</h3>
-                    <ul style="padding-left: 20px; margin: 0 0 20px 0;">
+                <div style="margin: 25px 0; background: #C6F6D5; padding: 20px; border-radius: 12px;">
+                    <h3 style="color: #2C2C2E; margin-bottom: 15px;">🌶️ Your Lite Bite Plan is Active:</h3>
+                    <ul style="padding-left: 20px; margin: 0 0 20px 0; color: #2C2C2E;">
                         <li style="margin-bottom: 8px;">✅ 3 AI-powered decisions per month</li>
-                        <li style="margin-bottom: 8px;">🤖 Access to GPT-4o AI model</li>
-                        <li style="margin-bottom: 8px;">⚖️ Realist advisor personality</li>
-                        <li>💬 Text-based decision assistance</li>
+                        <li style="margin-bottom: 8px;">🤖 Meet Grounded - your practical AI advisor</li>
+                        <li style="margin-bottom: 8px;">💬 Text-based decision brewing</li>
+                        <li>🧠 Smart insights with a kick of spice</li>
                     </ul>
                 </div>
                 
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 25px 0;">
-                    <h3 style="color: white; margin: 0 0 15px 0;">✨ Upgrade to Pro for:</h3>
-                    <ul style="color: rgba(255,255,255,0.9); padding-left: 20px; margin: 0;">
-                        <li style="margin-bottom: 8px;">🚀 Unlimited decisions</li>
-                        <li style="margin-bottom: 8px;">🧠 8 advisor personalities</li>
+                <div style="background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); padding: 20px; border-radius: 12px; margin: 25px 0;">
+                    <h3 style="color: #FFF8F0; margin: 0 0 15px 0;">✨ Want the Full Plate? Upgrade for:</h3>
+                    <ul style="color: rgba(255,248,240,0.9); padding-left: 20px; margin: 0;">
+                        <li style="margin-bottom: 8px;">🚀 Unlimited spicy decisions</li>
+                        <li style="margin-bottom: 8px;">👥 All 8 advisor personalities (Sunny, Spice, Twist, Stat, Vibe, Sky, Hug & Grounded)</li>
                         <li style="margin-bottom: 8px;">🎤 Voice input & output</li>
-                        <li style="margin-bottom: 8px;">📊 Advanced decision tools</li>
-                        <li>📄 PDF exports & sharing</li>
+                        <li style="margin-bottom: 8px;">📊 Advanced decision tools & analysis</li>
+                        <li>📄 PDF exports & sharing capabilities</li>
                     </ul>
                 </div>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{os.environ.get('FRONTEND_URL')}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                        Start Making Decisions
+                    <a href="{os.environ.get('FRONTEND_URL')}" style="display: inline-block; background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); color: #FFF8F0; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px; margin-right: 10px;">
+                        Start Making Decisions 🌶️
                     </a>
+                </div>
+                
+                <div style="background: #FFF8F0; border: 1px solid #F15A29; padding: 20px; border-radius: 12px; margin: 25px 0;">
+                    <h4 style="color: #F15A29; margin: 0 0 15px 0;">🔥 Pro Tip from your getgingee crew:</h4>
+                    <p style="margin: 0; color: #2C2C2E; font-style: italic;">
+                        "Start with any decision - big or small. Try asking: 'I'm thinking about [your choice]. What should I consider?' 
+                        Your AI advisor will help you talk it out, think it through, and getgingee it!"
+                    </p>
                 </div>
             </div>
             
-            <div style="text-align: center; padding: 20px; color: #666; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 0 0 10px 0;">Need help? Reply to this email or contact support.</p>
+            <div style="text-align: center; padding: 20px; color: #2C2C2E; border-top: 1px solid #C6F6D5;">
+                <p style="margin: 0 0 10px 0;">Need help getting started? Just reply to this email!</p>
                 <p style="margin: 0; font-size: 14px;">
-                    © 2025 ChoicePilot. Making decisions easier with AI.
+                    © 2025 getgingee. Talk it out. Think it through. Getgingee it. 🌶️
                 </p>
             </div>
         </body>
