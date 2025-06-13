@@ -1182,6 +1182,18 @@ function MainApp() {
         subscriptionInfo={subscriptionInfo}
         advisorStyle={advisorStyle}
       />
+
+      {/* Email Verification Modal */}
+      {showEmailVerification && user && (
+        <EmailVerification
+          user={user}
+          onVerificationComplete={() => {
+            setShowEmailVerification(false);
+            loadSubscriptionInfo(); // Refresh user info after verification
+          }}
+          onClose={() => setShowEmailVerification(false)}
+        />
+      )}
     </div>
   );
 }
