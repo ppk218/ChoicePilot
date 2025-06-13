@@ -1987,6 +1987,7 @@ app.add_middleware(
     allow_origins=[
         "https://fc4807d5-82dc-4b26-8dd2-bc18ac3b05d5.preview.emergentagent.com",
         "http://localhost:3000",  # Development only
+        "*"  # Allow all origins temporarily for debugging
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
