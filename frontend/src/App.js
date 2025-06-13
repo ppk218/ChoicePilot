@@ -279,9 +279,9 @@ const SubscriptionBar = ({ subscriptionInfo }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <span className={`px-2 py-1 rounded text-xs font-bold ${
-            isProUser ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'
+            isProUser ? 'gingee-bg-orange text-white' : 'mint-accent text-gray-800'
           }`}>
-            {isProUser ? '💎 PRO' : '🆓 FREE'}
+            {isProUser ? '🌶️ Full Plate' : '🌱 Lite Bite'}
           </span>
           
           {!isProUser && (
