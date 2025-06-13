@@ -251,7 +251,7 @@ const ToolsPanel = ({
                       disabled={exportingPdf || !isProUser}
                       className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 ${
                         isProUser
-                          ? 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50'
+                          ? 'gingee-gradient text-white hover:opacity-90 disabled:opacity-50'
                           : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       }`}
                     >
