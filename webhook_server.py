@@ -26,6 +26,9 @@ async def handle_dodo_webhook(request: Request):
         signature = request.headers.get("webhook-signature", "")
         timestamp = request.headers.get("webhook-timestamp", "")
         
+        logger.info(f"Received webhook - Signature: {signature}, Timestamp: {timestamp}")
+        logger.info(f"Payload: {body.decode('utf-8')}")
+        
         # Enhanced webhook verification
         if not signature or not timestamp:
             logger.warning("Webhook received without proper signature headers")
@@ -36,13 +39,23 @@ async def handle_dodo_webhook(request: Request):
             webhook_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
             time_diff = datetime.utcnow() - webhook_time
             if time_diff.total_seconds() > 300:  # 5 minutes tolerance
+                logger.warning(f"Webhook timestamp too old: {time_diff.total_seconds()} seconds")
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Webhook timestamp too old")
         except ValueError:
             logger.warning(f"Invalid webhook timestamp: {timestamp}")
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook timestamp")
         
         # Verify webhook signature
-        if not verify_webhook_signature(body, signature, timestamp):
+        expected_signature = hmac.new(
+            WEBHOOK_SECRET.encode('utf-8'),
+            body,
+            hashlib.sha256
+        ).hexdigest()
+        
+        logger.info(f"Expected signature: {expected_signature}")
+        logger.info(f"Received signature: {signature}")
+        
+        if not hmac.compare_digest(expected_signature, signature):
             logger.warning("Webhook signature verification failed")
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid webhook signature")
         
