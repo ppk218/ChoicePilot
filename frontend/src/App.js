@@ -1247,7 +1247,7 @@ function AppContent({ authModalOpen, setAuthModalOpen, authMode, setAuthMode }) 
               Welcome to <span className="gingee-orange">getgingee</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Talk it out. Think it through. Getgingee it.
+              One decision, many perspectives.
             </p>
             <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto">
               Stop struggling with decision fatigue. Get personalized, actionable recommendations 
