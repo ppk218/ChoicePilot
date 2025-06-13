@@ -499,14 +499,37 @@ async def register_user(user_data: UserRegistration):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Registration failed")
 
 @api_router.post("/auth/verify-email")
-async def verify_email(request):
-    """Verify user email address - placeholder"""
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Email verification not yet implemented")
+async def verify_email(request: dict):
+    """Verify user email address"""
+    try:
+        email = request.get("email")
+        code = request.get("verification_code")
+        
+        if not email or not code:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email and verification code required")
+        
+        return await email_verification_service.verify_email(email, code)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Email verification error: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Email verification failed")
 
 @api_router.post("/auth/resend-verification")
-async def resend_verification(request):
-    """Resend email verification - placeholder"""
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Email verification not yet implemented")
+async def resend_verification(request: dict):
+    """Resend email verification"""
+    try:
+        email = request.get("email")
+        
+        if not email:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email required")
+        
+        return await email_verification_service.send_verification_email(email)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resend verification error: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to resend verification")
 
 @api_router.post("/auth/login")
 async def login_user(login_data: UserLogin):
