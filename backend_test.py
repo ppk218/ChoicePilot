@@ -1555,6 +1555,173 @@ def run_all_tests():
     
     return test_results["failed"] == 0
 
+# Getgingee Rebrand Tests
+
+def test_advisor_names_rebrand():
+    """Test that advisor names have been updated to the getgingee branding"""
+    response = requests.get(f"{API_URL}/advisor-styles", headers=get_auth_headers())
+    
+    if response.status_code != 200:
+        print(f"Error: Advisor styles endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    if "advisor_styles" not in data:
+        print(f"Error: Advisor styles endpoint response missing 'advisor_styles' field: {data}")
+        return False
+    
+    advisor_styles = data["advisor_styles"]
+    
+    # Check that all expected advisor styles exist
+    for style_key in EXPECTED_ADVISOR_NAMES.keys():
+        if style_key not in advisor_styles:
+            print(f"Error: Expected advisor style '{style_key}' not found in response")
+            return False
+    
+    # Check that advisor names have been updated
+    all_updated = True
+    for style_key, expected_name in EXPECTED_ADVISOR_NAMES.items():
+        actual_name = advisor_styles[style_key].get("name")
+        if actual_name != expected_name:
+            print(f"Error: Advisor '{style_key}' name should be '{expected_name}' but is '{actual_name}'")
+            all_updated = False
+    
+    if all_updated:
+        print(f"All advisor names have been updated to getgingee branding:")
+        for style_key, name in EXPECTED_ADVISOR_NAMES.items():
+            print(f"  - {style_key}: {name}")
+    
+    return all_updated
+
+def test_plan_names_rebrand():
+    """Test that subscription plan names have been updated to the getgingee branding"""
+    response = requests.get(f"{API_URL}/subscription/plans")
+    
+    if response.status_code != 200:
+        print(f"Error: Subscription plans endpoint returned status code {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    data = response.json()
+    if "subscription_plans" not in data:
+        print(f"Error: Subscription plans endpoint response missing 'subscription_plans' field: {data}")
+        return False
+    
+    subscription_plans = data["subscription_plans"]
+    
+    # Check that all expected plan types exist
+    for plan_key in EXPECTED_PLAN_NAMES.keys():
+        if plan_key not in subscription_plans:
+            print(f"Error: Expected plan type '{plan_key}' not found in response")
+            return False
+    
+    # Check that plan names have been updated
+    all_updated = True
+    for plan_key, expected_name in EXPECTED_PLAN_NAMES.items():
+        actual_name = subscription_plans[plan_key].get("name")
+        if actual_name != expected_name:
+            print(f"Error: Plan '{plan_key}' name should be '{expected_name}' but is '{actual_name}'")
+            all_updated = False
+    
+    if all_updated:
+        print(f"All plan names have been updated to getgingee branding:")
+        for plan_key, name in EXPECTED_PLAN_NAMES.items():
+            print(f"  - {plan_key}: {name}")
+    
+    return all_updated
+
+def test_email_branding():
+    """Test that email templates use getgingee branding"""
+    # We'll check the SMTP settings to ensure they're using getgingee.com domain
+    smtp_username = os.environ.get("SMTP_USERNAME", "")
+    from_email = os.environ.get("FROM_EMAIL", "")
+    
+    if not smtp_username.endswith("@getgingee.com"):
+        print(f"Error: SMTP username should use getgingee.com domain but is '{smtp_username}'")
+        return False
+    
+    if not from_email.endswith("@getgingee.com"):
+        print(f"Error: From email should use getgingee.com domain but is '{from_email}'")
+        return False
+    
+    print(f"Email branding is using getgingee.com domain:")
+    print(f"  - SMTP username: {smtp_username}")
+    print(f"  - From email: {from_email}")
+    
+    return True
+
+def test_getgingee_branding_in_system_message():
+    """Test that system messages include getgingee branding"""
+    # Create a test session
+    session_id = str(uuid.uuid4())
+    payload = {
+        "message": "Hello, I need help deciding what laptop to buy for programming.",
+        "session_id": session_id,
+        "category": "consumer",
+        "preferences": {"budget": "medium", "priority": "performance"}
+    }
+    
+    if MOCK_CLAUDE_API:
+        # Create a mock response
+        mock_response = {
+            "session_id": session_id,
+            "response": "As your getgingee Grounded Advisor, I'll help you find the right laptop for programming within your medium budget.",
+            "category": payload["category"],
+            "timestamp": "2025-06-01T12:00:00.000Z"
+        }
+        
+        print(f"Using mock response for system message test")
+        data = mock_response
+    else:
+        # Use the real API
+        response = requests.post(f"{API_URL}/chat", json=payload)
+        if response.status_code != 200:
+            print(f"Error: Chat endpoint returned status code {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        data = response.json()
+    
+    # Check if the response contains getgingee branding
+    response_text = data.get("response", "")
+    if "getgingee" not in response_text.lower():
+        print(f"Error: Response does not contain 'getgingee' branding")
+        print(f"Response: {response_text[:200]}...")
+        return False
+    
+    print(f"System message includes getgingee branding")
+    print(f"Response preview: {response_text[:200]}...")
+    
+    return True
+
+def run_getgingee_rebrand_tests():
+    """Run all getgingee rebrand tests"""
+    rebrand_tests = [
+        ("Advisor Names Rebrand", test_advisor_names_rebrand),
+        ("Plan Names Rebrand", test_plan_names_rebrand),
+        ("Email Branding", test_email_branding),
+        ("System Message Branding", test_getgingee_branding_in_system_message)
+    ]
+    
+    for test_name, test_func in rebrand_tests:
+        run_test(test_name, test_func)
+
 if __name__ == "__main__":
-    # Run only the email service tests
-    run_email_tests()
+    # Run getgingee rebrand tests
+    run_getgingee_rebrand_tests()
+    
+    # Print summary
+    print(f"\n{'='*80}\nTest Summary\n{'='*80}")
+    print(f"Total tests: {test_results['total']}")
+    print(f"Passed: {test_results['passed']}")
+    print(f"Failed: {test_results['failed']}")
+    print(f"Success rate: {(test_results['passed'] / test_results['total']) * 100:.1f}%")
+    
+    # Print individual test results
+    print("\nDetailed Results:")
+    for test in test_results["tests"]:
+        status = "✅" if test["status"] == "PASSED" else "❌"
+        print(f"{status} {test['name']}: {test['status']}")
+        if test.get("error"):
+            print(f"   Error: {test['error']}")
