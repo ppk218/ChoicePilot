@@ -874,7 +874,17 @@ function MainApp() {
         <div className="flex items-center justify-between mb-6 bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 gingee-bg-coral rounded-lg flex items-center justify-center">
+              <img 
+                src="/logos/getgingee-horizontal/logo-getgingee-horizontal-1.png" 
+                alt="getgingee logo"
+                className="h-10 w-auto"
+                onError={(e) => {
+                  // Fallback to emoji if image not found
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="w-8 h-8 gingee-bg-coral rounded-lg items-center justify-center" style={{display: 'none'}}>
                 <span className="text-white font-bold text-lg">🌶️</span>
               </div>
               <h1 className="text-2xl font-bold gingee-coral">getgingee</h1>
