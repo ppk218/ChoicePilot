@@ -659,6 +659,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         "credits": current_user["credits"],
         "monthly_decisions_used": current_user.get("monthly_decisions_used", 0),
         "subscription_expires": current_user.get("subscription_expires"),
+        "email_verified": current_user.get("email_verified", True),  # Default to True as per the fix
         "created_at": current_user["created_at"]
     }
 
