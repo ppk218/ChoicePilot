@@ -1985,7 +1985,7 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://a3afc75c-858c-4f4f-b1c5-cd9fc2d2bc83.preview.emergentagent.com",
+        "https://fd14ccb4-6c5f-45fb-b9a9-ec6eed7e8965.preview.emergentagent.com",
         "http://localhost:3000",  # Development only
     ],
     allow_credentials=True,
