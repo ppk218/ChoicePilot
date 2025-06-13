@@ -1989,13 +1989,15 @@ app.add_middleware(
         "http://localhost:3000",  # Development only
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=[
         "Authorization",
         "Content-Type", 
         "X-Requested-With",
         "Accept",
         "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
     ],
     expose_headers=["Content-Disposition"],
 )
