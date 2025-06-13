@@ -473,7 +473,7 @@ async def register_user(user_data: UserRegistration):
             plan="free",
             credits=0,
             monthly_decisions_used=0,
-            email_verified=False  # Require email verification
+            email_verified=True  # Temporarily set to True to bypass email issues
         )
         
         await db.users.insert_one(user.dict())
