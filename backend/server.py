@@ -530,9 +530,43 @@ async def check_usage_and_permissions(user: dict, use_voice: bool = False, advis
 async def register_user(user_data: UserRegistration):
     """Register a new user with enhanced security"""
     try:
-        # Input validation
+        # Enhanced input validation
+        
+        # Name validation - only alphabetic characters and spaces
+        if not user_data.name or not user_data.name.strip():
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Name is required")
+        
+        name_pattern = r'^[a-zA-Z\s]+$'
+        if not re.match(name_pattern, user_data.name.strip()):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Name must contain only letters and spaces")
+        
+        if len(user_data.name.strip()) < 2:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Name must be at least 2 characters long")
+        
+        # Email validation
+        email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_pattern, user_data.email):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please enter a valid email address")
+        
+        # Enhanced password validation
         if len(user_data.password) < 8:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+        
+        # Check for uppercase letter
+        if not re.search(r'[A-Z]', user_data.password):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must contain at least one uppercase letter")
+        
+        # Check for lowercase letter
+        if not re.search(r'[a-z]', user_data.password):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must contain at least one lowercase letter")
+        
+        # Check for number
+        if not re.search(r'\d', user_data.password):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must contain at least one number")
+        
+        # Check for special character
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', user_data.password):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must contain at least one special character")
         
         # Check if user already exists
         existing_user = await db.users.find_one({"email": user_data.email})
@@ -542,7 +576,7 @@ async def register_user(user_data: UserRegistration):
         # Create new user
         password_hash = hash_password(user_data.password)
         user = User(
-            name=user_data.name,  # Added name field
+            name=user_data.name.strip(),  # Added name field with trim
             email=user_data.email,
             password_hash=password_hash,
             plan="free",
