@@ -198,40 +198,54 @@ const MainApp = () => {
     trackPageView(currentView);
   }, [currentView, trackPageView]);
 
-  // Apply theme class on mount
+  // Redirect authenticated users to dashboard if they're on landing
   useEffect(() => {
+    if (isAuthenticated && currentView === 'landing') {
+      setCurrentView('dashboard');
+    }
+  }, [isAuthenticated, currentView]);
+
+  // Apply theme class on mount and theme changes
+  useEffect(() => {
+    const root = document.documentElement;
     if (darkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
+      root.classList.add('dark');
+      root.classList.remove('light');
     } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
+      root.classList.add('light');
+      root.classList.remove('dark');
     }
   }, [darkMode]);
+
+  const handleStartDecision = () => {
+    setCurrentView('decision');
+  };
 
   const renderView = () => {
     switch (currentView) {
       case 'landing':
-        return <LandingPage onStartDecision={() => setCurrentView('decision')} />;
+        return <LandingPage onStartDecision={handleStartDecision} />;
       case 'decision':
-        return <DecisionFlow />;
+        return <DecisionFlow onComplete={() => setCurrentView('dashboard')} />;
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onStartDecision={handleStartDecision} />;
       default:
-        return <LandingPage onStartDecision={() => setCurrentView('decision')} />;
+        return isAuthenticated ? 
+          <Dashboard onStartDecision={handleStartDecision} /> : 
+          <LandingPage onStartDecision={handleStartDecision} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation Header */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
               <button
-                onClick={() => setCurrentView('landing')}
+                onClick={() => setCurrentView(isAuthenticated ? 'dashboard' : 'landing')}
                 className="text-xl font-bold text-foreground hover:text-primary transition-colors"
               >
                 <img 
@@ -243,7 +257,7 @@ const MainApp = () => {
                     e.target.nextSibling.style.display = 'inline';
                   }}
                 />
-                <span style={{ display: 'none' }}>getgingee</span>
+                <span style={{ display: 'none' }} className="text-primary font-bold">getgingee</span>
               </button>
             </div>
 
@@ -252,7 +266,8 @@ const MainApp = () => {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-md hover:bg-muted transition-colors"
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+                aria-label="Toggle theme"
               >
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
@@ -269,10 +284,10 @@ const MainApp = () => {
                     Dashboard
                   </Button>
                   <Button
-                    variant="outline"
-                    onClick={() => setCurrentView('decision')}
+                    onClick={handleStartDecision}
+                    className="bg-gradient-cta hover:scale-105 transition-all"
                   >
-                    New Decision
+                    Start My Decision
                   </Button>
                 </>
               ) : (
@@ -291,6 +306,7 @@ const MainApp = () => {
                       setAuthMode('register');
                       setShowAuthModal(true);
                     }}
+                    className="bg-gradient-cta hover:scale-105 transition-all"
                   >
                     Sign Up
                   </Button>
@@ -312,6 +328,10 @@ const MainApp = () => {
         onClose={() => setShowAuthModal(false)}
         mode={authMode}
         onSwitchMode={setAuthMode}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          setCurrentView('dashboard');
+        }}
       />
     </div>
   );
