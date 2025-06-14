@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import axios from 'axios';
-import { User, History, Settings, Moon, Sun, Menu, X, Shield } from 'lucide-react';
+import { User, History, Settings, Moon, Sun, Menu, X, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 
 // Import UI components
 import { Button } from './components/ui/Button';
@@ -135,6 +135,7 @@ const App = () => {
   const [authMode, setAuthMode] = useState('login');
   const [showSideChatModal, setShowSideChatModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [initialQuestion, setInitialQuestion] = useState(''); // Store initial question
 
   const { trackPageView } = usePostHog();
 
@@ -142,14 +143,37 @@ const App = () => {
     trackPageView(currentView);
   }, [currentView, trackPageView]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserMenu]);
+
+  const startDecisionFlow = (question) => {
+    setInitialQuestion(question);
+    setCurrentView('flow');
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'landing':
-        return <LandingPage onStartDecision={() => setCurrentView('flow')} />;
+        return <LandingPage onStartDecision={startDecisionFlow} />;
       case 'flow':
-        return <DecisionFlow onComplete={() => setCurrentView('landing')} />;
+        return <DecisionFlow 
+          initialQuestion={initialQuestion}
+          onComplete={() => setCurrentView('landing')} 
+          onSaveAndContinue={() => setCurrentView('dashboard')}
+        />;
+      case 'dashboard':
+        return <Dashboard onStartDecision={startDecisionFlow} />;
       default:
-        return <LandingPage onStartDecision={() => setCurrentView('flow')} />;
+        return <LandingPage onStartDecision={startDecisionFlow} />;
     }
   };
 
@@ -170,6 +194,7 @@ const App = () => {
               showUserMenu={showUserMenu}
               setShowUserMenu={setShowUserMenu}
               renderView={renderView}
+              startDecisionFlow={startDecisionFlow}
             />
           </div>
         </AuthProvider>
@@ -182,7 +207,7 @@ const App = () => {
 const AppContent = ({ 
   currentView, setCurrentView, showAuthModal, setShowAuthModal, 
   authMode, setAuthMode, showSideChatModal, setShowSideChatModal,
-  showUserMenu, setShowUserMenu, renderView 
+  showUserMenu, setShowUserMenu, renderView, startDecisionFlow
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -194,17 +219,25 @@ const AppContent = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🌶️</span>
+            <div 
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => setCurrentView('landing')}
+            >
+              <img 
+                src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_32x32 px (favicon)_Symbol Logo.png"
+                alt="GetGingee"
+                className="h-8 w-8"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <span style={{ display: 'none' }} className="text-2xl">🌶️</span>
               <span className="text-xl font-bold text-gradient">GetGingee</span>
             </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <button className="text-foreground hover:text-primary transition-colors">Features</button>
-              <button className="text-foreground hover:text-primary transition-colors">Pricing</button>
-              <button className="text-foreground hover:text-primary transition-colors">FAQ</button>
-              
+            {/* Right Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
               {isAuthenticated ? (
                 <>
                   <button 
@@ -215,8 +248,15 @@ const AppContent = ({
                     History
                   </button>
                   
+                  <button
+                    onClick={() => setCurrentView('dashboard')}
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    Dashboard
+                  </button>
+                  
                   {/* User Menu */}
-                  <div className="relative">
+                  <div className="relative user-menu-container">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
@@ -237,6 +277,7 @@ const AppContent = ({
                             onClick={() => {
                               setShowUserMenu(false);
                               logout();
+                              setCurrentView('landing');
                             }}
                             className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
                           >
@@ -302,6 +343,7 @@ const AppContent = ({
         onSwitchMode={setAuthMode}
         onSuccess={() => {
           setShowAuthModal(false);
+          setCurrentView('dashboard');
         }}
       />
 
@@ -318,7 +360,7 @@ const AppContent = ({
   );
 };
 
-// Landing Page Component (New Design)
+// Landing Page Component (Updated Headlines)
 const LandingPage = ({ onStartDecision }) => {
   const [question, setQuestion] = useState('');
   const { trackDecisionStarted } = usePostHog();
@@ -327,111 +369,135 @@ const LandingPage = ({ onStartDecision }) => {
   const handleStartDecision = () => {
     if (question.trim()) {
       trackDecisionStarted('general', question.length);
-      onStartDecision();
+      onStartDecision(question);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Hero Section */}
-        <div className="mb-16">
-          <h1 className="hero-headline mb-6">
-            Clarity in Under{' '}
-            <span className="hero-gradient">60</span>
-            <br />
-            <span className="hero-gradient">Seconds</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-            Overwhelmed by choices? GetGingee helps you make quick, thoughtful, and confident decisions. 
-            Just type your dilemma and find your focus.
-          </p>
-        </div>
-
-        {/* Central Input */}
-        <div className="max-w-2xl mx-auto mb-16">
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <Input
-                placeholder="What decision are you facing?"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="chat-input text-lg py-6 px-6"
-                onKeyPress={(e) => e.key === 'Enter' && handleStartDecision()}
-              />
-            </div>
-            <Button
-              size="lg"
-              onClick={handleStartDecision}
-              disabled={!question.trim()}
-              className="cta-button py-6 text-lg"
-            >
-              Get Clarity Now
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              E.g., "Should I switch careers?" or "Which city should I move to?"
+    <div className="min-h-screen flex flex-col">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Hero Section */}
+          <div className="mb-16">
+            <h1 className="hero-headline mb-6">
+              From confusion to clarity — in{' '}
+              <span className="hero-gradient">just a few steps</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
+              Overwhelmed by choices? GetGingee helps you make thoughtful, confident decisions.
+            </p>
+            
+            <p className="text-sm text-muted-foreground mb-12">
+              We'll ask up to 3 quick questions to personalize your answer.
             </p>
           </div>
-        </div>
 
-        {/* Why Choose GetGingee? */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-foreground">Why Choose GetGingee?</h2>
-          <p className="text-muted-foreground mb-12">
-            Unlock faster, smarter decision-making with our unique approach.
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="decision-card text-center">
-              <CardContent className="p-6">
-                <div className="text-4xl mb-4">⚡</div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">Rapid Results</h3>
-                <p className="text-muted-foreground text-sm">
-                  Get actionable insights in under 60 seconds. No more analysis paralysis.
-                </p>
-              </CardContent>
-            </Card>
+          {/* Chat-Style Input */}
+          <div className="max-w-2xl mx-auto mb-16">
+            <div className="relative">
+              {/* Chat Container */}
+              <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
+                <div className="flex flex-col gap-4">
+                  <textarea
+                    placeholder="What decision are you facing?"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    className="chat-input resize-none min-h-[80px] border-none bg-transparent text-lg focus:ring-0 focus:outline-none"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleStartDecision();
+                      }
+                    }}
+                  />
+                  
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground">
+                      E.g., "Should I switch careers?" or "Which city should I move to?"
+                    </p>
+                    <Button
+                      onClick={handleStartDecision}
+                      disabled={!question.trim()}
+                      className="cta-button px-6 py-2 text-sm"
+                    >
+                      Decide Now
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Why Choose GetGingee? */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold mb-8 text-foreground">Why Choose GetGingee?</h2>
+            <p className="text-muted-foreground mb-12">
+              Unlock faster, smarter decision-making with our unique approach.
+            </p>
             
-            <Card className="decision-card text-center">
-              <CardContent className="p-6">
-                <div className="text-4xl mb-4">😊</div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">Increased Confidence</h3>
-                <p className="text-muted-foreground text-sm">
-                  Make decisions you feel good about, backed by structured thinking.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="decision-card text-center">
-              <CardContent className="p-6">
-                <div className="text-4xl mb-4">👥</div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">Effortless Clarity</h3>
-                <p className="text-muted-foreground text-sm">
-                  Cut through the noise and identify the core of your decision.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="decision-card text-center">
+                <CardContent className="p-6">
+                  <div className="text-4xl mb-4">⚡</div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">Rapid Results</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Get actionable insights quickly. No more analysis paralysis.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="decision-card text-center">
+                <CardContent className="p-6">
+                  <div className="text-4xl mb-4">😊</div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">Increased Confidence</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Make decisions you feel good about, backed by structured thinking.
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="decision-card text-center">
+                <CardContent className="p-6">
+                  <div className="text-4xl mb-4">👥</div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">Effortless Clarity</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Cut through the noise and identify the core of your decision.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="text-center text-muted-foreground text-sm">
-          © 2024 GetGingee — Smarter decisions. Instantly.
-        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-auto border-t border-border bg-card/50">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-8 mb-4 md:mb-0">
+              <button className="text-muted-foreground hover:text-foreground transition-colors">Features</button>
+              <button className="text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
+              <button className="text-muted-foreground hover:text-foreground transition-colors">FAQ</button>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © 2024 GetGingee — Smarter decisions. Instantly.
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
 
-// Decision Flow Component (New Design)
-const DecisionFlow = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState('initial');
+// Decision Flow Component (Enhanced with Chat History)
+const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [currentStep, setCurrentStep] = useState('followup');
   const [decisionId, setDecisionId] = useState(null);
-  const [question, setQuestion] = useState('');
   const [followupQuestions, setFollowupQuestions] = useState([]);
   const [currentFollowupIndex, setCurrentFollowupIndex] = useState(0);
-  const [answers, setAnswers] = useState([]);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -440,13 +506,22 @@ const DecisionFlow = ({ onComplete }) => {
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
-  const handleInitialSubmit = async () => {
-    if (!question.trim()) return;
-    
-    setLoading(true);
-    setError('');
-    trackDecisionStarted('general', question.length);
+  // Initialize with the initial question
+  useEffect(() => {
+    if (initialQuestion) {
+      setConversationHistory([{
+        type: 'user_question',
+        content: initialQuestion,
+        timestamp: new Date()
+      }]);
+      
+      // Generate follow-up questions based on initial question
+      generateFollowups(initialQuestion);
+    }
+  }, [initialQuestion]);
 
+  const generateFollowups = async (question) => {
+    setLoading(true);
     try {
       const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
       const response = await axios.post(`${API}${endpoint}`, {
@@ -457,7 +532,7 @@ const DecisionFlow = ({ onComplete }) => {
       const data = response.data;
       setDecisionId(data.decision_id);
       
-      // Simulate follow-up questions (you can replace with real API)
+      // Mock follow-up questions (replace with real API)
       const mockFollowups = [
         {
           question: "What aspects of this decision feel most uncertain to you right now?",
@@ -467,17 +542,24 @@ const DecisionFlow = ({ onComplete }) => {
         {
           question: "If you chose the option you're leaning towards, what's the best possible outcome you can imagine?", 
           step_number: 2,
-          context: "Let's explore the potential upside to understand your true priorities."
+          context: "Let's explore the potential upside to understand your priorities."
         },
         {
           question: "What personal values are most important to you in making this decision?",
           step_number: 3, 
-          context: "Consider values like security, growth, happiness, or freedom. This helps us craft decision criteria based on what truly matters to you."
+          context: "Consider values like security, growth, happiness, or freedom."
         }
       ];
       
       setFollowupQuestions(mockFollowups);
-      setCurrentStep('followup');
+      
+      // Add AI response to conversation
+      setConversationHistory(prev => [...prev, {
+        type: 'ai_response',
+        content: "I'll help you think through this decision. Let me ask a few questions to give you the best recommendation.",
+        timestamp: new Date()
+      }]);
+      
     } catch (error) {
       console.error('Decision error:', error);
       setError('We\'re having trouble processing your decision. Please try again.');
@@ -486,11 +568,28 @@ const DecisionFlow = ({ onComplete }) => {
     }
   };
 
-  const handleFollowupSubmit = async () => {
+  const handleFollowupSubmit = () => {
     if (!currentAnswer.trim()) return;
     
-    const newAnswers = [...answers, currentAnswer];
-    setAnswers(newAnswers);
+    const currentQuestion = followupQuestions[currentFollowupIndex];
+    
+    // Add question and answer to conversation history
+    setConversationHistory(prev => [
+      ...prev,
+      {
+        type: 'ai_question',
+        content: currentQuestion.question,
+        context: currentQuestion.context,
+        step: currentFollowupIndex + 1,
+        timestamp: new Date()
+      },
+      {
+        type: 'user_answer',
+        content: currentAnswer,
+        timestamp: new Date()
+      }
+    ]);
+    
     trackFollowupAnswered(currentFollowupIndex + 1);
     
     if (currentFollowupIndex < followupQuestions.length - 1) {
@@ -498,84 +597,71 @@ const DecisionFlow = ({ onComplete }) => {
       setCurrentAnswer('');
     } else {
       // Generate recommendation
-      setCurrentStep('recommendation');
-      
-      // Mock recommendation (replace with real API call)
-      const mockRecommendation = {
-        recommendation: "Based on your reflections regarding uncertainty, desired outcomes, and core values, I recommend taking a measured approach to your decision. Start by addressing the areas of uncertainty through additional research or consultation, while keeping your primary goal and values as your north star.",
-        confidence_score: 85,
-        reasoning: "Your responses show you have a clear vision of what you want but need more information to feel confident. This balanced approach honors both your aspirations and your need for security."
-      };
-      
-      setRecommendation(mockRecommendation);
-      trackDecisionCompleted(decisionId, mockRecommendation.confidence_score);
+      generateRecommendation();
     }
   };
 
-  const handleFeedback = async (helpful) => {
-    // Track feedback
-    console.log('Feedback:', helpful);
+  const generateRecommendation = () => {
+    setCurrentStep('recommendation');
+    
+    // Mock recommendation (replace with real API call)
+    const mockRecommendation = {
+      recommendation: "Based on your thoughtful responses about uncertainty, desired outcomes, and core values, I recommend taking a measured approach to your decision. Start by addressing the areas of uncertainty through additional research or consultation, while keeping your primary goal and values as your north star.",
+      confidence_score: 85,
+      reasoning: "Your responses show you have a clear vision of what you want but need more information to feel confident. This balanced approach honors both your aspirations and your need for security.",
+      logic_trace: [
+        "Analyzed uncertainty factors to identify knowledge gaps",
+        "Evaluated potential outcomes against personal values",
+        "Applied structured decision framework for optimal clarity",
+        "Weighted risk tolerance with opportunity potential"
+      ]
+    };
+    
+    setRecommendation(mockRecommendation);
+    
+    // Add recommendation to conversation
+    setConversationHistory(prev => [...prev, {
+      type: 'ai_recommendation',
+      content: mockRecommendation,
+      timestamp: new Date()
+    }]);
+    
+    trackDecisionCompleted(decisionId, mockRecommendation.confidence_score);
   };
 
-  const currentFollowup = followupQuestions[currentFollowupIndex];
+  const handleFeedback = async (helpful, reason = '') => {
+    try {
+      await axios.post(`${API}/api/decision/feedback/${decisionId}`, {
+        helpful,
+        feedback_text: reason
+      });
+    } catch (error) {
+      console.error('Feedback error:', error);
+    }
+  };
+
+  const currentQuestion = followupQuestions[currentFollowupIndex];
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="max-w-2xl w-full mx-auto">
-        {/* Initial Question Step */}
-        {currentStep === 'initial' && (
-          <Card className="decision-card card-enter">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-foreground">Let's explore your decision</CardTitle>
-              <CardDescription>Tell me about the decision you need to make</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              <Input
-                placeholder="What decision do you need help with?"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="chat-input text-lg py-4"
-                onKeyPress={(e) => e.key === 'Enter' && handleInitialSubmit()}
-              />
-              
-              {error && (
-                <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                  {error}
-                </div>
-              )}
-              
-              <Button
-                onClick={handleInitialSubmit}
-                disabled={!question.trim() || loading}
-                className="w-full cta-button py-4 text-lg"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Analyzing your decision...
-                  </div>
-                ) : 'Start My Decision'}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+    <div className="min-h-screen px-4 py-8">
+      <div className="max-w-3xl mx-auto">
+        {/* Conversation History */}
+        <div className="space-y-6 mb-8">
+          {conversationHistory.map((item, index) => (
+            <ConversationCard key={index} item={item} />
+          ))}
+        </div>
 
-        {/* Follow-up Questions Step */}
-        {currentStep === 'followup' && currentFollowup && (
+        {/* Current Input */}
+        {currentStep === 'followup' && currentQuestion && (
           <Card className="decision-card card-enter">
             <CardHeader>
               <div className="step-indicator">Step {currentFollowupIndex + 1} of {followupQuestions.length}</div>
-              <CardTitle className="text-xl text-foreground">{currentFollowup.question}</CardTitle>
-              <CardDescription>{currentFollowup.context}</CardDescription>
+              <CardTitle className="text-xl text-foreground">{currentQuestion.question}</CardTitle>
+              <CardDescription>{currentQuestion.context}</CardDescription>
             </CardHeader>
             
             <CardContent className="space-y-6">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">Your Decision:</h4>
-                <p className="text-muted-foreground">{question}</p>
-              </div>
-              
               <textarea
                 placeholder="Enter your response here..."
                 value={currentAnswer}
@@ -595,124 +681,315 @@ const DecisionFlow = ({ onComplete }) => {
           </Card>
         )}
 
-        {/* Recommendation Step */}
-        {currentStep === 'recommendation' && recommendation && (
-          <Card className="decision-card card-enter">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-foreground">Your Decision Recommendation</CardTitle>
-              <CardDescription>Based on our conversation, here's what I recommend</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              <div className="p-6 bg-muted/30 rounded-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">Recommendation Summary</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Confidence:</span>
-                    <span className="text-sm font-medium text-foreground">{recommendation.confidence_score}%</span>
-                  </div>
-                </div>
-                
-                {/* Confidence Bar */}
-                <div className="mb-4">
-                  <div className="w-full bg-muted rounded-full h-3">
-                    <div 
-                      className="confidence-bar h-3 rounded-full"
-                      style={{ width: `${recommendation.confidence_score}%` }}
-                    />
-                  </div>
-                </div>
-                
-                <p className="text-foreground mb-4 leading-relaxed">
-                  {recommendation.recommendation}
-                </p>
-                
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <h4 className="font-medium text-foreground mb-2">Reasoning:</h4>
-                  <p className="text-muted-foreground text-sm">
-                    {recommendation.reasoning}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feedback and Actions */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-4">
-                  <span className="text-muted-foreground">Was this helpful?</span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleFeedback(true)}
-                      className="hover:bg-mint/10 hover:text-green-600"
-                    >
-                      👍 Yes
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleFeedback(false)}
-                      className="hover:bg-red-50 hover:text-red-600"
-                    >
-                      👎 No
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setCurrentStep('initial');
-                      setCurrentFollowupIndex(0);
-                      setAnswers([]);
-                      setCurrentAnswer('');
-                      setRecommendation(null);
-                    }}
-                    className="flex-1"
-                  >
-                    Adjust Decision
-                  </Button>
-                  <Button
-                    onClick={onComplete}
-                    className="flex-1 cta-button"
-                  >
-                    Take Action
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Action Buttons */}
+        {currentStep === 'recommendation' && (
+          <div className="flex gap-3 mt-8">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCurrentStep('followup');
+                setCurrentFollowupIndex(0);
+                setCurrentAnswer('');
+              }}
+              className="flex-1"
+            >
+              Adjust Decision
+            </Button>
+            <Button
+              onClick={() => {
+                // Save decision and redirect to dashboard
+                onSaveAndContinue();
+              }}
+              className="flex-1 cta-button"
+            >
+              Take Action
+            </Button>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-// Auth Modal Component
+// Conversation Card Component
+const ConversationCard = ({ item }) => {
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackReason, setFeedbackReason] = useState('');
+
+  const getConfidenceColor = (score) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  switch (item.type) {
+    case 'user_question':
+      return (
+        <Card className="ml-auto max-w-2xl bg-primary/10 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">
+                U
+              </div>
+              <div className="flex-1">
+                <p className="text-foreground">{item.content}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {item.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+
+    case 'ai_response':
+    case 'ai_question':
+      return (
+        <Card className="mr-auto max-w-2xl">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-card border border-border rounded-full flex items-center justify-center text-sm">
+                🤖
+              </div>
+              <div className="flex-1">
+                {item.step && (
+                  <div className="step-indicator mb-2">Step {item.step} of 3</div>
+                )}
+                <p className="text-foreground mb-2">{item.content}</p>
+                {item.context && (
+                  <p className="text-sm text-muted-foreground italic">{item.context}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  {item.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+
+    case 'user_answer':
+      return (
+        <Card className="ml-auto max-w-2xl bg-mint/10 border-mint/20">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-mint rounded-full flex items-center justify-center text-sm font-medium">
+                U
+              </div>
+              <div className="flex-1">
+                <p className="text-foreground">{item.content}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {item.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+
+    case 'ai_recommendation':
+      return (
+        <Card className="mr-auto max-w-full bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span>🎯</span>
+              <span>Your Decision Recommendation</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Confidence Score */}
+            <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
+              <span className="font-medium">Confidence Score</span>
+              <div className="flex items-center gap-3">
+                <span className={`font-bold text-lg ${getConfidenceColor(item.content.confidence_score)}`}>
+                  {item.content.confidence_score}%
+                </span>
+                <div className="w-20 bg-muted rounded-full h-3">
+                  <div 
+                    className="confidence-bar h-3 rounded-full"
+                    style={{ width: `${item.content.confidence_score}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Recommendation */}
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+              <p className="text-foreground leading-relaxed">{item.content.recommendation}</p>
+            </div>
+
+            {/* Reasoning */}
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Reasoning</h4>
+              <p className="text-muted-foreground">{item.content.reasoning}</p>
+            </div>
+
+            {/* Logic Trace */}
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Logic Trace</h4>
+              <div className="space-y-2">
+                {item.content.logic_trace.map((step, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Feedback Section */}
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-muted-foreground">Was this helpful?</span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleFeedback(true);
+                      setShowFeedback(true);
+                    }}
+                    className="hover:bg-green-50 hover:text-green-600"
+                  >
+                    👍 Yes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFeedback(true)}
+                    className="hover:bg-red-50 hover:text-red-600"
+                  >
+                    👎 No
+                  </Button>
+                </div>
+              </div>
+
+              {showFeedback && (
+                <div className="space-y-3">
+                  <textarea
+                    placeholder="Tell us how we can improve..."
+                    value={feedbackReason}
+                    onChange={(e) => setFeedbackReason(e.target.value)}
+                    className="chat-input min-h-[80px] resize-none text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      handleFeedback(false, feedbackReason);
+                      setShowFeedback(false);
+                    }}
+                    className="cta-button"
+                  >
+                    Submit Feedback
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      );
+
+    default:
+      return null;
+  }
+};
+
+// Simple Dashboard Component
+const Dashboard = ({ onStartDecision }) => {
+  const { user } = useAuth();
+  
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-4">Welcome back, {user?.name}!</h1>
+        <p className="text-muted-foreground mb-8">Ready to make your next decision?</p>
+        
+        <Button
+          onClick={() => onStartDecision('')}
+          className="cta-button px-8 py-4 text-lg"
+        >
+          Start New Decision
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Auth Modal Component
 const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login, register } = useAuth();
 
+  // Password strength calculation
+  const getPasswordStrength = (pass) => {
+    let strength = 0;
+    if (pass.length >= 8) strength++;
+    if (/[a-z]/.test(pass)) strength++;
+    if (/[A-Z]/.test(pass)) strength++;
+    if (/\d/.test(pass)) strength++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) strength++;
+    return strength;
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+  const strengthColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'];
+
+  // Clear form when modal closes or mode switches
   useEffect(() => {
     if (!isOpen) {
       setEmail('');
       setPassword('');
+      setConfirmPassword('');
       setName('');
       setError('');
       setShowPassword(false);
+      setShowConfirmPassword(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    setError('');
+    setConfirmPassword('');
+  }, [mode]);
+
+  const validatePassword = (password) => {
+    return passwordStrength >= 4; // Require at least "Strong"
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Validation for registration
+    if (mode === 'register') {
+      if (!name.trim()) {
+        setError('Name is required');
+        setLoading(false);
+        return;
+      }
+      if (!validatePassword(password)) {
+        setError('Password must be strong (8+ characters with uppercase, lowercase, number, and special character)');
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      }
+    }
 
     const result = mode === 'login' 
       ? await login(email, password)
@@ -738,7 +1015,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium mb-2">Your Name</label>
+              <label className="block text-sm font-medium mb-2">Your Name *</label>
               <Input
                 type="text"
                 value={name}
@@ -779,15 +1056,75 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                 onMouseDown={() => setShowPassword(true)}
                 onMouseUp={() => setShowPassword(false)}
                 onMouseLeave={() => setShowPassword(false)}
+                onTouchStart={() => setShowPassword(true)}
+                onTouchEnd={() => setShowPassword(false)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
               >
-                👁️
+                {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </button>
             </div>
+            
+            {/* Password Strength Meter */}
+            {mode === 'register' && password && (
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-muted-foreground">Password Strength</span>
+                  <span className={`text-xs font-medium ${strengthColors[passwordStrength]?.replace('bg-', 'text-')}`}>
+                    {strengthLabels[passwordStrength]}
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${strengthColors[passwordStrength]}`}
+                    style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  className="chat-input pr-12"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onMouseDown={() => setShowConfirmPassword(true)}
+                  onMouseUp={() => setShowConfirmPassword(false)}
+                  onMouseLeave={() => setShowConfirmPassword(false)}
+                  onTouchStart={() => setShowConfirmPassword(true)}
+                  onTouchEnd={() => setShowConfirmPassword(false)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
+                >
+                  {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                  <AlertCircle className="h-3 w-3" />
+                  <span>Passwords do not match</span>
+                </div>
+              )}
+              {confirmPassword && password === confirmPassword && (
+                <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
+                  <Check className="h-3 w-3" />
+                  <span>Passwords match</span>
+                </div>
+              )}
+            </div>
+          )}
           
           {error && (
-            <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+            <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
               {error}
             </div>
           )}
@@ -822,7 +1159,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   );
 };
 
-// Side Chat Modal Component (placeholder)
+// Side Chat Modal Component (placeholder - will be enhanced)
 const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
   const { isAuthenticated } = useAuth();
   
