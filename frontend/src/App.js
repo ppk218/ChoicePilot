@@ -538,40 +538,119 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       const data = response.data;
       setDecisionId(data.decision_id);
       
-      // Mock follow-up questions (replace with real API)
-      const mockFollowups = [
-        {
-          question: "What aspects of this decision feel most uncertain to you right now?",
-          step_number: 1,
-          context: "Understanding uncertainty helps us focus on the right information."
-        },
-        {
-          question: "If you chose the option you're leaning towards, what's the best possible outcome you can imagine?", 
-          step_number: 2,
-          context: "Let's explore the potential upside to understand your priorities."
-        },
-        {
-          question: "What personal values are most important to you in making this decision?",
-          step_number: 3, 
-          context: "Consider values like security, growth, happiness, or freedom."
-        }
-      ];
-      
-      setFollowupQuestions(mockFollowups);
-      
-      // Add AI response to conversation
-      setConversationHistory(prev => [...prev, {
-        type: 'ai_response',
-        content: "I'll help you think through this decision. Let me ask a few questions to give you the best recommendation.",
-        timestamp: new Date()
-      }]);
+      // Check if we get a real followup question from the API
+      if (data.followup_question) {
+        setFollowupQuestions([data.followup_question]);
+        
+        // Add AI response to conversation
+        setConversationHistory(prev => [...prev, {
+          type: 'ai_response',
+          content: data.response || "I'll help you think through this decision. Let me ask a few questions to give you the best recommendation.",
+          timestamp: new Date()
+        }]);
+      } else {
+        // Fallback to generating questions if API doesn't provide them
+        await generateFallbackFollowups(question);
+      }
       
     } catch (error) {
       console.error('Decision error:', error);
-      setError('We\'re having trouble processing your decision. Please try again.');
+      // Fallback to local questions on API error
+      await generateFallbackFollowups(question);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fallback question generation for when API is not available
+  const generateFallbackFollowups = async (question) => {
+    const questionLower = question.toLowerCase();
+    let followups = [];
+
+    // Intelligent question generation based on decision type
+    if (questionLower.includes('job') || questionLower.includes('career') || questionLower.includes('work')) {
+      followups = [
+        {
+          question: "What are your top 3 priorities in this career decision (e.g., salary, work-life balance, growth opportunities)?",
+          step_number: 1,
+          context: "Understanding your priorities helps us weight the different factors."
+        },
+        {
+          question: "What concerns or risks worry you most about this career change?",
+          step_number: 2,
+          context: "Identifying potential downsides helps us plan mitigation strategies."
+        },
+        {
+          question: "How does this decision align with your 5-year career goals?",
+          step_number: 3,
+          context: "Considering long-term alignment ensures this choice supports your bigger picture."
+        }
+      ];
+    } else if (questionLower.includes('buy') || questionLower.includes('purchase') || questionLower.includes('product')) {
+      followups = [
+        {
+          question: "What's your budget range for this purchase, and how flexible is it?",
+          step_number: 1,
+          context: "Budget constraints help narrow down viable options."
+        },
+        {
+          question: "What are the most important features or qualities you need from this product?",
+          step_number: 2,
+          context: "Identifying must-have features vs. nice-to-haves helps prioritize options."
+        },
+        {
+          question: "How urgent is this purchase, and what happens if you wait?",
+          step_number: 3,
+          context: "Timing can affect both options available and pricing."
+        }
+      ];
+    } else if (questionLower.includes('move') || questionLower.includes('relocat') || questionLower.includes('city')) {
+      followups = [
+        {
+          question: "What are your main motivations for moving (work, family, lifestyle, cost of living)?",
+          step_number: 1,
+          context: "Understanding your 'why' helps evaluate how well each option meets your needs."
+        },
+        {
+          question: "What aspects of your current location would you miss most?",
+          step_number: 2,
+          context: "Identifying what you value helps ensure your new location provides these benefits."
+        },
+        {
+          question: "How important are factors like cost of living, job market, and social connections in your decision?",
+          step_number: 3,
+          context: "Weighting different factors helps create a decision framework."
+        }
+      ];
+    } else {
+      // Generic questions for any decision
+      followups = [
+        {
+          question: "What aspects of this decision feel most uncertain or unclear to you right now?",
+          step_number: 1,
+          context: "Understanding uncertainty helps us focus on gathering the right information."
+        },
+        {
+          question: "What would success look like with this decision? What's your ideal outcome?",
+          step_number: 2,
+          context: "Clarifying your desired outcome helps evaluate options against your goals."
+        },
+        {
+          question: "What personal values or priorities are most important to consider in this decision?",
+          step_number: 3,
+          context: "Aligning decisions with your values increases satisfaction with the outcome."
+        }
+      ];
+    }
+
+    setFollowupQuestions(followups);
+    
+    // Add AI response to conversation
+    setConversationHistory(prev => [...prev, {
+      type: 'ai_response',
+      content: "I'll help you think through this decision step by step. Let me ask a few targeted questions to give you the best recommendation.",
+      timestamp: new Date()
+    }]);
   };
 
   const handleFollowupSubmit = () => {
