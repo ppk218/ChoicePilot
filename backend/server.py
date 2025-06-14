@@ -1678,6 +1678,35 @@ CONFIDENCE: 85"""
             action_link=None
         )
 
+# Decision Feedback Endpoint
+@api_router.post("/decision/feedback/{decision_id}")
+async def submit_decision_feedback(decision_id: str, request: dict):
+    """Submit feedback for a decision recommendation"""
+    try:
+        helpful = request.get("helpful")
+        feedback_text = request.get("feedback_text", "")
+        
+        if helpful is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "helpful field is required")
+        
+        # Store feedback in database
+        feedback_doc = {
+            "decision_id": decision_id,
+            "helpful": helpful,
+            "feedback_text": feedback_text,
+            "timestamp": datetime.utcnow()
+        }
+        
+        await db.decision_feedback.insert_one(feedback_doc)
+        
+        return {"message": "Feedback submitted successfully", "decision_id": decision_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error submitting feedback: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Error submitting feedback")
+
 @api_router.get("/decisions")
 async def get_user_decisions(current_user: dict = Depends(get_current_user), limit: int = 20):
     """Get list of user's decision sessions"""
