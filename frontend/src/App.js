@@ -222,6 +222,18 @@ const MainApp = () => {
     }
   }, [darkMode]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest('.relative')) {
+        setShowUserMenu(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showUserMenu]);
+
   const handleStartDecision = (predefinedQuestion = '') => {
     setCurrentView('decision');
   };
