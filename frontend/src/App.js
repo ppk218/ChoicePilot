@@ -296,6 +296,70 @@ const MainApp = () => {
                     <User className="h-4 w-4" />
                     Dashboard
                   </Button>
+                  
+                  {/* User Menu Dropdown */}
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <span className="hidden md:inline">{user?.name || 'Account'}</span>
+                    </Button>
+                    
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
+                        <div className="p-4 border-b border-border">
+                          <p className="font-medium text-foreground">{user?.name}</p>
+                          <p className="text-sm text-muted-foreground">{user?.email}</p>
+                          <p className="text-xs text-muted-foreground mt-1 capitalize">{user?.plan} Plan</p>
+                        </div>
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              setCurrentView('dashboard');
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
+                          >
+                            Dashboard
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              // Open settings modal
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
+                          >
+                            Account Settings
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              // Open privacy settings
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
+                          >
+                            Privacy & Data
+                          </button>
+                          <hr className="my-2 border-border" />
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              logout();
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-secondary-coral hover:bg-secondary-coral/10 rounded"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
                   <Button
                     onClick={handleStartDecision}
                     className="bg-gradient-cta hover:scale-105 transition-all"
