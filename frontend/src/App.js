@@ -10,9 +10,10 @@ import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './com
 import { Progress } from './components/ui/Progress';
 import { Switch } from './components/ui/Switch';
 import { DecisionHistoryModal } from './components/ui/SideModal';
+import { ConfirmationModal, PrivacySettingsModal } from './components/ui/GDPRComponents';
 
 // Icons (using lucide-react)
-import { Sun, Moon, User, Settings, Menu, MessageCircle, Home, History } from 'lucide-react';
+import { Sun, Moon, User, Settings, Menu, MessageCircle, Home, History, Shield } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
