@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global theme styles with new color system */
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Global theme styles with new design system */
 @layer base {
   * {
     @apply border-border;
@@ -11,7 +14,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
         "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
         "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -19,57 +22,97 @@
     margin: 0;
   }
   
-  /* Dark mode (default) - Updated colors */
+  /* Dark mode (default) - New design tokens */
   html.dark {
     --background: #1C1C1E;
-    --foreground: #FFF8F0;
+    --foreground: #F0F0F0;
     --card: #2A2A2D;
-    --muted: #393A3D;
-    --muted-foreground: #A1A1AA;
-    --border: #393A3D;
-    --input: #393A3D;
+    --muted: #3A3A3D;
+    --muted-foreground: #A0A0A0;
+    --border: #3A3A3D;
+    --input: #2A2A2D;
+    --primary: #FF9966;
+    --primary-hover: #FF8F43;
+    --mint: #C6F6D5;
+    --text-secondary: #A0A0A0;
   }
   
-  /* Light mode - Updated colors */
+  /* Light mode - New design tokens */
   html.light {
-    --background: #FCFCFD;
+    --background: #FFFFFF;
     --foreground: #1A1A1A;
-    --card: #F2F2F5;
-    --muted: #E4E4EA;
-    --muted-foreground: #6B7280;
-    --border: #E4E4EA;
-    --input: #F2F2F5;
+    --card: #FFFFFF;
+    --muted: #F5F5F5;
+    --muted-foreground: #888888;
+    --border: #E5E5E5;
+    --input: #FFFFFF;
+    --primary: #FF9966;
+    --primary-hover: #FF8F43;
+    --mint: #C6F6D5;
+    --text-secondary: #888888;
   }
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
 }
 
 /* Custom components */
 @layer components {
-  /* Modern button styles */
-  .btn-primary {
-    @apply bg-gradient-cta text-white rounded-xl shadow-md hover:scale-105 transition-all duration-200 font-medium;
+  /* Hero headline styling */
+  .hero-headline {
+    @apply text-5xl md:text-6xl font-bold leading-tight;
   }
   
-  .btn-primary:hover {
-    @apply animate-pulse-soft;
+  .hero-gradient {
+    background: linear-gradient(135deg, #FF9966 0%, #FF8F43 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* CTA Button styles */
+  .cta-button {
+    background: linear-gradient(135deg, #FF9966 0%, #FF8F43 100%);
+    @apply text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+  }
+  
+  .cta-button:hover {
+    background: linear-gradient(135deg, #FF8F43 0%, #FF7A2A 100%);
   }
   
   /* Decision card styles */
   .decision-card {
-    @apply bg-card border border-border rounded-xl shadow-lg p-6 transition-all duration-200 hover:shadow-xl;
+    @apply bg-card border border-border rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl;
   }
   
   /* Confidence bar styles */
   .confidence-bar {
-    @apply bg-gradient-confidence rounded-full h-3 transition-all duration-500;
+    background: linear-gradient(90deg, #C6F6D5 0%, #9AE6B4 100%);
+    @apply rounded-full h-3 transition-all duration-500;
+  }
+  
+  /* Chat input styling */
+  .chat-input {
+    @apply w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200;
+  }
+  
+  /* Step indicator */
+  .step-indicator {
+    @apply text-sm text-muted-foreground font-medium mb-2;
+  }
+  
+  /* Card animations */
+  .card-enter {
+    @apply opacity-0 translate-y-4;
+    animation: cardEnter 0.5s ease-out forwards;
+  }
+  
+  @keyframes cardEnter {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar */
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -91,12 +134,39 @@ code {
     @apply bg-primary/50;
   }
   
-  /* Hero gradient backgrounds */
-  .hero-gradient-dark {
-    background: linear-gradient(145deg, #1C1C1E, #252528, #2A2A2D);
+  /* Background gradients */
+  .bg-dark-gradient {
+    background: linear-gradient(145deg, #1C1C1E 0%, #2A2A2D 100%);
   }
   
-  .hero-gradient-light {
-    background: linear-gradient(135deg, #FFFFFF 0%, #F4F4F7 100%);
+  .bg-light-gradient {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F8F9FA 100%);
   }
+  
+  /* Text gradients */
+  .text-gradient {
+    background: linear-gradient(135deg, #FF9966 0%, #FF8F43 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Drawer animation */
+.drawer-enter {
+  transform: translateX(100%);
+}
+
+.drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-out;
+}
+
+.drawer-exit {
+  transform: translateX(0);
+}
+
+.drawer-exit-active {
+  transform: translateX(100%);
+  transition: transform 300ms ease-in;
 }
