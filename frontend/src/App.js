@@ -431,6 +431,13 @@ const MainApp = () => {
         onClose={() => setShowHistoryModal(false)}
         onStartNewDecision={handleStartDecision}
       />
+
+      {/* Privacy Settings Modal */}
+      <PrivacySettingsModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        user={user}
+      />
     </div>
   );
 };
