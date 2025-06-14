@@ -1491,7 +1491,104 @@ async def process_anonymous_decision_step(request: DecisionStepRequest):
             )
         
         # Continue with same logic as authenticated endpoint...
-        # (Implementation continues similarly)
+        elif request.step == "followup":
+            step_num = request.step_number or len(session.get("followup_answers", [])) + 1
+            
+            # Store the answer
+            await db.decision_sessions_new.update_one(
+                {"id": decision_id},
+                {
+                    "$push": {"followup_answers": request.message},
+                    "$set": {"last_active": datetime.utcnow()}
+                }
+            )
+            
+            # Check if we need more questions (max 3)
+            if step_num < 3:
+                # Generate next follow-up question
+                followup = await generate_followup_question(
+                    session["initial_question"], 
+                    step_num + 1, 
+                    session.get("category"),
+                    session.get("followup_answers", []) + [request.message]
+                )
+                
+                await db.decision_sessions_new.update_one(
+                    {"id": decision_id},
+                    {
+                        "$push": {"followup_questions": followup.dict()},
+                        "$set": {"step_number": step_num + 1}
+                    }
+                )
+                
+                return DecisionStepResponse(
+                    decision_id=decision_id,
+                    step="followup",
+                    step_number=step_num + 1,
+                    response="Thank you for that information.",
+                    followup_question=followup
+                )
+            else:
+                # Generate final recommendation
+                recommendation = await generate_final_recommendation(
+                    session["initial_question"],
+                    session.get("followup_answers", []) + [request.message],
+                    session.get("category")
+                )
+                
+                await db.decision_sessions_new.update_one(
+                    {"id": decision_id},
+                    {
+                        "$set": {
+                            "current_step": "complete",
+                            "recommendation": recommendation.dict(),
+                            "completed_at": datetime.utcnow(),
+                            "last_active": datetime.utcnow()
+                        }
+                    }
+                )
+                
+                return DecisionStepResponse(
+                    decision_id=decision_id,
+                    step="complete",
+                    step_number=step_num,
+                    response="Based on our conversation, here's my recommendation:",
+                    is_complete=True,
+                    recommendation=recommendation
+                )
+        
+        # Handle adjustment step
+        elif request.step == "adjust":
+            # Handle adjustment - regenerate recommendation
+            await db.decision_sessions_new.update_one(
+                {"id": decision_id},
+                {
+                    "$inc": {"adjustment_count": 1},
+                    "$set": {"last_active": datetime.utcnow()}
+                }
+            )
+            
+            # Regenerate recommendation with adjustment context
+            recommendation = await generate_final_recommendation(
+                session["initial_question"],
+                session.get("followup_answers", []),
+                session.get("category"),
+                adjustment_context=request.message
+            )
+            
+            await db.decision_sessions_new.update_one(
+                {"id": decision_id},
+                {"$set": {"recommendation": recommendation.dict()}}
+            )
+            
+            return DecisionStepResponse(
+                decision_id=decision_id,
+                step="complete",
+                step_number=session.get("step_number", 3),
+                response="I've adjusted my recommendation based on your feedback:",
+                is_complete=True,
+                recommendation=recommendation
+            )
         
     except HTTPException:
         raise
