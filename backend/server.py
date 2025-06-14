@@ -1607,8 +1607,7 @@ CONFIDENCE: 85"""
     
     try:
         # Use the LLM Router to get AI response
-        llm_router = LLMRouter()
-        response, ai_confidence = await llm_router.get_response(
+        response, ai_confidence = await LLMRouter.get_llm_response(
             message=message,
             session_id=f"recommendation_{hash(initial_question)}",
             category=category,
