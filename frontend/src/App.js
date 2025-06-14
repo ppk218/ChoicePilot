@@ -712,9 +712,19 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 };
 
 // Conversation Card Component
-const ConversationCard = ({ item }) => {
+const ConversationCard = ({ item, onFeedback }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackReason, setFeedbackReason] = useState('');
+
+  const handleFeedback = async (helpful, reason = '') => {
+    try {
+      if (onFeedback) {
+        onFeedback(helpful, reason);
+      }
+    } catch (error) {
+      console.error('Feedback error:', error);
+    }
+  };
 
   const getConfidenceColor = (score) => {
     if (score >= 80) return 'text-green-600';
