@@ -249,9 +249,9 @@ const MainApp = () => {
                 className="text-xl font-bold text-foreground hover:text-primary transition-colors"
               >
                 <img 
-                  src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_129x40 px_Full Logo.png"
+                  src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_1584x396 px (LinkedIn banner)__TextLogo.png"
                   alt="getgingee"
-                  className="h-8"
+                  className="h-8 w-auto"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'inline';
