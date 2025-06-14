@@ -343,6 +343,12 @@ const MainApp = () => {
           setCurrentView('dashboard');
         }}
       />
+      {/* Decision History Modal */}
+      <DecisionHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        onStartNewDecision={handleStartDecision}
+      />
     </div>
   );
 };
