@@ -1116,6 +1116,83 @@ async def chat_with_assistant(request: DecisionRequest, current_user: dict = Dep
         logging.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Error processing request: {str(e)}")
 
+# GDPR Compliance Endpoints
+@api_router.get("/auth/export-data")
+async def export_user_data(current_user: dict = Depends(get_current_user)):
+    """Export all user data for GDPR compliance"""
+    try:
+        user_id = current_user["id"]
+        
+        # Gather all user data
+        user_data = {
+            "personal_information": {
+                "id": current_user["id"],
+                "name": current_user.get("name", ""),
+                "email": current_user["email"],
+                "plan": current_user["plan"],
+                "created_at": current_user["created_at"],
+                "last_login": current_user.get("last_login"),
+                "email_verified": current_user.get("email_verified", False)
+            },
+            "usage_data": {
+                "monthly_decisions_used": current_user.get("monthly_decisions_used", 0),
+                "credits": current_user.get("credits", 0),
+                "subscription_expires": current_user.get("subscription_expires")
+            }
+        }
+        
+        # Get decision sessions
+        decision_sessions = []
+        async for session in db.decision_sessions_new.find({"user_id": user_id}):
+            session["_id"] = str(session["_id"])  # Convert ObjectId to string
+            decision_sessions.append(session)
+        
+        user_data["decision_sessions"] = decision_sessions
+        
+        # Get conversation history
+        conversations = []
+        async for conversation in db.conversation_history.find({"user_id": user_id}):
+            conversation["_id"] = str(conversation["_id"])
+            conversations.append(conversation)
+        
+        user_data["conversation_history"] = conversations
+        
+        # Return as downloadable JSON
+        return {
+            "message": "User data export completed",
+            "export_date": datetime.utcnow().isoformat(),
+            "data": user_data
+        }
+        
+    except Exception as e:
+        logging.error(f"Error exporting user data: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Error exporting user data")
+
+@api_router.delete("/auth/delete-account")
+async def delete_user_account(current_user: dict = Depends(get_current_user)):
+    """Delete user account and all associated data for GDPR compliance"""
+    try:
+        user_id = current_user["id"]
+        
+        # Delete user data from all collections
+        await db.users.delete_one({"id": user_id})
+        await db.decision_sessions_new.delete_many({"user_id": user_id})
+        await db.conversation_history.delete_many({"user_id": user_id})
+        await db.decision_sessions.delete_many({"user_id": user_id})  # Old format
+        
+        # Log the deletion for audit purposes
+        logging.info(f"Account deleted for user: {current_user['email']} (ID: {user_id})")
+        
+        return {
+            "message": "Account and all associated data have been permanently deleted",
+            "deleted_at": datetime.utcnow().isoformat(),
+            "user_id": user_id
+        }
+        
+    except Exception as e:
+        logging.error(f"Error deleting user account: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Error deleting account")
+
 def determine_reasoning_type(message: str, category: str, advisor_style: str) -> str:
     """Determine the type of reasoning being used based on message, category, and advisor style"""
     message_lower = message.lower()
