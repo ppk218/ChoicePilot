@@ -353,10 +353,11 @@ const MainApp = () => {
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              // Open privacy settings
+                              setShowPrivacyModal(true);
                             }}
-                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded flex items-center gap-2"
                           >
+                            <Shield className="h-4 w-4" />
                             Privacy & Data
                           </button>
                           <hr className="my-2 border-border" />
