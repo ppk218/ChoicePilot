@@ -221,7 +221,13 @@ const AppContent = ({
             {/* Logo */}
             <div 
               className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => setCurrentView('landing')}
+              onClick={() => {
+                if (isAuthenticated) {
+                  setCurrentView('dashboard');
+                } else {
+                  setCurrentView('landing');
+                }
+              }}
             >
               <img 
                 src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_32x32 px (favicon)_Symbol Logo.png"
