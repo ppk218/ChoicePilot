@@ -441,17 +441,273 @@ const LandingPage = ({ onStartDecision }) => {
   );
 };
 
-// Decision Flow Component (placeholder for now)
-const DecisionFlow = () => {
+// Decision Flow Component with structured flow
+const DecisionFlow = ({ onComplete }) => {
+  const [currentStep, setCurrentStep] = useState('initial'); // initial, followup, complete
+  const [decisionId, setDecisionId] = useState(null);
+  const [question, setQuestion] = useState('');
+  const [followupQuestion, setFollowupQuestion] = useState(null);
+  const [answer, setAnswer] = useState('');
+  const [recommendation, setRecommendation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [stepNumber, setStepNumber] = useState(0);
+  const { trackDecisionStarted, trackDecisionCompleted } = usePostHog();
+  const { isAuthenticated } = useAuth();
+
+  const handleInitialSubmit = async () => {
+    if (!question.trim()) return;
+    
+    setLoading(true);
+    setError('');
+    trackDecisionStarted('general', question.length);
+
+    try {
+      const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
+      const response = await axios.post(`${API}${endpoint}`, {
+        message: question,
+        step: 'initial'
+      });
+
+      const data = response.data;
+      setDecisionId(data.decision_id);
+      
+      if (data.followup_question) {
+        setFollowupQuestion(data.followup_question);
+        setCurrentStep('followup');
+        setStepNumber(data.step_number);
+      }
+    } catch (error) {
+      console.error('Decision error:', error);
+      setError('We\'re having trouble processing your decision. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFollowupSubmit = async () => {
+    if (!answer.trim()) return;
+    
+    setLoading(true);
+    setError('');
+
+    try {
+      const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
+      const response = await axios.post(`${API}${endpoint}`, {
+        decision_id: decisionId,
+        message: answer,
+        step: 'followup',
+        step_number: stepNumber
+      });
+
+      const data = response.data;
+      
+      if (data.is_complete && data.recommendation) {
+        setRecommendation(data.recommendation);
+        setCurrentStep('complete');
+        trackDecisionCompleted(decisionId, data.recommendation.confidence_score);
+      } else if (data.followup_question) {
+        setFollowupQuestion(data.followup_question);
+        setStepNumber(data.step_number);
+        setAnswer(''); // Clear for next question
+      }
+    } catch (error) {
+      console.error('Follow-up error:', error);
+      setError('We\'re having trouble processing your response. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFeedback = async (helpful) => {
+    try {
+      await axios.post(`${API}/decision/feedback/${decisionId}`, {
+        helpful
+      });
+    } catch (error) {
+      console.error('Feedback error:', error);
+    }
+  };
+
+  const handleNewDecision = () => {
+    setCurrentStep('initial');
+    setDecisionId(null);
+    setQuestion('');
+    setFollowupQuestion(null);
+    setAnswer('');
+    setRecommendation(null);
+    setStepNumber(0);
+    setError('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="max-w-2xl w-full mx-4">
-        <CardHeader>
-          <CardTitle>Decision Assistant</CardTitle>
-          <CardDescription>Let's work through your decision together</CardDescription>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <Card className="max-w-2xl w-full mx-4 decision-card">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
+            {currentStep === 'initial' && 'Let\'s explore your decision'}
+            {currentStep === 'followup' && `Question ${stepNumber} of 3`}
+            {currentStep === 'complete' && 'Your Decision Recommendation'}
+          </CardTitle>
+          <CardDescription>
+            {currentStep === 'initial' && 'Tell me about the decision you need to make'}
+            {currentStep === 'followup' && 'Let me understand your situation better'}
+            {currentStep === 'complete' && 'Based on our conversation, here\'s what I recommend'}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Decision flow implementation coming next...</p>
+        
+        <CardContent className="space-y-6">
+          {/* Initial Question Step */}
+          {currentStep === 'initial' && (
+            <div className="space-y-4">
+              <Input
+                placeholder="What decision do you need help with?"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="text-lg py-4 px-6 rounded-xl"
+                onKeyPress={(e) => e.key === 'Enter' && handleInitialSubmit()}
+              />
+              
+              {error && (
+                <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+              
+              <Button
+                onClick={handleInitialSubmit}
+                disabled={!question.trim() || loading}
+                className="w-full py-4 text-lg bg-gradient-cta hover:scale-105 rounded-xl"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Analyzing your decision...
+                  </div>
+                ) : 'Start My Decision'}
+              </Button>
+            </div>
+          )}
+
+          {/* Follow-up Questions Step */}
+          {currentStep === 'followup' && followupQuestion && (
+            <div className="space-y-4">
+              <div className="p-4 bg-card border border-border rounded-lg">
+                <h3 className="font-medium text-foreground mb-2">Your Decision:</h3>
+                <p className="text-muted-foreground">{question}</p>
+              </div>
+              
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">
+                  {followupQuestion.question}
+                </h4>
+              </div>
+              
+              <Input
+                placeholder="Your answer..."
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="text-lg py-4 px-6 rounded-xl"
+                onKeyPress={(e) => e.key === 'Enter' && handleFollowupSubmit()}
+              />
+              
+              {error && (
+                <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+              
+              <Button
+                onClick={handleFollowupSubmit}
+                disabled={!answer.trim() || loading}
+                className="w-full py-4 text-lg bg-gradient-cta hover:scale-105 rounded-xl"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </div>
+                ) : 'Continue'}
+              </Button>
+            </div>
+          )}
+
+          {/* Recommendation Step */}
+          {currentStep === 'complete' && recommendation && (
+            <div className="space-y-6">
+              <div className="p-6 bg-card border border-border rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">My Recommendation</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Confidence:</span>
+                    <span className="text-sm font-medium text-foreground">{recommendation.confidence_score}%</span>
+                  </div>
+                </div>
+                
+                {/* Confidence Bar */}
+                <div className="mb-4">
+                  <div className="w-full bg-muted rounded-full h-3">
+                    <div 
+                      className="confidence-bar h-3 rounded-full"
+                      style={{ width: `${recommendation.confidence_score}%` }}
+                    />
+                  </div>
+                </div>
+                
+                <p className="text-foreground mb-4 leading-relaxed">
+                  {recommendation.recommendation}
+                </p>
+                
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-2">Reasoning:</h4>
+                  <p className="text-muted-foreground text-sm">
+                    {recommendation.reasoning}
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback and Actions */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-4">
+                  <span className="text-muted-foreground">Was this helpful?</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFeedback(true)}
+                      className="hover:bg-secondary-teal/10 hover:text-secondary-teal"
+                    >
+                      👍 Yes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFeedback(false)}
+                      className="hover:bg-secondary-coral/10 hover:text-secondary-coral"
+                    >
+                      👎 No
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleNewDecision}
+                    className="flex-1"
+                  >
+                    Adjust Decision
+                  </Button>
+                  <Button
+                    onClick={onComplete}
+                    className="flex-1 bg-gradient-cta hover:scale-105"
+                  >
+                    Take Action
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
