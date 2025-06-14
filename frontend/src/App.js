@@ -928,7 +928,7 @@ const Dashboard = ({ onStartDecision }) => {
   );
 };
 
-// Enhanced Auth Modal Component
+// Enhanced Auth Modal Component with Proper Validation
 const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -938,22 +938,87 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const { login, register } = useAuth();
 
-  // Password strength calculation
-  const getPasswordStrength = (pass) => {
-    let strength = 0;
-    if (pass.length >= 8) strength++;
-    if (/[a-z]/.test(pass)) strength++;
-    if (/[A-Z]/.test(pass)) strength++;
-    if (/\d/.test(pass)) strength++;
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) strength++;
-    return strength;
+  // Real-time email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const passwordStrength = getPasswordStrength(password);
-  const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
-  const strengthColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'];
+  // Real-time name validation
+  const validateName = (name) => {
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    return name.trim().length >= 2 && nameRegex.test(name.trim());
+  };
+
+  // Password strength calculation with detailed rules
+  const getPasswordStrength = (pass) => {
+    let strength = 0;
+    let issues = [];
+    
+    if (pass.length >= 8) {
+      strength++;
+    } else {
+      issues.push('At least 8 characters');
+    }
+    
+    if (/[a-z]/.test(pass)) {
+      strength++;
+    } else {
+      issues.push('At least 1 lowercase letter');
+    }
+    
+    if (/[A-Z]/.test(pass)) {
+      strength++;
+    } else {
+      issues.push('At least 1 uppercase letter');
+    }
+    
+    if (/\d/.test(pass)) {
+      strength++;
+    } else {
+      issues.push('At least 1 number');
+    }
+    
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) {
+      strength++;
+    } else {
+      issues.push('At least 1 symbol (!@#$%^&*)');
+    }
+    
+    return { strength, issues };
+  };
+
+  const passwordAnalysis = getPasswordStrength(password);
+  const strengthLabels = ['', 'Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  const strengthColors = ['', 'bg-red-500', 'bg-red-400', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'];
+
+  // Real-time validation
+  useEffect(() => {
+    const errors = {};
+    
+    if (email && !validateEmail(email)) {
+      errors.email = 'Please enter a valid email address (e.g., user@example.com)';
+    }
+    
+    if (mode === 'register') {
+      if (name && !validateName(name)) {
+        errors.name = 'Name must contain only letters and spaces (minimum 2 characters)';
+      }
+      
+      if (password && passwordAnalysis.issues.length > 0) {
+        errors.password = passwordAnalysis.issues;
+      }
+      
+      if (confirmPassword && password !== confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+      }
+    }
+    
+    setValidationErrors(errors);
+  }, [email, name, password, confirmPassword, mode]);
 
   // Clear form when modal closes or mode switches
   useEffect(() => {
@@ -965,35 +1030,47 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
       setError('');
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setValidationErrors({});
     }
   }, [isOpen]);
 
   useEffect(() => {
     setError('');
     setConfirmPassword('');
+    setValidationErrors({});
   }, [mode]);
-
-  const validatePassword = (password) => {
-    return passwordStrength >= 4; // Require at least "Strong"
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Validation for registration
+    // Final validation before submission
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
     if (mode === 'register') {
       if (!name.trim()) {
         setError('Name is required');
         setLoading(false);
         return;
       }
-      if (!validatePassword(password)) {
-        setError('Password must be strong (8+ characters with uppercase, lowercase, number, and special character)');
+      
+      if (!validateName(name)) {
+        setError('Name must contain only letters and spaces (minimum 2 characters)');
         setLoading(false);
         return;
       }
+      
+      if (passwordAnalysis.strength < 5) {
+        setError('Password must meet all requirements');
+        setLoading(false);
+        return;
+      }
+      
       if (password !== confirmPassword) {
         setError('Passwords do not match');
         setLoading(false);
@@ -1003,7 +1080,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
 
     const result = mode === 'login' 
       ? await login(email, password)
-      : await register(name, email, password);
+      : await register(name.trim(), email, password);
 
     if (result.success) {
       onSuccess?.();
@@ -1030,34 +1107,58 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="chat-input"
+                placeholder="Enter your full name"
+                className={`chat-input ${validationErrors.name ? 'border-red-500' : ''}`}
                 required
               />
+              {validationErrors.name && (
+                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                  <AlertCircle className="h-3 w-3" />
+                  <span>{validationErrors.name}</span>
+                </div>
+              )}
+              {name && !validationErrors.name && validateName(name) && (
+                <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
+                  <Check className="h-3 w-3" />
+                  <span>Valid name</span>
+                </div>
+              )}
             </div>
           )}
           
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2">Email *</label>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="chat-input"
+              placeholder="your@example.com"
+              className={`chat-input ${validationErrors.email ? 'border-red-500' : ''}`}
               required
             />
+            {validationErrors.email && (
+              <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                <AlertCircle className="h-3 w-3" />
+                <span>{validationErrors.email}</span>
+              </div>
+            )}
+            {email && !validationErrors.email && validateEmail(email) && (
+              <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
+                <Check className="h-3 w-3" />
+                <span>Valid email address</span>
+              </div>
+            )}
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <label className="block text-sm font-medium mb-2">Password *</label>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="chat-input pr-12"
+                className={`chat-input pr-12 ${validationErrors.password ? 'border-red-500' : ''}`}
                 required
                 minLength={8}
               />
@@ -1074,35 +1175,57 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
               </button>
             </div>
             
-            {/* Password Strength Meter */}
-            {mode === 'register' && password && (
-              <div className="mt-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-muted-foreground">Password Strength</span>
-                  <span className={`text-xs font-medium ${strengthColors[passwordStrength]?.replace('bg-', 'text-')}`}>
-                    {strengthLabels[passwordStrength]}
-                  </span>
+            {/* Password Requirements & Strength */}
+            {mode === 'register' && (
+              <div className="mt-2 space-y-2">
+                {/* Password Requirements */}
+                <div className="text-xs space-y-1">
+                  <div className="text-muted-foreground font-medium">Password Requirements:</div>
+                  {passwordAnalysis.issues.map((issue, index) => (
+                    <div key={index} className="flex items-center gap-1 text-red-500">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                  {passwordAnalysis.issues.length === 0 && password && (
+                    <div className="flex items-center gap-1 text-green-500">
+                      <Check className="h-3 w-3" />
+                      <span>All requirements met</span>
+                    </div>
+                  )}
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${strengthColors[passwordStrength]}`}
-                    style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                  />
-                </div>
+                
+                {/* Password Strength Meter */}
+                {password && (
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-muted-foreground">Password Strength</span>
+                      <span className={`text-xs font-medium ${strengthColors[passwordAnalysis.strength]?.replace('bg-', 'text-')}`}>
+                        {strengthLabels[passwordAnalysis.strength]}
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${strengthColors[passwordAnalysis.strength]}`}
+                        style={{ width: `${(passwordAnalysis.strength / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium mb-2">Confirm Password *</label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
-                  className="chat-input pr-12"
+                  className={`chat-input pr-12 ${validationErrors.confirmPassword ? 'border-red-500' : ''}`}
                   required
                   minLength={8}
                 />
@@ -1118,10 +1241,10 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                   {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
-              {confirmPassword && password !== confirmPassword && (
+              {validationErrors.confirmPassword && (
                 <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
                   <AlertCircle className="h-3 w-3" />
-                  <span>Passwords do not match</span>
+                  <span>{validationErrors.confirmPassword}</span>
                 </div>
               )}
               {confirmPassword && password === confirmPassword && (
@@ -1141,7 +1264,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
           
           <Button 
             type="submit" 
-            disabled={loading} 
+            disabled={loading || (mode === 'register' && Object.keys(validationErrors).length > 0)} 
             className="w-full cta-button py-3"
           >
             {loading ? (
