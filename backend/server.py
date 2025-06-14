@@ -1640,14 +1640,13 @@ CONFIDENCE: 85"""
     message = f"Please analyze this decision and provide your recommendation:\n\n{context}"
     
     try:
-        # Use the LLM Router to get AI response
+        # Use the LLM Router to get AI response - using the correct signature
         response, ai_confidence = await LLMRouter.get_llm_response(
             message=message,
+            llm_choice="gpt4o",
             session_id=f"recommendation_{hash(initial_question)}",
-            category=category,
-            user_preference="auto", 
-            user_plan="pro",
-            system_message=system_prompt
+            system_message=system_prompt,
+            conversation_history=[]
         )
         
         # Parse the structured response
