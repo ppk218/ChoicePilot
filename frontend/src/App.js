@@ -32,23 +32,31 @@ const ThemeProvider = ({ children }) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
+      const isDark = savedTheme === 'dark';
+      setDarkMode(isDark);
+      updateDocumentTheme(isDark);
+    } else {
+      // Default to dark mode
+      updateDocumentTheme(true);
     }
   }, []);
+
+  const updateDocumentTheme = (isDark) => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+  };
 
   const toggleTheme = () => {
     const newTheme = !darkMode;
     setDarkMode(newTheme);
     localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    
-    // Update HTML class
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
+    updateDocumentTheme(newTheme);
   };
 
   return (
