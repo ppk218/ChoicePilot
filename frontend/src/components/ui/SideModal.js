@@ -256,7 +256,7 @@ const DecisionHistoryModal = ({ isOpen, onClose, onStartNewDecision }) => {
                       variant="ghost" 
                       size="sm" 
                       className="px-2 text-secondary-coral hover:bg-secondary-coral/10"
-                      onClick={() => handleDeleteDecision(decision.id)}
+                      onClick={() => confirmDeleteDecision(decision)}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
