@@ -1515,8 +1515,7 @@ Return only the question, nothing else."""
     
     try:
         # Use the LLM Router to get AI response
-        llm_router = LLMRouter()
-        response, confidence = await llm_router.get_response(
+        response, confidence = await LLMRouter.get_llm_response(
             message=message,
             session_id=f"followup_{step_number}",
             category=category,
