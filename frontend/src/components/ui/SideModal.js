@@ -48,6 +48,9 @@ const SideModal = ({ isOpen, onClose, children, className, title }) => {
 const DecisionHistoryModal = ({ isOpen, onClose, onStartNewDecision }) => {
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [decisionToDelete, setDecisionToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
