@@ -279,6 +279,14 @@ const MainApp = () => {
                 <>
                   <Button
                     variant="ghost"
+                    onClick={() => setShowHistoryModal(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <History className="h-4 w-4" />
+                    History
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => setCurrentView('dashboard')}
                     className="flex items-center gap-2"
                   >
