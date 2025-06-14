@@ -341,6 +341,7 @@ const MainApp = () => {
 const LandingPage = ({ onStartDecision }) => {
   const [question, setQuestion] = useState('');
   const { trackDecisionStarted } = usePostHog();
+  const { isAuthenticated } = useAuth();
 
   const handleStartDecision = () => {
     if (question.trim()) {
@@ -350,7 +351,7 @@ const LandingPage = ({ onStartDecision }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 hero-gradient-dark dark:hero-gradient-dark bg-gradient-light">
       <div className="max-w-4xl mx-auto text-center">
         {/* Hero Section */}
         <div className="mb-12">
@@ -365,61 +366,75 @@ const LandingPage = ({ onStartDecision }) => {
           />
           <div style={{ display: 'none' }} className="text-6xl mb-8">🌶️</div>
           
-          <h1 className="text-5xl font-bold mb-6 text-foreground">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-foreground bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
             One decision, many perspectives
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto">
-            Let 8 AI advisors guide your next big call with voice, logic, and personality. No pressure — just clarity
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+            AI-powered decision assistant for clarity and confidence. Get actionable guidance in under 60 seconds.
           </p>
         </div>
 
         {/* Central Input */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-12">
           <div className="flex flex-col gap-4">
-            <Input
-              placeholder="What decision do you need help with?"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              className="text-lg py-4 px-6"
-              onKeyPress={(e) => e.key === 'Enter' && handleStartDecision()}
-            />
+            <div className="relative">
+              <Input
+                placeholder="What decision do you need help with?"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="text-lg py-6 px-6 bg-card/50 backdrop-blur-sm border-border/50 focus:border-primary rounded-xl"
+                onKeyPress={(e) => e.key === 'Enter' && handleStartDecision()}
+              />
+            </div>
             <Button
               size="lg"
               onClick={handleStartDecision}
               disabled={!question.trim()}
-              className="py-4 text-lg"
+              className="py-6 text-lg bg-gradient-cta hover:scale-105 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Start Free - 3 decisions, no card needed
+              {isAuthenticated ? 'Start My Decision' : 'Start Free - 3 decisions, no card needed'}
             </Button>
+            {!isAuthenticated && (
+              <p className="text-sm text-muted-foreground">
+                💡 You have 3 free decisions left – no card needed
+              </p>
+            )}
           </div>
         </div>
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <Card>
+          <Card className="decision-card hover:scale-105 transition-transform duration-300">
             <CardContent className="p-6 text-center">
               <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-lg font-semibold mb-2">Quick Clarity</h3>
-              <p className="text-muted-foreground">Get actionable guidance in under 60 seconds</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Quick Clarity</h3>
+              <p className="text-muted-foreground">Get actionable guidance in under 60 seconds, free from anxiety or complexity</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="decision-card hover:scale-105 transition-transform duration-300">
             <CardContent className="p-6 text-center">
               <div className="text-4xl mb-4">🧠</div>
-              <h3 className="text-lg font-semibold mb-2">Smart Analysis</h3>
-              <p className="text-muted-foreground">AI-powered insights tailored to your situation</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Smart Analysis</h3>
+              <p className="text-muted-foreground">AI follows up with 3 targeted questions, then delivers personalized recommendations</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="decision-card hover:scale-105 transition-transform duration-300">
             <CardContent className="p-6 text-center">
               <div className="text-4xl mb-4">💡</div>
-              <h3 className="text-lg font-semibold mb-2">Confident Choices</h3>
-              <p className="text-muted-foreground">Make decisions with clarity and confidence</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Confident Choices</h3>
+              <p className="text-muted-foreground">Make decisions with clarity, confidence, and actionable next steps</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Social Proof */}
+        <div className="mt-16 text-center">
+          <p className="text-muted-foreground text-sm">
+            Join thousands making better decisions every day
+          </p>
         </div>
       </div>
     </div>
