@@ -8,39 +8,57 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Custom getgingee colors
-        background: {
-          DEFAULT: '#2C2C2E',  // Dark background
-          light: '#FFFFFF',    // Light background
-        },
-        foreground: {
-          DEFAULT: '#FFF8F0',  // Dark mode text
-          light: '#1A1A1A',    // Light mode text
-        },
+        // Primary Brand Colors
         primary: {
           DEFAULT: '#FF9966',
-          hover: '#FF8A4D',
-          light: '#FFB380',
+          hover: '#FF8F43',
         },
         accent: {
           DEFAULT: '#C6F6D5',
           hover: '#9AE6B4',
         },
-        muted: {
-          DEFAULT: '#3A3A3C',
-          foreground: '#A1A1AA',
+        
+        // Dark Mode Colors (Updated)
+        dark: {
+          base: '#1C1C1E',
+          surface: '#2A2A2D', 
+          contrast: '#393A3D',
         },
-        border: {
-          DEFAULT: '#3A3A3C',
-          light: '#E5E5E5',
+        
+        // Light Mode Colors (Updated)
+        light: {
+          base: '#FCFCFD',
+          surface: '#F2F2F5',
+          contrast: '#E4E4EA',
         },
-        input: {
-          DEFAULT: '#3A3A3C',
-          light: '#F5F5F5',
+        
+        // Secondary Colors
+        secondary: {
+          purple: '#7A5FFF',
+          teal: '#2EC4B6',
+          yellow: '#FFC75F',
+          coral: '#EF476F',
+        },
+        
+        // Dynamic theme colors
+        background: {
+          DEFAULT: 'var(--background)',
+        },
+        foreground: {
+          DEFAULT: 'var(--foreground)',
         },
         card: {
-          DEFAULT: '#1C1C1E',
-          light: '#FFFFFF',
+          DEFAULT: 'var(--card)',
+        },
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
+        },
+        border: {
+          DEFAULT: 'var(--border)',
+        },
+        input: {
+          DEFAULT: 'var(--input)',
         },
       },
       fontFamily: {
@@ -48,8 +66,18 @@ module.exports = {
       },
       borderRadius: {
         lg: '0.5rem',
-        md: '0.375rem',
+        md: '0.375rem', 
         sm: '0.25rem',
+        xl: '0.75rem', // Added for modern buttons
+      },
+      backgroundImage: {
+        'gradient-dark': 'linear-gradient(145deg, #1C1C1E, #252528, #2A2A2D)',
+        'gradient-cta': 'linear-gradient(135deg, #FF9966, #FF8F43)',
+        'gradient-confidence': 'linear-gradient(90deg, #C6F6D5, #2EC4B6)',
+        'gradient-light': 'linear-gradient(135deg, #FFFFFF 0%, #F4F4F7 100%)',
+      },
+      animation: {
+        'pulse-soft': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
