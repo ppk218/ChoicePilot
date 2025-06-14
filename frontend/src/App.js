@@ -500,29 +500,70 @@ const Dashboard = () => {
   );
 };
 
-// Auth Modal Component (simplified for now)
-const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
+// Auth Modal Component with improved UX
+const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login, register } = useAuth();
+
+  // Clear form when modal closes or mode switches
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setName('');
+      setError('');
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    setError('');
+    setConfirmPassword('');
+  }, [mode]);
+
+  const validatePassword = (password) => {
+    if (password.length < 8) return false;
+    if (!/[a-z]/.test(password)) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/\d/.test(password)) return false;
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    // Validation for registration
+    if (mode === 'register') {
+      if (!validatePassword(password)) {
+        setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      }
+    }
+
     const result = mode === 'login' 
       ? await login(email, password)
       : await register(name, email, password);
 
     if (result.success) {
-      onClose();
-      setEmail('');
-      setPassword('');
-      setName('');
+      onSuccess?.();
     } else {
       setError(result.error);
     }
@@ -530,21 +571,30 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
       <ModalHeader>
-        <ModalTitle>{mode === 'login' ? 'Sign In' : 'Create Account'}</ModalTitle>
+        <ModalTitle className="text-center">
+          {mode === 'login' ? 'Welcome back' : 'Create your account'}
+        </ModalTitle>
+        <p className="text-center text-muted-foreground mt-2">
+          {mode === 'login' 
+            ? 'Sign in to continue your decision journey' 
+            : 'Start making better decisions today'
+          }
+        </p>
       </ModalHeader>
       
       <ModalContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium mb-2">Name</label>
+              <label className="block text-sm font-medium mb-2">Your Name</label>
               <Input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder="Enter your name"
+                className="rounded-xl"
                 required
               />
             </div>
@@ -557,38 +607,97 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
+              className="rounded-xl"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-2">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-              required
-              minLength={8}
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="rounded-xl pr-12"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onMouseDown={() => setShowPassword(true)}
+                onMouseUp={() => setShowPassword(false)}
+                onMouseLeave={() => setShowPassword(false)}
+                onTouchStart={() => setShowPassword(true)}
+                onTouchEnd={() => setShowPassword(false)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
+              >
+                👁️
+              </button>
+            </div>
+            {mode === 'register' && password && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                Password must include: uppercase, lowercase, number, and special character
+              </div>
+            )}
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  className="rounded-xl pr-12"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onMouseDown={() => setShowConfirmPassword(true)}
+                  onMouseUp={() => setShowConfirmPassword(false)}
+                  onMouseLeave={() => setShowConfirmPassword(false)}
+                  onTouchStart={() => setShowConfirmPassword(true)}
+                  onTouchEnd={() => setShowConfirmPassword(false)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+          )}
           
           {error && (
-            <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded">
+            <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg border border-secondary-coral/20">
               {error}
             </div>
           )}
           
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+          <Button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full py-3 bg-gradient-cta hover:scale-105 rounded-xl"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Please wait...
+              </div>
+            ) : (
+              mode === 'login' ? 'Sign In' : 'Create Account'
+            )}
           </Button>
         </form>
         
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           <button
             type="button"
             onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
-            className="text-primary hover:underline"
+            className="text-primary hover:text-primary-hover underline-offset-4 hover:underline transition-colors"
           >
             {mode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>
