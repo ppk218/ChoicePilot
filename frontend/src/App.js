@@ -1,372 +1,244 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import axios from 'axios';
-import { PostHogProvider, usePostHog } from './lib/posthog';
+import { User, History, Settings, Moon, Sun, Menu, X, Shield } from 'lucide-react';
 
-// UI Components
+// Import UI components
 import { Button } from './components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
 import { Input } from './components/ui/Input';
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './components/ui/Modal';
-import { Progress } from './components/ui/Progress';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
+import { Modal, ModalContent, ModalHeader, ModalTitle } from './components/ui/Modal';
+import { SideModal } from './components/ui/SideModal';
 import { Switch } from './components/ui/Switch';
-import { DecisionHistoryModal } from './components/ui/SideModal';
-import { ConfirmationModal, PrivacySettingsModal } from './components/ui/GDPRComponents';
+import { Progress } from './components/ui/Progress';
 
-// Icons (using lucide-react)
-import { Sun, Moon, User, Settings, Menu, MessageCircle, Home, History, Shield } from 'lucide-react';
+// PostHog Analytics
+import { usePostHog, PostHogProvider } from './lib/posthog';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-// Theme Context
-const ThemeContext = createContext();
-
-const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
-};
-
-const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(true); // Dark mode first
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      const isDark = savedTheme === 'dark';
-      setDarkMode(isDark);
-      updateDocumentTheme(isDark);
-    } else {
-      // Default to dark mode
-      updateDocumentTheme(true);
-    }
-  }, []);
-
-  const updateDocumentTheme = (isDark) => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-  };
-
-  const toggleTheme = () => {
-    const newTheme = !darkMode;
-    setDarkMode(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    updateDocumentTheme(newTheme);
-  };
-
-  return (
-    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+// API configuration
+const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 // Auth Context
 const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
-const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
+// Theme Context  
+const ThemeContext = createContext();
+export const useTheme = () => useContext(ThemeContext);
 
+// Auth Provider
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const { identifyUser } = usePostHog();
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Fetch user info
       fetchUserInfo();
+    } else {
+      setLoading(false);
     }
   }, [token]);
 
   const fetchUserInfo = async () => {
     try {
-      const response = await axios.get(`${API}/auth/me`);
+      const response = await axios.get(`${API}/api/auth/me`);
       setUser(response.data);
-      if (response.data.id) {
-        identifyUser(response.data.id, {
-          email: response.data.email,
-          plan: response.data.plan
-        });
-      }
     } catch (error) {
       console.error('Failed to fetch user info:', error);
       logout();
+    } finally {
+      setLoading(false);
     }
   };
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API}/auth/login`, { email, password });
+      const response = await axios.post(`${API}/api/auth/login`, { email, password });
       const { access_token, user: userData } = response.data;
       
-      localStorage.setItem('token', access_token);
       setToken(access_token);
-      setUser(userData);
+      localStorage.setItem('token', access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
-      if (userData.id) {
-        identifyUser(userData.id, {
-          email: userData.email,
-          plan: userData.plan
-        });
-      }
+      setUser(userData);
       
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || error.response?.data?.message || 'Login failed' 
-      };
+      return { success: false, error: error.response?.data?.detail || 'Login failed' };
     }
   };
 
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post(`${API}/auth/register`, { name, email, password });
+      const response = await axios.post(`${API}/api/auth/register`, { name, email, password });
       const { access_token, user: userData } = response.data;
       
-      localStorage.setItem('token', access_token);
       setToken(access_token);
-      setUser(userData);
+      localStorage.setItem('token', access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
-      if (userData.id) {
-        identifyUser(userData.id, {
-          email: userData.email,
-          plan: userData.plan,
-          name: userData.name
-        });
-      }
+      setUser(userData);
       
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || error.response?.data?.message || 'Registration failed' 
-      };
+      return { success: false, error: error.response?.data?.detail || 'Registration failed' };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
-    // Redirect to landing page
-    window.location.href = '/';
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!user
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Main App Component
-const App = () => {
+// Theme Provider
+const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <PostHogProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <MainApp />
-        </AuthProvider>
-      </ThemeProvider>
-    </PostHogProvider>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
   );
 };
 
-const MainApp = () => {
-  const [currentView, setCurrentView] = useState('landing'); // landing, decision, dashboard
+// Main App Component
+const App = () => {
+  const [currentView, setCurrentView] = useState('landing');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+  const [showSideChatModal, setShowSideChatModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // login, register
-  const { darkMode, toggleTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
+
   const { trackPageView } = usePostHog();
 
   useEffect(() => {
     trackPageView(currentView);
   }, [currentView, trackPageView]);
 
-  // Redirect authenticated users to dashboard if they're on landing
-  useEffect(() => {
-    if (isAuthenticated && currentView === 'landing') {
-      setCurrentView('dashboard');
-    }
-  }, [isAuthenticated, currentView]);
-
-  // Apply theme class on mount and theme changes
-  useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  // Close user menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu && !event.target.closest('.relative')) {
-        setShowUserMenu(false);
-      }
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showUserMenu]);
-
-  const handleStartDecision = (predefinedQuestion = '') => {
-    setCurrentView('decision');
-  };
-
   const renderView = () => {
     switch (currentView) {
       case 'landing':
-        return <LandingPage onStartDecision={handleStartDecision} />;
-      case 'decision':
-        return <DecisionFlow onComplete={() => setCurrentView('dashboard')} />;
-      case 'dashboard':
-        return <Dashboard onStartDecision={handleStartDecision} />;
+        return <LandingPage onStartDecision={() => setCurrentView('flow')} />;
+      case 'flow':
+        return <DecisionFlow onComplete={() => setCurrentView('landing')} />;
       default:
-        return isAuthenticated ? 
-          <Dashboard onStartDecision={handleStartDecision} /> : 
-          <LandingPage onStartDecision={handleStartDecision} />;
+        return <LandingPage onStartDecision={() => setCurrentView('flow')} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+    <PostHogProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-gradient-dark dark:bg-gradient-dark bg-gradient-light">
+            <AppContent 
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              showAuthModal={showAuthModal}
+              setShowAuthModal={setShowAuthModal}
+              authMode={authMode}
+              setAuthMode={setAuthMode}
+              showSideChatModal={showSideChatModal}
+              setShowSideChatModal={setShowSideChatModal}
+              showUserMenu={showUserMenu}
+              setShowUserMenu={setShowUserMenu}
+              renderView={renderView}
+            />
+          </div>
+        </AuthProvider>
+      </ThemeProvider>
+    </PostHogProvider>
+  );
+};
+
+// App Content Component
+const AppContent = ({ 
+  currentView, setCurrentView, showAuthModal, setShowAuthModal, 
+  authMode, setAuthMode, showSideChatModal, setShowSideChatModal,
+  showUserMenu, setShowUserMenu, renderView 
+}) => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <>
+      {/* Header Navigation */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center">
-              <button
-                onClick={() => setCurrentView(isAuthenticated ? 'dashboard' : 'landing')}
-                className="text-xl font-bold text-foreground hover:text-primary transition-colors"
-              >
-                <img 
-                  src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_1584x396 px (LinkedIn banner)__TextLogo.png"
-                  alt="getgingee"
-                  className="h-8 w-auto"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'inline';
-                  }}
-                />
-                <span style={{ display: 'none' }} className="text-primary font-bold">getgingee</span>
-              </button>
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">🌶️</span>
+              <span className="text-xl font-bold text-gradient">GetGingee</span>
             </div>
 
             {/* Navigation */}
-            <nav className="flex items-center space-x-4">
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                aria-label="Toggle theme"
-              >
-                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-
-              {/* User Actions */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <button className="text-foreground hover:text-primary transition-colors">Features</button>
+              <button className="text-foreground hover:text-primary transition-colors">Pricing</button>
+              <button className="text-foreground hover:text-primary transition-colors">FAQ</button>
+              
               {isAuthenticated ? (
                 <>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowHistoryModal(true)}
-                    className="flex items-center gap-2"
+                  <button 
+                    onClick={() => setShowSideChatModal(true)}
+                    className="text-foreground hover:text-primary transition-colors flex items-center gap-2"
                   >
                     <History className="h-4 w-4" />
                     History
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setCurrentView('dashboard')}
-                    className="flex items-center gap-2"
-                  >
-                    <User className="h-4 w-4" />
-                    Dashboard
-                  </Button>
+                  </button>
                   
-                  {/* User Menu Dropdown */}
+                  {/* User Menu */}
                   <div className="relative">
-                    <Button
-                      variant="ghost"
+                    <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
                     >
                       <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
-                      <span className="hidden md:inline">{user?.name || 'Account'}</span>
-                    </Button>
+                    </button>
                     
                     {showUserMenu && (
                       <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
                         <div className="p-4 border-b border-border">
                           <p className="font-medium text-foreground">{user?.name}</p>
                           <p className="text-sm text-muted-foreground">{user?.email}</p>
-                          <p className="text-xs text-muted-foreground mt-1 capitalize">{user?.plan} Plan</p>
                         </div>
                         <div className="p-2">
                           <button
                             onClick={() => {
                               setShowUserMenu(false);
-                              setCurrentView('dashboard');
-                            }}
-                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
-                          >
-                            Dashboard
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              // Open settings modal
-                            }}
-                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
-                          >
-                            Account Settings
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false);
-                              setShowPrivacyModal(true);
-                            }}
-                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded flex items-center gap-2"
-                          >
-                            <Shield className="h-4 w-4" />
-                            Privacy & Data
-                          </button>
-                          <hr className="my-2 border-border" />
-                          <button
-                            onClick={() => {
-                              setShowUserMenu(false);
                               logout();
                             }}
-                            className="w-full text-left px-3 py-2 text-sm text-secondary-coral hover:bg-secondary-coral/10 rounded"
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted rounded"
                           >
                             Sign Out
                           </button>
@@ -374,43 +246,51 @@ const MainApp = () => {
                       </div>
                     )}
                   </div>
-                  
-                  <Button
-                    onClick={handleStartDecision}
-                    className="bg-gradient-cta hover:scale-105 transition-all"
-                  >
-                    Start My Decision
-                  </Button>
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="ghost"
+                  <button
                     onClick={() => {
                       setAuthMode('login');
                       setShowAuthModal(true);
                     }}
+                    className="text-foreground hover:text-primary transition-colors"
                   >
-                    Sign In
-                  </Button>
+                    Login
+                  </button>
                   <Button
                     onClick={() => {
                       setAuthMode('register');
                       setShowAuthModal(true);
                     }}
-                    className="bg-gradient-cta hover:scale-105 transition-all"
+                    className="cta-button px-6 py-2"
                   >
-                    Sign Up
+                    Sign Up Free
                   </Button>
                 </>
               )}
+              
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="text-foreground hover:text-primary transition-colors p-2"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button className="text-foreground hover:text-primary">
+                <Menu className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="pt-16">
         {renderView()}
       </main>
 
@@ -422,27 +302,23 @@ const MainApp = () => {
         onSwitchMode={setAuthMode}
         onSuccess={() => {
           setShowAuthModal(false);
-          setCurrentView('dashboard');
         }}
       />
-      {/* Decision History Modal */}
-      <DecisionHistoryModal
-        isOpen={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        onStartNewDecision={handleStartDecision}
-      />
 
-      {/* Privacy Settings Modal */}
-      <PrivacySettingsModal
-        isOpen={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        user={user}
+      {/* Side Chat Modal */}
+      <SideChatModal
+        isOpen={showSideChatModal}
+        onClose={() => setShowSideChatModal(false)}
+        onStartNewDecision={() => {
+          setShowSideChatModal(false);
+          setCurrentView('flow');
+        }}
       />
-    </div>
+    </>
   );
 };
 
-// Landing Page Component
+// Landing Page Component (New Design)
 const LandingPage = ({ onStartDecision }) => {
   const [question, setQuestion] = useState('');
   const { trackDecisionStarted } = usePostHog();
@@ -456,39 +332,32 @@ const LandingPage = ({ onStartDecision }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 hero-gradient-dark dark:hero-gradient-dark bg-gradient-light">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-4xl mx-auto text-center">
         {/* Hero Section */}
-        <div className="mb-12">
-          <img 
-            src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_500x500 px (general web)__TextLogo.png"
-            alt="getgingee"
-            className="h-32 mx-auto mb-8"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'block';
-            }}
-          />
-          <div style={{ display: 'none' }} className="text-6xl mb-8">🌶️</div>
-          
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-foreground bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
-            One decision, many perspectives
+        <div className="mb-16">
+          <h1 className="hero-headline mb-6">
+            Clarity in Under{' '}
+            <span className="hero-gradient">60</span>
+            <br />
+            <span className="hero-gradient">Seconds</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-            AI-powered decision assistant for clarity and confidence. Get actionable guidance in under 60 seconds.
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+            Overwhelmed by choices? GetGingee helps you make quick, thoughtful, and confident decisions. 
+            Just type your dilemma and find your focus.
           </p>
         </div>
 
         {/* Central Input */}
-        <div className="max-w-2xl mx-auto mb-12">
+        <div className="max-w-2xl mx-auto mb-16">
           <div className="flex flex-col gap-4">
             <div className="relative">
               <Input
-                placeholder="What decision do you need help with?"
+                placeholder="What decision are you facing?"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="text-lg py-6 px-6 bg-card/50 backdrop-blur-sm border-border/50 focus:border-primary rounded-xl"
+                className="chat-input text-lg py-6 px-6"
                 onKeyPress={(e) => e.key === 'Enter' && handleStartDecision()}
               />
             </div>
@@ -496,68 +365,79 @@ const LandingPage = ({ onStartDecision }) => {
               size="lg"
               onClick={handleStartDecision}
               disabled={!question.trim()}
-              className="py-6 text-lg bg-gradient-cta hover:scale-105 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              className="cta-button py-6 text-lg"
             >
-              {isAuthenticated ? 'Start My Decision' : 'Start Free - 3 decisions, no card needed'}
+              Get Clarity Now
             </Button>
-            {!isAuthenticated && (
-              <p className="text-sm text-muted-foreground">
-                💡 You have 3 free decisions left – no card needed
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              E.g., "Should I switch careers?" or "Which city should I move to?"
+            </p>
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <Card className="decision-card hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">Quick Clarity</h3>
-              <p className="text-muted-foreground">Get actionable guidance in under 60 seconds, free from anxiety or complexity</p>
-            </CardContent>
-          </Card>
+        {/* Why Choose GetGingee? */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold mb-8 text-foreground">Why Choose GetGingee?</h2>
+          <p className="text-muted-foreground mb-12">
+            Unlock faster, smarter decision-making with our unique approach.
+          </p>
           
-          <Card className="decision-card hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-4">🧠</div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">Smart Analysis</h3>
-              <p className="text-muted-foreground">AI follows up with 3 targeted questions, then delivers personalized recommendations</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="decision-card hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-4">💡</div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">Confident Choices</h3>
-              <p className="text-muted-foreground">Make decisions with clarity, confidence, and actionable next steps</p>
-            </CardContent>
-          </Card>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="decision-card text-center">
+              <CardContent className="p-6">
+                <div className="text-4xl mb-4">⚡</div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Rapid Results</h3>
+                <p className="text-muted-foreground text-sm">
+                  Get actionable insights in under 60 seconds. No more analysis paralysis.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="decision-card text-center">
+              <CardContent className="p-6">
+                <div className="text-4xl mb-4">😊</div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Increased Confidence</h3>
+                <p className="text-muted-foreground text-sm">
+                  Make decisions you feel good about, backed by structured thinking.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="decision-card text-center">
+              <CardContent className="p-6">
+                <div className="text-4xl mb-4">👥</div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Effortless Clarity</h3>
+                <p className="text-muted-foreground text-sm">
+                  Cut through the noise and identify the core of your decision.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Social Proof */}
-        <div className="mt-16 text-center">
-          <p className="text-muted-foreground text-sm">
-            Join thousands making better decisions every day
-          </p>
+        {/* Footer */}
+        <div className="text-center text-muted-foreground text-sm">
+          © 2024 GetGingee — Smarter decisions. Instantly.
         </div>
       </div>
     </div>
   );
 };
 
-// Decision Flow Component with structured flow
+// Decision Flow Component (New Design)
 const DecisionFlow = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState('initial'); // initial, followup, complete
+  const [currentStep, setCurrentStep] = useState('initial');
   const [decisionId, setDecisionId] = useState(null);
   const [question, setQuestion] = useState('');
-  const [followupQuestion, setFollowupQuestion] = useState(null);
-  const [answer, setAnswer] = useState('');
+  const [followupQuestions, setFollowupQuestions] = useState([]);
+  const [currentFollowupIndex, setCurrentFollowupIndex] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [currentAnswer, setCurrentAnswer] = useState('');
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [stepNumber, setStepNumber] = useState(0);
-  const { trackDecisionStarted, trackDecisionCompleted } = usePostHog();
+  
+  const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
   const handleInitialSubmit = async () => {
@@ -577,11 +457,27 @@ const DecisionFlow = ({ onComplete }) => {
       const data = response.data;
       setDecisionId(data.decision_id);
       
-      if (data.followup_question) {
-        setFollowupQuestion(data.followup_question);
-        setCurrentStep('followup');
-        setStepNumber(data.step_number);
-      }
+      // Simulate follow-up questions (you can replace with real API)
+      const mockFollowups = [
+        {
+          question: "What aspects of this decision feel most uncertain to you right now?",
+          step_number: 1,
+          context: "Understanding uncertainty helps us focus on the right information."
+        },
+        {
+          question: "If you chose the option you're leaning towards, what's the best possible outcome you can imagine?", 
+          step_number: 2,
+          context: "Let's explore the potential upside to understand your true priorities."
+        },
+        {
+          question: "What personal values are most important to you in making this decision?",
+          step_number: 3, 
+          context: "Consider values like security, growth, happiness, or freedom. This helps us craft decision criteria based on what truly matters to you."
+        }
+      ];
+      
+      setFollowupQuestions(mockFollowups);
+      setCurrentStep('followup');
     } catch (error) {
       console.error('Decision error:', error);
       setError('We\'re having trouble processing your decision. Please try again.');
@@ -591,90 +487,60 @@ const DecisionFlow = ({ onComplete }) => {
   };
 
   const handleFollowupSubmit = async () => {
-    if (!answer.trim()) return;
+    if (!currentAnswer.trim()) return;
     
-    setLoading(true);
-    setError('');
-
-    try {
-      const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
-      const response = await axios.post(`${API}${endpoint}`, {
-        decision_id: decisionId,
-        message: answer,
-        step: 'followup',
-        step_number: stepNumber
-      });
-
-      const data = response.data;
+    const newAnswers = [...answers, currentAnswer];
+    setAnswers(newAnswers);
+    trackFollowupAnswered(currentFollowupIndex + 1);
+    
+    if (currentFollowupIndex < followupQuestions.length - 1) {
+      setCurrentFollowupIndex(currentFollowupIndex + 1);
+      setCurrentAnswer('');
+    } else {
+      // Generate recommendation
+      setCurrentStep('recommendation');
       
-      if (data.is_complete && data.recommendation) {
-        setRecommendation(data.recommendation);
-        setCurrentStep('complete');
-        trackDecisionCompleted(decisionId, data.recommendation.confidence_score);
-      } else if (data.followup_question) {
-        setFollowupQuestion(data.followup_question);
-        setStepNumber(data.step_number);
-        setAnswer(''); // Clear for next question
-      }
-    } catch (error) {
-      console.error('Follow-up error:', error);
-      setError('We\'re having trouble processing your response. Please try again.');
-    } finally {
-      setLoading(false);
+      // Mock recommendation (replace with real API call)
+      const mockRecommendation = {
+        recommendation: "Based on your reflections regarding uncertainty, desired outcomes, and core values, I recommend taking a measured approach to your decision. Start by addressing the areas of uncertainty through additional research or consultation, while keeping your primary goal and values as your north star.",
+        confidence_score: 85,
+        reasoning: "Your responses show you have a clear vision of what you want but need more information to feel confident. This balanced approach honors both your aspirations and your need for security."
+      };
+      
+      setRecommendation(mockRecommendation);
+      trackDecisionCompleted(decisionId, mockRecommendation.confidence_score);
     }
   };
 
   const handleFeedback = async (helpful) => {
-    try {
-      await axios.post(`${API}/decision/feedback/${decisionId}`, {
-        helpful
-      });
-    } catch (error) {
-      console.error('Feedback error:', error);
-    }
+    // Track feedback
+    console.log('Feedback:', helpful);
   };
 
-  const handleNewDecision = () => {
-    setCurrentStep('initial');
-    setDecisionId(null);
-    setQuestion('');
-    setFollowupQuestion(null);
-    setAnswer('');
-    setRecommendation(null);
-    setStepNumber(0);
-    setError('');
-  };
+  const currentFollowup = followupQuestions[currentFollowupIndex];
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <Card className="max-w-2xl w-full mx-4 decision-card">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
-            {currentStep === 'initial' && 'Let\'s explore your decision'}
-            {currentStep === 'followup' && `Question ${stepNumber} of 3`}
-            {currentStep === 'complete' && 'Your Decision Recommendation'}
-          </CardTitle>
-          <CardDescription>
-            {currentStep === 'initial' && 'Tell me about the decision you need to make'}
-            {currentStep === 'followup' && 'Let me understand your situation better'}
-            {currentStep === 'complete' && 'Based on our conversation, here\'s what I recommend'}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {/* Initial Question Step */}
-          {currentStep === 'initial' && (
-            <div className="space-y-4">
+      <div className="max-w-2xl w-full mx-auto">
+        {/* Initial Question Step */}
+        {currentStep === 'initial' && (
+          <Card className="decision-card card-enter">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-foreground">Let's explore your decision</CardTitle>
+              <CardDescription>Tell me about the decision you need to make</CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
               <Input
                 placeholder="What decision do you need help with?"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="text-lg py-4 px-6 rounded-xl"
+                className="chat-input text-lg py-4"
                 onKeyPress={(e) => e.key === 'Enter' && handleInitialSubmit()}
               />
               
               {error && (
-                <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg">
+                <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
                   {error}
                 </div>
               )}
@@ -682,7 +548,7 @@ const DecisionFlow = ({ onComplete }) => {
               <Button
                 onClick={handleInitialSubmit}
                 disabled={!question.trim() || loading}
-                className="w-full py-4 text-lg bg-gradient-cta hover:scale-105 rounded-xl"
+                className="w-full cta-button py-4 text-lg"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -691,58 +557,56 @@ const DecisionFlow = ({ onComplete }) => {
                   </div>
                 ) : 'Start My Decision'}
               </Button>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Follow-up Questions Step */}
-          {currentStep === 'followup' && followupQuestion && (
-            <div className="space-y-4">
-              <div className="p-4 bg-card border border-border rounded-lg">
-                <h3 className="font-medium text-foreground mb-2">Your Decision:</h3>
+        {/* Follow-up Questions Step */}
+        {currentStep === 'followup' && currentFollowup && (
+          <Card className="decision-card card-enter">
+            <CardHeader>
+              <div className="step-indicator">Step {currentFollowupIndex + 1} of {followupQuestions.length}</div>
+              <CardTitle className="text-xl text-foreground">{currentFollowup.question}</CardTitle>
+              <CardDescription>{currentFollowup.context}</CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">Your Decision:</h4>
                 <p className="text-muted-foreground">{question}</p>
               </div>
               
-              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">
-                  {followupQuestion.question}
-                </h4>
-              </div>
-              
-              <Input
-                placeholder="Your answer..."
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                className="text-lg py-4 px-6 rounded-xl"
-                onKeyPress={(e) => e.key === 'Enter' && handleFollowupSubmit()}
+              <textarea
+                placeholder="Enter your response here..."
+                value={currentAnswer}
+                onChange={(e) => setCurrentAnswer(e.target.value)}
+                className="chat-input min-h-[120px] resize-none"
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleFollowupSubmit()}
               />
-              
-              {error && (
-                <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg">
-                  {error}
-                </div>
-              )}
               
               <Button
                 onClick={handleFollowupSubmit}
-                disabled={!answer.trim() || loading}
-                className="w-full py-4 text-lg bg-gradient-cta hover:scale-105 rounded-xl"
+                disabled={!currentAnswer.trim()}
+                className="w-full cta-button py-4 text-lg"
               >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Processing...
-                  </div>
-                ) : 'Continue'}
+                Continue
               </Button>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Recommendation Step */}
-          {currentStep === 'complete' && recommendation && (
-            <div className="space-y-6">
-              <div className="p-6 bg-card border border-border rounded-xl">
+        {/* Recommendation Step */}
+        {currentStep === 'recommendation' && recommendation && (
+          <Card className="decision-card card-enter">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-foreground">Your Decision Recommendation</CardTitle>
+              <CardDescription>Based on our conversation, here's what I recommend</CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <div className="p-6 bg-muted/30 rounded-xl">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">My Recommendation</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Recommendation Summary</h3>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Confidence:</span>
                     <span className="text-sm font-medium text-foreground">{recommendation.confidence_score}%</span>
@@ -780,7 +644,7 @@ const DecisionFlow = ({ onComplete }) => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleFeedback(true)}
-                      className="hover:bg-secondary-teal/10 hover:text-secondary-teal"
+                      className="hover:bg-mint/10 hover:text-green-600"
                     >
                       👍 Yes
                     </Button>
@@ -788,7 +652,7 @@ const DecisionFlow = ({ onComplete }) => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleFeedback(false)}
-                      className="hover:bg-secondary-coral/10 hover:text-secondary-coral"
+                      className="hover:bg-red-50 hover:text-red-600"
                     >
                       👎 No
                     </Button>
@@ -798,268 +662,57 @@ const DecisionFlow = ({ onComplete }) => {
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    onClick={handleNewDecision}
+                    onClick={() => {
+                      setCurrentStep('initial');
+                      setCurrentFollowupIndex(0);
+                      setAnswers([]);
+                      setCurrentAnswer('');
+                      setRecommendation(null);
+                    }}
                     className="flex-1"
                   >
                     Adjust Decision
                   </Button>
                   <Button
                     onClick={onComplete}
-                    className="flex-1 bg-gradient-cta hover:scale-105"
+                    className="flex-1 cta-button"
                   >
                     Take Action
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Dashboard Component with enhanced features
-const Dashboard = ({ onStartDecision }) => {
-  const { user } = useAuth();
-  const [decisions, setDecisions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // Fetch user decisions here
-    // For now, using mock data
-    setTimeout(() => {
-      setDecisions([
-        {
-          id: '1',
-          title: 'Should I switch careers?',
-          created_at: new Date().toISOString(),
-          confidence: 85,
-          recommendation: 'Based on your skills and market demand...'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const usedDecisions = user?.monthly_decisions_used || 0;
-  const maxDecisions = user?.plan === 'pro' ? 999 : 3;
-  const usagePercentage = user?.plan === 'pro' ? 25 : (usedDecisions / maxDecisions) * 100;
-  
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
-          Welcome back, {user?.name || 'there'}! 
-        </h1>
-        <p className="text-muted-foreground mt-2 text-lg">Ready to make your next decision with confidence?</p>
-      </div>
-      
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Usage Meter Card */}
-        <Card className="decision-card">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              This Month
-              {user?.plan === 'pro' && (
-                <span className="text-xs bg-gradient-cta text-white px-2 py-1 rounded-full">PRO</span>
-              )}
-            </CardTitle>
-            <CardDescription>
-              {user?.plan === 'pro' ? 'Unlimited decisions' : 'Decision sessions used'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold mb-4 text-foreground">
-              {usedDecisions} {user?.plan === 'pro' ? 'this month' : `/ ${maxDecisions}`}
-            </div>
-            
-            {/* Updated Progress Bar with new colors */}
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                <span>Usage</span>
-                <span>{Math.round(usagePercentage)}%</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-3">
-                <div 
-                  className="confidence-bar h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                />
-              </div>
-              {user?.plan !== 'pro' && usedDecisions >= maxDecisions && (
-                <p className="text-secondary-coral text-sm mt-2">
-                  You've used all your free decisions. Upgrade to Pro for unlimited access!
-                </p>
-              )}
-            </div>
-            
-            <Button 
-              onClick={onStartDecision} 
-              className="w-full bg-gradient-cta hover:scale-105 rounded-xl"
-              disabled={user?.plan !== 'pro' && usedDecisions >= maxDecisions}
-            >
-              {user?.plan !== 'pro' && usedDecisions >= maxDecisions ? 'Upgrade to Continue' : 'Start My Decision'}
-            </Button>
-            
-            {user?.plan !== 'pro' && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-secondary-purple/10 rounded-lg border border-primary/20">
-                <h4 className="font-medium text-foreground mb-2">Upgrade to Pro</h4>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Get unlimited decisions, advanced insights, and priority support for just $7/month.
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  Upgrade Now
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Recent Decisions */}
-        <Card className="lg:col-span-2 decision-card">
-          <CardHeader>
-            <CardTitle>Recent Decisions</CardTitle>
-            <CardDescription>Your decision history and insights</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : decisions.length > 0 ? (
-              <div className="space-y-4">
-                {decisions.map((decision) => (
-                  <div key={decision.id} className="p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-foreground">{decision.title}</h4>
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs text-muted-foreground">
-                          {decision.confidence}% confidence
-                        </div>
-                        <div className="w-12 bg-muted rounded-full h-2">
-                          <div 
-                            className="bg-gradient-confidence h-2 rounded-full"
-                            style={{ width: `${decision.confidence}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {decision.recommendation}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(decision.created_at).toLocaleDateString()}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">View</Button>
-                        <Button variant="ghost" size="sm">Adjust</Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">🤔</div>
-                <h3 className="text-lg font-medium text-foreground mb-2">No decisions yet</h3>
-                <p className="text-muted-foreground mb-6">
-                  Start your first decision to see your history and insights here.
-                </p>
-                <Button onClick={onStartDecision} className="bg-gradient-cta hover:scale-105 rounded-xl">
-                  Make Your First Decision
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid md:grid-cols-3 gap-6 mt-8">
-        <Card className="decision-card">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-primary mb-2">{usedDecisions}</div>
-            <p className="text-muted-foreground">Decisions Made</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="decision-card">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-secondary-teal mb-2">85%</div>
-            <p className="text-muted-foreground">Avg. Confidence</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="decision-card">
-          <CardContent className="p-6 text-center">
-            <div className="text-3xl font-bold text-secondary-yellow mb-2">2.3</div>
-            <p className="text-muted-foreground">Avg. Follow-ups</p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
 };
 
-// Auth Modal Component with improved UX
+// Auth Modal Component
 const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login, register } = useAuth();
 
-  // Clear form when modal closes or mode switches
   useEffect(() => {
     if (!isOpen) {
       setEmail('');
       setPassword('');
-      setConfirmPassword('');
       setName('');
       setError('');
       setShowPassword(false);
-      setShowConfirmPassword(false);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    setError('');
-    setConfirmPassword('');
-  }, [mode]);
-
-  const validatePassword = (password) => {
-    if (password.length < 8) return false;
-    if (!/[a-z]/.test(password)) return false;
-    if (!/[A-Z]/.test(password)) return false;
-    if (!/\d/.test(password)) return false;
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
-    return true;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    // Validation for registration
-    if (mode === 'register') {
-      if (!validatePassword(password)) {
-        setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
-        setLoading(false);
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
-      }
-    }
 
     const result = mode === 'login' 
       ? await login(email, password)
@@ -1079,12 +732,6 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
         <ModalTitle className="text-center">
           {mode === 'login' ? 'Welcome back' : 'Create your account'}
         </ModalTitle>
-        <p className="text-center text-muted-foreground mt-2">
-          {mode === 'login' 
-            ? 'Sign in to continue your decision journey' 
-            : 'Start making better decisions today'
-          }
-        </p>
       </ModalHeader>
       
       <ModalContent>
@@ -1097,7 +744,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="rounded-xl"
+                className="chat-input"
                 required
               />
             </div>
@@ -1110,7 +757,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="rounded-xl"
+              className="chat-input"
               required
             />
           </div>
@@ -1123,7 +770,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="rounded-xl pr-12"
+                className="chat-input pr-12"
                 required
                 minLength={8}
               />
@@ -1132,50 +779,15 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
                 onMouseDown={() => setShowPassword(true)}
                 onMouseUp={() => setShowPassword(false)}
                 onMouseLeave={() => setShowPassword(false)}
-                onTouchStart={() => setShowPassword(true)}
-                onTouchEnd={() => setShowPassword(false)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
               >
                 👁️
               </button>
             </div>
-            {mode === 'register' && password && (
-              <div className="mt-2 text-xs text-muted-foreground">
-                Password must include: uppercase, lowercase, number, and special character
-              </div>
-            )}
           </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password</label>
-              <div className="relative">
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className="rounded-xl pr-12"
-                  required
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onMouseDown={() => setShowConfirmPassword(true)}
-                  onMouseUp={() => setShowConfirmPassword(false)}
-                  onMouseLeave={() => setShowConfirmPassword(false)}
-                  onTouchStart={() => setShowConfirmPassword(true)}
-                  onTouchEnd={() => setShowConfirmPassword(false)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
-                >
-                  👁️
-                </button>
-              </div>
-            </div>
-          )}
           
           {error && (
-            <div className="text-secondary-coral text-sm bg-secondary-coral/10 p-3 rounded-lg border border-secondary-coral/20">
+            <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
               {error}
             </div>
           )}
@@ -1183,7 +795,7 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
           <Button 
             type="submit" 
             disabled={loading} 
-            className="w-full py-3 bg-gradient-cta hover:scale-105 rounded-xl"
+            className="w-full cta-button py-3"
           >
             {loading ? (
               <div className="flex items-center gap-2">
@@ -1207,6 +819,58 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
         </div>
       </ModalContent>
     </Modal>
+  );
+};
+
+// Side Chat Modal Component (placeholder)
+const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1" onClick={onClose} />
+      <div className="w-96 bg-card border-l border-border shadow-xl animate-slide-in-right">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Decision History</h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 flex-1">
+          {isAuthenticated ? (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">🤔</div>
+              <h3 className="text-lg font-medium text-foreground mb-2">No decisions yet</h3>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Start your first decision to see your history here.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">🔒</div>
+              <h3 className="text-lg font-medium text-foreground mb-2">Sign in to view history</h3>
+              <p className="text-muted-foreground text-sm">
+                Create an account to save and revisit your decisions.
+              </p>
+            </div>
+          )}
+        </div>
+        
+        <div className="p-6 border-t border-border">
+          <Button
+            onClick={onStartNewDecision}
+            className="w-full cta-button py-3"
+          >
+            Start New Decision
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
