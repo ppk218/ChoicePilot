@@ -913,22 +913,93 @@ const ConversationCard = ({ item, onFeedback }) => {
   }
 };
 
-// Simple Dashboard Component
+// Enhanced Dashboard Component with Chat Interface
 const Dashboard = ({ onStartDecision }) => {
   const { user } = useAuth();
+  const [question, setQuestion] = useState('');
+  
+  const handleStartDecision = () => {
+    if (question.trim()) {
+      onStartDecision(question);
+    } else {
+      // If no question, start with empty flow
+      onStartDecision('');
+    }
+  };
   
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Welcome back, {user?.name}!</h1>
-        <p className="text-muted-foreground mb-8">Ready to make your next decision?</p>
-        
-        <Button
-          onClick={() => onStartDecision('')}
-          className="cta-button px-8 py-4 text-lg"
-        >
-          Start New Decision
-        </Button>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="max-w-4xl w-full mx-auto">
+        {/* Welcome Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4 text-foreground">
+            Welcome back, {user?.name}! 👋
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            Ready to make your next decision with confidence?
+          </p>
+        </div>
+
+        {/* Chat-Style Decision Input */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="relative">
+            {/* Chat Container */}
+            <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
+              <div className="flex flex-col gap-4">
+                <textarea
+                  placeholder="What decision are you facing today?"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  className="chat-input resize-none min-h-[100px] border-none bg-transparent text-lg focus:ring-0 focus:outline-none"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleStartDecision();
+                    }
+                  }}
+                />
+                
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-muted-foreground">
+                    E.g., "Should I take this new job offer?" or "Which investment option is better?"
+                  </p>
+                  <Button
+                    onClick={handleStartDecision}
+                    className="cta-button px-6 py-2 text-sm"
+                  >
+                    Let's Decide
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats or Recent Decisions */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="decision-card text-center">
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold text-primary mb-2">
+                {user?.monthly_decisions_used || 0}
+              </div>
+              <p className="text-muted-foreground text-sm">Decisions This Month</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="decision-card text-center">
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold text-mint mb-2">85%</div>
+              <p className="text-muted-foreground text-sm">Avg. Confidence</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="decision-card text-center">
+            <CardContent className="p-6">
+              <div className="text-3xl font-bold text-secondary-yellow mb-2">2.1</div>
+              <p className="text-muted-foreground text-sm">Avg. Follow-ups</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
