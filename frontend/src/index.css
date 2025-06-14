@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global dark theme styles */
+/* Global theme styles with new color system */
 @layer base {
   * {
     @apply border-border;
@@ -19,32 +19,54 @@
     margin: 0;
   }
   
+  /* Dark mode (default) - Updated colors */
   html.dark {
-    --background: #2C2C2E;
+    --background: #1C1C1E;
     --foreground: #FFF8F0;
-    --card: #1C1C1E;
-    --primary: #FF9966;
-    --accent: #C6F6D5;
-    --muted: #3A3A3C;
-    --border: #3A3A3C;
-    --input: #3A3A3C;
+    --card: #2A2A2D;
+    --muted: #393A3D;
+    --muted-foreground: #A1A1AA;
+    --border: #393A3D;
+    --input: #393A3D;
   }
   
+  /* Light mode - Updated colors */
   html.light {
-    --background: #FFFFFF;
+    --background: #FCFCFD;
     --foreground: #1A1A1A;
-    --card: #FFFFFF;
-    --primary: #FF9966;
-    --accent: #C6F6D5;
-    --muted: #F5F5F5;
-    --border: #E5E5E5;
-    --input: #F5F5F5;
+    --card: #F2F2F5;
+    --muted: #E4E4EA;
+    --muted-foreground: #6B7280;
+    --border: #E4E4EA;
+    --input: #F2F2F5;
   }
 }
 
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
         monospace;
+}
+
+/* Custom components */
+@layer components {
+  /* Modern button styles */
+  .btn-primary {
+    @apply bg-gradient-cta text-white rounded-xl shadow-md hover:scale-105 transition-all duration-200 font-medium;
+  }
+  
+  .btn-primary:hover {
+    @apply animate-pulse-soft;
+  }
+  
+  /* Decision card styles */
+  .decision-card {
+    @apply bg-card border border-border rounded-xl shadow-lg p-6 transition-all duration-200 hover:shadow-xl;
+  }
+  
+  /* Confidence bar styles */
+  .confidence-bar {
+    @apply bg-gradient-confidence rounded-full h-3 transition-all duration-500;
+  }
 }
 
 /* Custom scrollbar for dark theme */
@@ -67,5 +89,14 @@ code {
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-primary/50;
+  }
+  
+  /* Hero gradient backgrounds */
+  .hero-gradient-dark {
+    background: linear-gradient(145deg, #1C1C1E, #252528, #2A2A2D);
+  }
+  
+  .hero-gradient-light {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F4F4F7 100%);
   }
 }
