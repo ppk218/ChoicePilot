@@ -190,6 +190,7 @@ const App = () => {
 const MainApp = () => {
   const [currentView, setCurrentView] = useState('landing'); // landing, decision, dashboard
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // login, register
   const { darkMode, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
@@ -218,7 +219,7 @@ const MainApp = () => {
     }
   }, [darkMode]);
 
-  const handleStartDecision = () => {
+  const handleStartDecision = (predefinedQuestion = '') => {
     setCurrentView('decision');
   };
 
