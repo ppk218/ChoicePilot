@@ -1412,79 +1412,196 @@ def auto_classify_question(question: str) -> str:
         return "general"
 
 async def generate_followup_question(initial_question: str, step_number: int, category: str = "general", previous_answers: List[str] = None) -> DecisionFollowUpQuestion:
-    """Generate a relevant follow-up question"""
+    """Generate a relevant follow-up question using AI"""
     
-    context = f"User's initial question: {initial_question}\nCategory: {category}"
+    # Build context for AI
+    context = f"Initial question: {initial_question}\nCategory: {category}\nStep: {step_number}/3"
     if previous_answers:
-        context += f"\nPrevious answers: {previous_answers}"
+        context += f"\nPrevious answers: {', '.join(previous_answers)}"
     
-    # Use simple logic for now, can be enhanced with AI later
-    questions_by_category = {
-        "consumer": [
-            "What's your budget range for this purchase?",
-            "What features or qualities are most important to you?",
-            "When do you need to make this decision?"
-        ],
-        "travel": [
-            "What's your budget for this trip?",
-            "What type of experience are you looking for?",
-            "How long do you have available?"
-        ],
-        "career": [
-            "What are your main career goals?",
-            "What factors are most important to you in a job?",
-            "What's your timeline for making this change?"
-        ],
-        "general": [
-            "What factors are most important to you in this decision?",
-            "What are your main concerns or constraints?",
-            "What would success look like to you?"
-        ]
-    }
+    # System prompt for generating follow-up questions
+    system_prompt = """You are an expert decision advisor. Your job is to ask insightful follow-up questions that help users make better decisions.
+
+Given the user's initial question and any previous answers, generate ONE specific, actionable follow-up question that will help you provide a better recommendation.
+
+Rules:
+- Ask only ONE question
+- Make it specific and actionable
+- Focus on clarifying constraints, priorities, or context
+- Avoid yes/no questions
+- Keep it under 20 words
+- Be conversational and helpful
+
+Return only the question, nothing else."""
+
+    message = f"User's situation: {context}\n\nGenerate the next follow-up question:"
     
-    category_questions = questions_by_category.get(category, questions_by_category["general"])
-    question_index = min(step_number - 1, len(category_questions) - 1)
-    
-    return DecisionFollowUpQuestion(
-        question=category_questions[question_index],
-        step_number=step_number,
-        context=context
-    )
+    try:
+        # Use the LLM Router to get AI response
+        llm_router = LLMRouter()
+        response, confidence = await llm_router.get_response(
+            message=message,
+            session_id=f"followup_{step_number}",
+            category=category,
+            user_preference="auto",
+            user_plan="pro"  # Use pro features for better questions
+        )
+        
+        # Clean up the response
+        question = response.strip().strip('"').strip("'")
+        if not question.endswith('?'):
+            question += '?'
+            
+        return DecisionFollowUpQuestion(
+            question=question,
+            step_number=step_number,
+            context=context
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating AI follow-up question: {e}")
+        # Fallback to template questions
+        questions_by_category = {
+            "consumer": [
+                "What's your budget range for this purchase?",
+                "What features or qualities are most important to you?", 
+                "When do you need to make this decision?"
+            ],
+            "travel": [
+                "What's your budget for this trip?",
+                "What type of experience are you looking for?",
+                "How long do you have available?"
+            ],
+            "career": [
+                "What are your main career goals?",
+                "What factors are most important to you in a job?",
+                "What's your timeline for making this change?"
+            ],
+            "general": [
+                "What factors are most important to you in this decision?",
+                "What are your main concerns or constraints?",
+                "What would success look like to you?"
+            ]
+        }
+        
+        category_questions = questions_by_category.get(category, questions_by_category["general"])
+        question_index = min(step_number - 1, len(category_questions) - 1)
+        
+        return DecisionFollowUpQuestion(
+            question=category_questions[question_index],
+            step_number=step_number,
+            context=context
+        )
 
 async def generate_final_recommendation(initial_question: str, answers: List[str], category: str = "general", adjustment_context: str = None) -> DecisionRecommendation:
-    """Generate final recommendation based on all inputs"""
+    """Generate final recommendation using AI"""
     
-    # For now, use a simple template-based approach
-    # This can be enhanced with AI generation later
-    
-    recommendation_text = f"Based on your question about {initial_question.lower()}"
-    if answers:
-        recommendation_text += f" and considering your preferences: {', '.join(answers[:2])}"
-    
-    if category == "consumer":
-        recommendation_text += ", I recommend researching the top 3 options that fit your budget and comparing their features."
-    elif category == "travel":
-        recommendation_text += ", I suggest looking into destinations that match your budget and travel style."
-    elif category == "career":
-        recommendation_text += ", I recommend creating a pros and cons list and discussing with trusted mentors."
-    else:
-        recommendation_text += ", I recommend taking time to weigh the most important factors you mentioned."
+    # Build comprehensive context
+    context = f"""
+Decision Question: {initial_question}
+Category: {category}
+User Responses: {', '.join(answers) if answers else 'None'}
+"""
     
     if adjustment_context:
-        recommendation_text += f" Taking into account your additional input: {adjustment_context}"
+        context += f"\nAdjustment Request: {adjustment_context}"
     
-    # Simple confidence calculation
-    confidence = 75 + len(answers) * 5  # Base 75% + 5% per answer
-    confidence = min(confidence, 95)  # Cap at 95%
+    # System prompt for generating recommendations
+    system_prompt = """You are an expert decision advisor. Based on the user's question and their responses to follow-up questions, provide a clear, actionable recommendation.
+
+Your response should be structured exactly as follows:
+
+RECOMMENDATION: [One clear, specific recommendation in 2-3 sentences]
+REASONING: [2-3 sentences explaining why this is the best choice based on their responses]
+CONFIDENCE: [A number from 1-100 representing your confidence in this recommendation]
+
+Guidelines:
+- Be decisive but acknowledge uncertainty where it exists
+- Focus on actionable next steps
+- Consider the user's constraints and priorities
+- Be encouraging and supportive
+- Confidence should reflect the completeness of information provided
+
+Example format:
+RECOMMENDATION: Based on your budget and timeline, I recommend choosing Option A because it best matches your priorities.
+REASONING: This choice aligns with your stated budget constraints while delivering the features you identified as most important.
+CONFIDENCE: 85"""
+
+    message = f"Please analyze this decision and provide your recommendation:\n\n{context}"
     
-    reasoning = f"This recommendation is based on your {len(answers)} responses and focuses on the {category} category factors."
-    
-    return DecisionRecommendation(
-        recommendation=recommendation_text,
-        confidence_score=confidence,
-        reasoning=reasoning,
-        action_link=None  # Can be populated later
-    )
+    try:
+        # Use the LLM Router to get AI response
+        llm_router = LLMRouter()
+        response, ai_confidence = await llm_router.get_response(
+            message=message,
+            session_id=f"recommendation_{hash(initial_question)}",
+            category=category,
+            user_preference="auto", 
+            user_plan="pro",
+            system_message=system_prompt
+        )
+        
+        # Parse the structured response
+        recommendation_text = ""
+        reasoning_text = ""
+        confidence_score = 75  # Default
+        
+        lines = response.split('\n')
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('RECOMMENDATION:'):
+                current_section = 'recommendation'
+                recommendation_text = line.replace('RECOMMENDATION:', '').strip()
+            elif line.startswith('REASONING:'):
+                current_section = 'reasoning'
+                reasoning_text = line.replace('REASONING:', '').strip()
+            elif line.startswith('CONFIDENCE:'):
+                current_section = 'confidence'
+                conf_text = line.replace('CONFIDENCE:', '').strip()
+                try:
+                    confidence_score = int(''.join(filter(str.isdigit, conf_text)))
+                    confidence_score = max(1, min(100, confidence_score))  # Clamp to 1-100
+                except:
+                    confidence_score = 75
+            elif current_section and line:
+                if current_section == 'recommendation':
+                    recommendation_text += " " + line
+                elif current_section == 'reasoning':
+                    reasoning_text += " " + line
+        
+        # Fallback if parsing failed
+        if not recommendation_text:
+            recommendation_text = response[:200] + "..." if len(response) > 200 else response
+        if not reasoning_text:
+            reasoning_text = "This recommendation is based on the information you provided and common best practices for this type of decision."
+            
+        return DecisionRecommendation(
+            recommendation=recommendation_text.strip(),
+            confidence_score=float(confidence_score),
+            reasoning=reasoning_text.strip(),
+            action_link=None
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating AI recommendation: {e}")
+        # Fallback to template recommendation
+        recommendation_text = f"Based on your question about {initial_question.lower()}"
+        if answers:
+            recommendation_text += f" and considering your preferences, I recommend taking time to evaluate your options carefully."
+        
+        confidence = 70 + len(answers) * 5
+        confidence = min(confidence, 90)
+        
+        reasoning = f"This recommendation considers the {len(answers)} responses you provided and focuses on practical next steps for {category} decisions."
+        
+        return DecisionRecommendation(
+            recommendation=recommendation_text,
+            confidence_score=confidence,
+            reasoning=reasoning,
+            action_link=None
+        )
 
 @api_router.get("/decisions")
 async def get_user_decisions(current_user: dict = Depends(get_current_user), limit: int = 20):
