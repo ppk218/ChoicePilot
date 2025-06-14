@@ -356,7 +356,7 @@ const LandingPage = ({ onStartDecision }) => {
         {/* Hero Section */}
         <div className="mb-12">
           <img 
-            src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_500x500 px_Full Logo.png"
+            src="/logos/getgingee-logos-orange/Getgingee Logo Orange All Sizes_500x500 px (general web)__TextLogo.png"
             alt="getgingee"
             className="h-32 mx-auto mb-8"
             onError={(e) => {
