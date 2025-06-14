@@ -458,41 +458,183 @@ const DecisionFlow = () => {
   );
 };
 
-// Dashboard Component (placeholder for now)
-const Dashboard = () => {
+// Dashboard Component with enhanced features
+const Dashboard = ({ onStartDecision }) => {
   const { user } = useAuth();
+  const [decisions, setDecisions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch user decisions here
+    // For now, using mock data
+    setTimeout(() => {
+      setDecisions([
+        {
+          id: '1',
+          title: 'Should I switch careers?',
+          created_at: new Date().toISOString(),
+          confidence: 85,
+          recommendation: 'Based on your skills and market demand...'
+        }
+      ]);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const usedDecisions = user?.monthly_decisions_used || 0;
+  const maxDecisions = user?.plan === 'pro' ? 999 : 3;
+  const usagePercentage = user?.plan === 'pro' ? 25 : (usedDecisions / maxDecisions) * 100;
   
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Welcome Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Welcome back, {user?.name || 'there'}!</h1>
-        <p className="text-muted-foreground mt-2">Ready to make your next decision?</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary-purple bg-clip-text text-transparent">
+          Welcome back, {user?.name || 'there'}! 
+        </h1>
+        <p className="text-muted-foreground mt-2 text-lg">Ready to make your next decision with confidence?</p>
       </div>
       
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Usage Meter */}
-        <Card>
+        {/* Usage Meter Card */}
+        <Card className="decision-card">
           <CardHeader>
-            <CardTitle>This Month</CardTitle>
-            <CardDescription>Decision sessions used</CardDescription>
+            <CardTitle className="flex items-center justify-between">
+              This Month
+              {user?.plan === 'pro' && (
+                <span className="text-xs bg-gradient-cta text-white px-2 py-1 rounded-full">PRO</span>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {user?.plan === 'pro' ? 'Unlimited decisions' : 'Decision sessions used'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">
-              {user?.monthly_decisions_used || 0} / {user?.plan === 'pro' ? '∞' : 3}
+            <div className="text-3xl font-bold mb-4 text-foreground">
+              {usedDecisions} {user?.plan === 'pro' ? 'this month' : `/ ${maxDecisions}`}
             </div>
-            <Progress value={user?.plan === 'pro' ? 50 : ((user?.monthly_decisions_used || 0) / 3) * 100} className="mb-4" />
-            <Button className="w-full">New Decision</Button>
+            
+            {/* Updated Progress Bar with new colors */}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <span>Usage</span>
+                <span>{Math.round(usagePercentage)}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-3">
+                <div 
+                  className="confidence-bar h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                />
+              </div>
+              {user?.plan !== 'pro' && usedDecisions >= maxDecisions && (
+                <p className="text-secondary-coral text-sm mt-2">
+                  You've used all your free decisions. Upgrade to Pro for unlimited access!
+                </p>
+              )}
+            </div>
+            
+            <Button 
+              onClick={onStartDecision} 
+              className="w-full bg-gradient-cta hover:scale-105 rounded-xl"
+              disabled={user?.plan !== 'pro' && usedDecisions >= maxDecisions}
+            >
+              {user?.plan !== 'pro' && usedDecisions >= maxDecisions ? 'Upgrade to Continue' : 'Start My Decision'}
+            </Button>
+            
+            {user?.plan !== 'pro' && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-secondary-purple/10 rounded-lg border border-primary/20">
+                <h4 className="font-medium text-foreground mb-2">Upgrade to Pro</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Get unlimited decisions, advanced insights, and priority support for just $7/month.
+                </p>
+                <Button variant="outline" size="sm" className="w-full">
+                  Upgrade Now
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
         
         {/* Recent Decisions */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 decision-card">
           <CardHeader>
             <CardTitle>Recent Decisions</CardTitle>
-            <CardDescription>Your decision history</CardDescription>
+            <CardDescription>Your decision history and insights</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No decisions yet. Start your first one!</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : decisions.length > 0 ? (
+              <div className="space-y-4">
+                {decisions.map((decision) => (
+                  <div key={decision.id} className="p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-foreground">{decision.title}</h4>
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          {decision.confidence}% confidence
+                        </div>
+                        <div className="w-12 bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-gradient-confidence h-2 rounded-full"
+                            style={{ width: `${decision.confidence}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {decision.recommendation}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(decision.created_at).toLocaleDateString()}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm">View</Button>
+                        <Button variant="ghost" size="sm">Adjust</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">🤔</div>
+                <h3 className="text-lg font-medium text-foreground mb-2">No decisions yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start your first decision to see your history and insights here.
+                </p>
+                <Button onClick={onStartDecision} className="bg-gradient-cta hover:scale-105 rounded-xl">
+                  Make Your First Decision
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid md:grid-cols-3 gap-6 mt-8">
+        <Card className="decision-card">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-primary mb-2">{usedDecisions}</div>
+            <p className="text-muted-foreground">Decisions Made</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="decision-card">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-secondary-teal mb-2">85%</div>
+            <p className="text-muted-foreground">Avg. Confidence</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="decision-card">
+          <CardContent className="p-6 text-center">
+            <div className="text-3xl font-bold text-secondary-yellow mb-2">2.3</div>
+            <p className="text-muted-foreground">Avg. Follow-ups</p>
           </CardContent>
         </Card>
       </div>
