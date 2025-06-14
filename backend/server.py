@@ -1548,13 +1548,13 @@ Return only the question, nothing else."""
     message = f"User's situation: {context}\n\nGenerate the next follow-up question:"
     
     try:
-        # Use the LLM Router to get AI response
+        # Use the LLM Router to get AI response - using the correct signature
         response, confidence = await LLMRouter.get_llm_response(
-            message=message,
-            session_id=f"followup_{step_number}",
-            category=category,
-            user_preference="auto",
-            user_plan="pro"  # Use pro features for better questions
+            message, 
+            "gpt4o", 
+            f"followup_{step_number}_{category}", 
+            system_prompt,
+            []  # Empty conversation history for followup questions
         )
         
         # Clean up the response
