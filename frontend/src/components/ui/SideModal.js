@@ -4,6 +4,7 @@ import { X, MessageCircle, Edit, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "./Button";
 import { Card, CardContent, CardHeader, CardTitle } from "./Card";
 import { Progress } from "./Progress";
+import { ConfirmationModal } from "./GDPRComponents";
 
 const SideModal = ({ isOpen, onClose, children, className, title }) => {
   return (
