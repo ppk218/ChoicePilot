@@ -284,6 +284,21 @@ const DecisionHistoryModal = ({ isOpen, onClose, onStartNewDecision }) => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDecisionToDelete(null);
+        }}
+        onConfirm={() => handleDeleteDecision(decisionToDelete?.id)}
+        title="Delete Decision"
+        message={`Are you sure you want to delete "${decisionToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="destructive"
+        loading={deleting}
+      />
     </SideModal>
   );
 };
