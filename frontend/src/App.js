@@ -194,6 +194,7 @@ const MainApp = () => {
   const [currentView, setCurrentView] = useState('landing'); // landing, decision, dashboard
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // login, register
   const { darkMode, toggleTheme } = useTheme();
