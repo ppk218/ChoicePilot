@@ -104,12 +104,24 @@ const DecisionHistoryModal = ({ isOpen, onClose, onStartNewDecision }) => {
   };
 
   const handleDeleteDecision = async (decisionId) => {
+    setDeleting(true);
     try {
       // API call to delete decision
+      // For now, just remove from state
       setDecisions(prev => prev.filter(d => d.id !== decisionId));
+      setShowDeleteConfirm(false);
+      setDecisionToDelete(null);
     } catch (error) {
       console.error('Error deleting decision:', error);
+      alert('Failed to delete decision. Please try again.');
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const confirmDeleteDecision = (decision) => {
+    setDecisionToDelete(decision);
+    setShowDeleteConfirm(true);
   };
 
   const handleRestartDecision = (decision) => {
