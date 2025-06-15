@@ -691,13 +691,42 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     
     try {
       // Send the answer to the backend
-      await axios.post(`${API}/api/decision/advanced`, {
+      const response = await axios.post(`${API}/api/decision/advanced`, {
         decision_id: decisionId,
         message: currentAnswer,
         step: 'followup',
         step_number: currentFollowupIndex + 1,
         enable_personalization: isAuthenticated
       });
+      
+      // Check if this was the last question and we get a recommendation
+      if (currentFollowupIndex >= followupQuestions.length - 1 && response.data.is_complete && response.data.recommendation) {
+        // We got the final recommendation directly
+        const advancedRec = response.data.recommendation;
+        const recommendation = {
+          recommendation: advancedRec.final_recommendation,
+          confidence_score: advancedRec.confidence_score,
+          reasoning: advancedRec.reasoning,
+          logic_trace: advancedRec.trace.frameworks_used || [],
+          next_steps: advancedRec.next_steps || [],
+          confidence_tooltip: advancedRec.confidence_tooltip,
+          trace: advancedRec.trace
+        };
+        
+        setRecommendation(recommendation);
+        setCurrentStep('recommendation');
+        
+        // Add recommendation to conversation
+        setConversationHistory(prev => [...prev, {
+          type: 'ai_recommendation',
+          content: recommendation,
+          timestamp: new Date()
+        }]);
+        
+        trackDecisionCompleted(decisionId, recommendation.confidence_score);
+        return;
+      }
+      
     } catch (error) {
       console.error('Follow-up submission error:', error);
       // Continue with frontend flow even if backend call fails
@@ -707,8 +736,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setCurrentFollowupIndex(currentFollowupIndex + 1);
       setCurrentAnswer('');
     } else {
-      // Generate recommendation
-      generateRecommendation();
+      // All questions answered, trigger recommendation generation
+      await generateRecommendation();
     }
   };
 
