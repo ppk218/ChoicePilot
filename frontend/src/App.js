@@ -706,19 +706,26 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         .filter(item => item.type === 'user_answer')
         .map(item => item.content);
 
-      // Try to get real AI recommendation
-      const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
-      
-      // Send final step to get recommendation
-      const response = await axios.post(`${API}${endpoint}`, {
+      // Use the advanced decision endpoint for recommendation
+      const response = await axios.post(`${API}/api/decision/advanced`, {
         decision_id: decisionId,
-        message: `Based on my answers: ${allAnswers.join('; ')}. Please provide your final recommendation.`,
-        step: 'recommendation'
+        step: 'recommendation',
+        enable_personalization: isAuthenticated
       });
 
       let recommendation;
       if (response.data.recommendation) {
-        recommendation = response.data.recommendation;
+        // Handle the enhanced recommendation format
+        const advancedRec = response.data.recommendation;
+        recommendation = {
+          recommendation: advancedRec.final_recommendation,
+          confidence_score: advancedRec.confidence_score,
+          reasoning: advancedRec.reasoning,
+          logic_trace: advancedRec.trace.frameworks_used || [],
+          next_steps: advancedRec.next_steps || [],
+          confidence_tooltip: advancedRec.confidence_tooltip,
+          trace: advancedRec.trace
+        };
       } else {
         // Fallback to intelligent local recommendation
         recommendation = generateIntelligentRecommendation(initialQuestion, allAnswers);
