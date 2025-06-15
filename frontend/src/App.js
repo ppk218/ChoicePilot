@@ -1195,11 +1195,11 @@ const ConversationCard = ({ item, onFeedback }) => {
             {item.content.trace && (
               <div>
                 <details className="group">
-                  <summary className="cursor-pointer font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <summary className="cursor-pointer font-semibold text-foreground mb-2 flex items-center gap-2 hover:text-primary transition-colors">
                     <span className="transform group-open:rotate-90 transition-transform">▶</span>
-                    Logic Trace
+                    🧠 Logic Trace
                     <span className="text-xs text-muted-foreground">
-                      ({item.content.trace.processing_time_ms}ms)
+                      (Click to expand • {item.content.trace.processing_time_ms}ms)
                     </span>
                   </summary>
                   <div className="mt-4 space-y-4 pl-4 border-l-2 border-primary/20">
@@ -1209,10 +1209,18 @@ const ConversationCard = ({ item, onFeedback }) => {
                       <div className="flex gap-2">
                         {item.content.trace.models_used.map((model, index) => (
                           <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                            {model === 'claude' ? '🧠 Claude' : '🤖 GPT-4o'}
+                            {model === 'claude' ? '🧠 Claude (Analytical)' : 
+                             model === 'gpt4o' ? '🤖 GPT-4o (Creative)' :
+                             model === 'gpt4o-simulated' ? '🤖 GPT-4o (Simulated Creative)' :
+                             model}
                           </span>
                         ))}
                       </div>
+                      {item.content.trace.models_used.includes('gpt4o-simulated') && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          * Creative insights simulated due to API access limitations
+                        </p>
+                      )}
                     </div>
 
                     {/* Frameworks Used */}
@@ -1257,6 +1265,17 @@ const ConversationCard = ({ item, onFeedback }) => {
                         </ul>
                       </div>
                     )}
+
+                    {/* Personalization Status */}
+                    <div>
+                      <h5 className="text-sm font-medium text-foreground mb-1">Personalization</h5>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
+                        {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
+                      </span>
+                    </div>
                   </div>
                 </details>
               </div>
