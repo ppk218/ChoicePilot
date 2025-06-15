@@ -1856,6 +1856,259 @@ CONFIDENCE: 85"""
             action_link=None
         )
 
+# Advanced Decision Flow with AI Orchestration
+@api_router.post("/decision/advanced", response_model=AdvancedDecisionStepResponse)
+async def process_advanced_decision_step(
+    request: AdvancedDecisionStepRequest,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Advanced decision processing with multi-LLM orchestration
+    Supports structured/intuitive/mixed decision types with consensus logic
+    """
+    try:
+        user_id = current_user.get("id") if current_user else None
+        decision_id = request.decision_id or str(uuid.uuid4())
+        
+        # Get or create decision session
+        session = await db.decision_sessions_advanced.find_one({"id": decision_id})
+        
+        if not session and request.step == "initial":
+            # Classify the decision type
+            decision_type = await ai_orchestrator.classify_question(
+                request.message, 
+                f"{decision_id}_classification"
+            )
+            
+            # Create new advanced session
+            session = {
+                "id": decision_id,
+                "user_id": user_id,
+                "initial_question": request.message,
+                "decision_type": decision_type.value,
+                "current_step": "initial",
+                "step_number": 1,
+                "followup_answers": [],
+                "followup_questions": [],
+                "versions": [],
+                "created_at": datetime.utcnow(),
+                "last_active": datetime.utcnow(),
+                "enable_personalization": request.enable_personalization
+            }
+            
+            await db.decision_sessions_advanced.insert_one(session)
+            
+            # Generate follow-up questions using AI orchestrator
+            followup_questions = await ai_orchestrator.generate_followup_questions(
+                request.message,
+                decision_type,
+                max_questions=3
+            )
+            
+            # Convert to response format
+            enhanced_questions = [
+                EnhancedFollowUpQuestion(
+                    question=q.question,
+                    nudge=q.nudge,
+                    category=q.category,
+                    step_number=i + 1
+                ) for i, q in enumerate(followup_questions)
+            ]
+            
+            # Store questions in session
+            await db.decision_sessions_advanced.update_one(
+                {"id": decision_id},
+                {
+                    "$set": {
+                        "followup_questions": [q.dict() for q in enhanced_questions],
+                        "current_step": "followup",
+                        "last_active": datetime.utcnow()
+                    }
+                }
+            )
+            
+            response_text = f"I've analyzed your {decision_type.value} decision. Let me ask a few targeted questions to give you the best recommendation."
+            
+            return AdvancedDecisionStepResponse(
+                decision_id=decision_id,
+                step="initial",
+                step_number=1,
+                response=response_text,
+                followup_questions=enhanced_questions,
+                decision_type=decision_type.value,
+                session_version=1
+            )
+            
+        elif request.step == "followup" and session:
+            # Store the follow-up answer
+            await db.decision_sessions_advanced.update_one(
+                {"id": decision_id},
+                {
+                    "$push": {"followup_answers": request.message},
+                    "$set": {"last_active": datetime.utcnow()}
+                }
+            )
+            
+            current_answers = session.get("followup_answers", []) + [request.message]
+            followup_questions = session.get("followup_questions", [])
+            
+            if len(current_answers) < len(followup_questions):
+                # More questions to answer
+                next_step = len(current_answers) + 1
+                next_question = followup_questions[len(current_answers)]
+                
+                return AdvancedDecisionStepResponse(
+                    decision_id=decision_id,
+                    step="followup",
+                    step_number=next_step,
+                    response="Thank you for that insight.",
+                    followup_questions=[EnhancedFollowUpQuestion(**next_question)],
+                    decision_type=session.get("decision_type"),
+                    session_version=session.get("version", 1)
+                )
+            else:
+                # All questions answered, generate recommendation
+                return await _generate_advanced_recommendation(
+                    decision_id, session, current_answers
+                )
+                
+        elif request.step == "recommendation" and session:
+            # Direct recommendation request
+            current_answers = session.get("followup_answers", [])
+            return await _generate_advanced_recommendation(
+                decision_id, session, current_answers
+            )
+            
+        elif request.step == "adjust" and session:
+            # Adjustment request - create new version
+            current_version = session.get("version", 1)
+            new_version = current_version + 1
+            
+            # Store current version in history
+            await db.decision_sessions_advanced.update_one(
+                {"id": decision_id},
+                {
+                    "$push": {
+                        "versions": {
+                            "version": current_version,
+                            "answers": session.get("followup_answers", []),
+                            "recommendation": session.get("recommendation"),
+                            "created_at": datetime.utcnow()
+                        }
+                    },
+                    "$set": {
+                        "version": new_version,
+                        "adjustment_context": request.adjustment_context,
+                        "last_active": datetime.utcnow()
+                    }
+                }
+            )
+            
+            # Regenerate with adjustment context
+            return await _generate_advanced_recommendation(
+                decision_id, session, session.get("followup_answers", []),
+                adjustment_context=request.adjustment_context
+            )
+            
+        else:
+            raise HTTPException(
+                status_code=404, 
+                detail="Decision session not found or invalid step"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Advanced decision processing error: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="Error processing advanced decision"
+        )
+
+async def _generate_advanced_recommendation(
+    decision_id: str,
+    session: dict,
+    followup_answers: List[str],
+    adjustment_context: str = None
+) -> AdvancedDecisionStepResponse:
+    """
+    Generate advanced recommendation using AI orchestrator
+    """
+    try:
+        decision_type = DecisionType(session.get("decision_type", "mixed"))
+        initial_question = session.get("initial_question", "")
+        enable_personalization = session.get("enable_personalization", False)
+        
+        # Get user profile if personalization enabled
+        user_profile = None
+        if enable_personalization and session.get("user_id"):
+            user = await db.users.find_one({"id": session["user_id"]})
+            if user:
+                user_profile = {
+                    "preferences": user.get("preferences", {}),
+                    "past_decisions": user.get("decision_history", [])
+                }
+        
+        # Generate recommendation using AI orchestrator
+        recommendation = await ai_orchestrator.synthesize_decision(
+            initial_question=initial_question,
+            followup_answers=followup_answers,
+            decision_type=decision_type,
+            user_profile=user_profile,
+            enable_personalization=enable_personalization
+        )
+        
+        # Convert to response format
+        enhanced_trace = EnhancedDecisionTrace(
+            models_used=recommendation.trace.models_used,
+            frameworks_used=recommendation.trace.frameworks_used,
+            themes=recommendation.trace.themes,
+            confidence_factors=recommendation.trace.confidence_factors,
+            used_web_search=recommendation.trace.used_web_search,
+            personas_consulted=recommendation.trace.personas_consulted,
+            processing_time_ms=recommendation.trace.processing_time_ms
+        )
+        
+        enhanced_recommendation = EnhancedDecisionRecommendation(
+            final_recommendation=recommendation.final_recommendation,
+            next_steps=recommendation.next_steps,
+            confidence_score=recommendation.confidence_score,
+            confidence_tooltip=recommendation.confidence_tooltip,
+            reasoning=recommendation.reasoning,
+            trace=enhanced_trace
+        )
+        
+        # Store recommendation in session
+        await db.decision_sessions_advanced.update_one(
+            {"id": decision_id},
+            {
+                "$set": {
+                    "recommendation": enhanced_recommendation.dict(),
+                    "current_step": "complete",
+                    "completed_at": datetime.utcnow(),
+                    "last_active": datetime.utcnow()
+                }
+            }
+        )
+        
+        return AdvancedDecisionStepResponse(
+            decision_id=decision_id,
+            step="complete",
+            step_number=len(followup_answers),
+            response="Based on our comprehensive analysis, here's my recommendation:",
+            is_complete=True,
+            recommendation=enhanced_recommendation,
+            decision_type=session.get("decision_type"),
+            session_version=session.get("version", 1)
+        )
+        
+    except Exception as e:
+        logger.error(f"Advanced recommendation generation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error generating advanced recommendation"
+        )
+
 # Decision Feedback Endpoint
 @api_router.post("/decision/feedback/{decision_id}")
 async def submit_decision_feedback(decision_id: str, request: dict):
