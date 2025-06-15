@@ -610,6 +610,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       await generateFallbackFollowups(question);
     } finally {
       setLoading(false);
+      setProcessingStep('');
     }
   };
 
