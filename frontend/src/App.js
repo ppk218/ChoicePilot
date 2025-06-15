@@ -1197,7 +1197,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
                     <span className="transform group-open:rotate-90 transition-transform">▶</span>
                     🧠 Logic Trace
                     <span className="text-xs text-muted-foreground">
-                      (Click to expand • {item.content.trace.processing_time_ms}ms)
+                      (AI Reasoning Process – Click to Expand)
                     </span>
                   </summary>
                   <div className="mt-4 space-y-4 pl-4 border-l-2 border-primary/20">
@@ -1221,7 +1221,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
                       )}
                     </div>
 
-                    {/* Frameworks Used */}
+                    {/* Analysis Frameworks */}
                     <div>
                       <h5 className="text-sm font-medium text-foreground mb-1">Analysis Frameworks</h5>
                       <div className="flex flex-wrap gap-2">
@@ -1233,7 +1233,18 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
                       </div>
                     </div>
 
-                    {/* Personas Consulted */}
+                    {/* External Knowledge Status */}
+                    <div>
+                      <h5 className="text-sm font-medium text-foreground mb-1">External Knowledge</h5>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
+                        {item.content.trace.used_web_search ? 
+                          '🔍 External Knowledge Accessed: Web Search' : 
+                          '📋 No external search used – analysis based on user input and AI reasoning only'
+                        }
+                      </span>
+                    </div>
+
+                    {/* Advisory Perspectives */}
                     {item.content.trace.personas_consulted && item.content.trace.personas_consulted.length > 0 && (
                       <div>
                         <h5 className="text-sm font-medium text-foreground mb-1">Advisory Perspectives</h5>
@@ -1273,6 +1284,14 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
                       }`}>
                         {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
                       </span>
+                    </div>
+
+                    {/* Processing Time (Hidden in collapsed tooltip) */}
+                    <div className="group relative inline-block">
+                      <span className="text-xs text-muted-foreground cursor-help">ⓘ Processing details</span>
+                      <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                        Processing time: {item.content.trace.processing_time_ms}ms
+                      </div>
                     </div>
                   </div>
                 </details>
