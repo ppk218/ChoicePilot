@@ -1039,10 +1039,20 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               <Button
                 variant="outline"
                 onClick={() => {
+                  // Save current decision to comparison before adjusting
+                  if (recommendation) {
+                    setPreviousDecisions(prev => [...prev, {
+                      id: Date.now(),
+                      recommendation: recommendation,
+                      answers: conversationHistory.filter(item => item.type === 'user_answer').map(item => item.content),
+                      timestamp: new Date()
+                    }]);
+                  }
                   // Adjust decision logic
                   setCurrentStep('followup');
                   setCurrentFollowupIndex(0);
                   setCurrentAnswer('');
+                  setRecommendation(null);
                 }}
                 className="flex-1 flex items-center gap-2"
               >
@@ -1058,6 +1068,20 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 ✅ Implement This
               </Button>
             </div>
+            
+            {/* Comparison Button */}
+            {previousDecisions.length > 0 && (
+              <div className="text-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowComparison(!showComparison)}
+                  className="flex items-center gap-2"
+                >
+                  🔄 Compare with Previous Decision
+                  {showComparison ? ' (Hide)' : ''}
+                </Button>
+              </div>
+            )}
             
             {/* Privacy Notice */}
             <div className="text-center text-xs text-muted-foreground">
