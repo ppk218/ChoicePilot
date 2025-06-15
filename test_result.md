@@ -56,19 +56,31 @@ backend:
         agent: "testing"
         comment: "Verified that the anonymous decision flow now works correctly. The generate_followup_question function is now using the correct parameters for LLMRouter.get_llm_response(). Additionally, the generate_final_recommendation function has been fixed to use the correct parameters as well. The anonymous decision flow now successfully handles the initial step, followup steps, and generates recommendations. All tests for the decision flow API integration passed successfully."
 
+  - task: "Advanced AI Orchestration System"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented advanced AI orchestration system with multi-LLM routing and sophisticated decision frameworks. Added new endpoint /api/decision/advanced with enhanced features including structured/intuitive/mixed decision classification, intelligent follow-up questions, and enhanced recommendations with confidence scores and logic traces."
+      - working: true
+        agent: "testing"
+        comment: "Tested the new advanced decision endpoint (/api/decision/advanced) with both authenticated and anonymous users. The endpoint correctly classifies different types of questions (structured, intuitive, mixed) and provides appropriate follow-up questions with nudges and categories. The response format includes all required fields: decision_id, step, step_number, response, followup_questions, decision_type, and session_version. The recommendation includes enhanced trace information with models_used, frameworks_used, themes, confidence_factors, and personas_consulted. All tests passed successfully with a 100% success rate."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Authentication Validation Improvements"
-    - "Decision Flow API Integration"
-  stuck_tasks:
-    - "Authentication Validation Improvements"
-    - "Decision Flow API Integration"
+    - "Advanced AI Orchestration System"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
@@ -81,3 +93,5 @@ agent_communication:
     message: "Conducted comprehensive testing of Round 2 bug fixes and found several critical issues that need to be addressed: 1) Name validation is not implemented - the registration endpoint accepts names with numbers and special characters when it should only accept alphabetic characters. 2) Password requirements are not fully enforced - only the length validation (8+ chars) is working, but it doesn't check for uppercase, lowercase, number, and symbol requirements. 3) The anonymous decision flow has an error in the generate_followup_question function which is passing incorrect parameters to LLMRouter.get_llm_response(). The function is passing 'category', 'user_preference', and 'user_plan' parameters, but the LLMRouter.get_llm_response() method only accepts 'message', 'llm_choice', 'session_id', 'system_message', and 'conversation_history'. This causes a 500 Internal Server Error when trying to use the followup step in the anonymous flow. The authenticated decision flow, feedback endpoint, and email validation are working correctly. Decision IDs are generated properly as UUIDs, and the backend handles different decision types correctly."
   - agent: "testing"
     message: "Verified that all the backend validation fixes have been implemented correctly. Name validation now properly rejects names with numbers, special characters, and requires at least 2 alphabetic characters. Password validation now correctly enforces all requirements: minimum 8 characters, uppercase letter, lowercase letter, number, and special character. The anonymous decision flow has been fixed to use the correct parameters for LLMRouter.get_llm_response() in both the generate_followup_question and generate_final_recommendation functions. All tests are now passing with a 100% success rate. The backend is now working correctly for all the tested functionality."
+  - agent: "testing"
+    message: "Tested the new advanced decision endpoint (/api/decision/advanced) with both authenticated and anonymous users. The endpoint is working correctly and implements all the required features: 1) It properly classifies different types of questions as structured, intuitive, or mixed. 2) It provides enhanced follow-up questions with nudges and categories. 3) The response format includes all required fields including decision_type and session_version. 4) The recommendations include detailed trace information with models used, frameworks used, themes, confidence factors, and personas consulted. All tests passed successfully with a 100% success rate. The advanced AI orchestration system is working as expected and ready for use."
