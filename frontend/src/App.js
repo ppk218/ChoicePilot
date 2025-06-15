@@ -942,6 +942,11 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           {conversationHistory.map((item, index) => (
             <ConversationCard key={index} item={item} onFeedback={handleFeedback} isAuthenticated={isAuthenticated} getConfidenceColor={getConfidenceColor} />
           ))}
+          
+          {/* Show thinking animation when loading */}
+          {loading && processingStep && (
+            <ThinkingAnimation message={processingStep} />
+          )}
         </div>
 
         {/* Current Input */}
