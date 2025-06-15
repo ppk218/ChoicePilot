@@ -728,23 +728,76 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     trackFollowupAnswered(currentFollowupIndex + 1);
     
     try {
-      // For now, use simple logic until dynamic backend is fully implemented
-      // Move to next question or generate recommendation
-      if (currentFollowupIndex < 2) { // Allow up to 3 questions (0, 1, 2)
-        setProcessingStep('Preparing your next question...');
-        // Move to next question
+      // Send the answer to the backend for dynamic analysis
+      const response = await axios.post(`${API}/api/decision/advanced`, {
+        decision_id: decisionId,
+        message: currentAnswer,
+        step: 'followup',
+        step_number: currentFollowupIndex + 1,
+        enable_personalization: isAuthenticated
+      });
+      
+      // Check if backend provides a direct recommendation
+      if (response.data.is_complete && response.data.recommendation) {
+        // We got the final recommendation directly from backend
+        const advancedRec = response.data.recommendation;
+        const recommendation = {
+          recommendation: advancedRec.final_recommendation,
+          confidence_score: advancedRec.confidence_score,
+          reasoning: advancedRec.reasoning,
+          logic_trace: advancedRec.trace.frameworks_used || [],
+          next_steps: advancedRec.next_steps || [],
+          confidence_tooltip: advancedRec.confidence_tooltip,
+          trace: advancedRec.trace
+        };
+        
+        setRecommendation(recommendation);
+        setCurrentStep('recommendation');
+        
+        // Add recommendation to conversation
+        setConversationHistory(prev => [...prev, {
+          type: 'ai_recommendation',
+          content: recommendation,
+          timestamp: new Date()
+        }]);
+        
+        trackDecisionCompleted(decisionId, recommendation.confidence_score);
+        return;
+      }
+      
+      // Check if backend provides next dynamic questions
+      if (response.data.followup_questions && response.data.followup_questions.length > 0) {
+        // AI determined we need another question - add it dynamically
+        const newQuestion = response.data.followup_questions[0];
+        const convertedQuestion = {
+          question: newQuestion.question,
+          step_number: currentFollowupIndex + 2,
+          context: newQuestion.nudge,
+          category: newQuestion.category
+        };
+        
+        // Update the questions array with the new question if it doesn't exist
+        setFollowupQuestions(prev => {
+          const updated = [...prev];
+          if (updated.length <= currentFollowupIndex + 1) {
+            updated.push(convertedQuestion);
+          }
+          return updated;
+        });
+        
+        // Move to the next question
         setCurrentFollowupIndex(currentFollowupIndex + 1);
         setCurrentAnswer('');
       } else {
-        // Generate final recommendation
+        // Backend says we're done or no new questions - generate recommendation
         setProcessingStep('Curating your personalized decision recommendation...');
         await generateRecommendation();
       }
       
     } catch (error) {
       console.error('Followup error:', error);
-      // Fallback behavior
-      if (currentFollowupIndex < followupQuestions.length - 1) {
+      // Fallback behavior - use simple logic
+      if (currentFollowupIndex < 2) { // Allow up to 3 questions (0, 1, 2)
         setCurrentFollowupIndex(currentFollowupIndex + 1);
         setCurrentAnswer('');
       } else {
