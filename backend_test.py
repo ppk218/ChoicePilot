@@ -547,6 +547,226 @@ def test_decision_types():
     
     return all_passed
 
+def test_advanced_decision_endpoint_authenticated():
+    """Test the advanced decision endpoint with authenticated user"""
+    print("Testing advanced decision endpoint with authenticated user...")
+    
+    # Register a test user
+    response, user_data = register_test_user()
+    if response.status_code != 200:
+        print(f"Error: Failed to register test user: {response.status_code} - {response.text}")
+        return False
+    
+    token = response.json().get("access_token")
+    headers = get_auth_headers(token)
+    
+    # Test structured decision
+    structured_payload = {
+        "message": "Should I buy iPhone or Samsung?",
+        "step": "initial"
+    }
+    
+    print("Testing advanced decision - structured question")
+    structured_response = requests.post(f"{API_URL}/decision/advanced", json=structured_payload, headers=headers)
+    
+    if structured_response.status_code != 200:
+        print(f"Error: Advanced decision endpoint returned status code {structured_response.status_code}")
+        print(f"Response: {structured_response.text}")
+        return False
+    
+    structured_data = structured_response.json()
+    
+    # Verify response format
+    required_fields = ["decision_id", "step", "step_number", "response", "followup_questions", "decision_type", "session_version"]
+    for field in required_fields:
+        if field not in structured_data:
+            print(f"Error: Advanced decision response missing required field '{field}'")
+            return False
+    
+    # Verify decision type
+    if structured_data["decision_type"] != "structured":
+        print(f"Warning: Expected decision type 'structured' but got '{structured_data['decision_type']}'")
+    
+    # Verify followup questions format
+    if not structured_data["followup_questions"] or not isinstance(structured_data["followup_questions"], list):
+        print(f"Error: Missing or invalid followup questions: {structured_data['followup_questions']}")
+        return False
+    
+    for question in structured_data["followup_questions"]:
+        if "question" not in question or "nudge" not in question or "category" not in question:
+            print(f"Error: Followup question missing required fields: {question}")
+            return False
+    
+    decision_id = structured_data["decision_id"]
+    print(f"Advanced decision created with ID: {decision_id}")
+    print(f"Decision type: {structured_data['decision_type']}")
+    print(f"First followup question: {structured_data['followup_questions'][0]['question']}")
+    
+    # Test followup step
+    followup_payload = {
+        "message": "I prefer iPhone because of the ecosystem, but Samsung has better customization options.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 1
+    }
+    
+    print("\nTesting advanced decision - followup step")
+    followup_response = requests.post(f"{API_URL}/decision/advanced", json=followup_payload, headers=headers)
+    
+    if followup_response.status_code != 200:
+        print(f"Error: Advanced decision followup step returned status code {followup_response.status_code}")
+        print(f"Response: {followup_response.text}")
+        return False
+    
+    followup_data = followup_response.json()
+    
+    # Test intuitive decision
+    intuitive_payload = {
+        "message": "What career would make me happy?",
+        "step": "initial"
+    }
+    
+    print("\nTesting advanced decision - intuitive question")
+    intuitive_response = requests.post(f"{API_URL}/decision/advanced", json=intuitive_payload, headers=headers)
+    
+    if intuitive_response.status_code != 200:
+        print(f"Error: Advanced decision endpoint returned status code {intuitive_response.status_code}")
+        print(f"Response: {intuitive_response.text}")
+        return False
+    
+    intuitive_data = intuitive_response.json()
+    
+    # Verify decision type
+    if intuitive_data["decision_type"] != "intuitive":
+        print(f"Warning: Expected decision type 'intuitive' but got '{intuitive_data['decision_type']}'")
+    
+    # Test mixed decision
+    mixed_payload = {
+        "message": "Should I start my own business?",
+        "step": "initial"
+    }
+    
+    print("\nTesting advanced decision - mixed question")
+    mixed_response = requests.post(f"{API_URL}/decision/advanced", json=mixed_payload, headers=headers)
+    
+    if mixed_response.status_code != 200:
+        print(f"Error: Advanced decision endpoint returned status code {mixed_response.status_code}")
+        print(f"Response: {mixed_response.text}")
+        return False
+    
+    mixed_data = mixed_response.json()
+    
+    # Verify decision type
+    if mixed_data["decision_type"] != "mixed":
+        print(f"Warning: Expected decision type 'mixed' but got '{mixed_data['decision_type']}'")
+    
+    return True
+
+def test_advanced_decision_endpoint_anonymous():
+    """Test the advanced decision endpoint with anonymous user"""
+    print("Testing advanced decision endpoint with anonymous user...")
+    
+    # Test structured decision
+    structured_payload = {
+        "message": "Should I buy MacBook Pro or Dell XPS?",
+        "step": "initial"
+    }
+    
+    print("Testing anonymous advanced decision - structured question")
+    structured_response = requests.post(f"{API_URL}/decision/advanced", json=structured_payload)
+    
+    if structured_response.status_code != 200:
+        print(f"Error: Anonymous advanced decision endpoint returned status code {structured_response.status_code}")
+        print(f"Response: {structured_response.text}")
+        return False
+    
+    structured_data = structured_response.json()
+    
+    # Verify response format
+    required_fields = ["decision_id", "step", "step_number", "response", "followup_questions", "decision_type", "session_version"]
+    for field in required_fields:
+        if field not in structured_data:
+            print(f"Error: Anonymous advanced decision response missing required field '{field}'")
+            return False
+    
+    decision_id = structured_data["decision_id"]
+    print(f"Anonymous advanced decision created with ID: {decision_id}")
+    print(f"Decision type: {structured_data['decision_type']}")
+    
+    # Test followup step
+    followup_payload = {
+        "message": "I need it for software development and video editing.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 1
+    }
+    
+    print("\nTesting anonymous advanced decision - followup step")
+    followup_response = requests.post(f"{API_URL}/decision/advanced", json=followup_payload)
+    
+    if followup_response.status_code != 200:
+        print(f"Error: Anonymous advanced decision followup step returned status code {followup_response.status_code}")
+        print(f"Response: {followup_response.text}")
+        return False
+    
+    # Complete all followup questions to get recommendation
+    for i in range(2, len(structured_data["followup_questions"]) + 1):
+        next_followup_payload = {
+            "message": f"This is my answer to question {i}.",
+            "step": "followup",
+            "decision_id": decision_id,
+            "step_number": i
+        }
+        
+        next_response = requests.post(f"{API_URL}/decision/advanced", json=next_followup_payload)
+        
+        if next_response.status_code != 200:
+            print(f"Error: Anonymous advanced decision followup step {i} returned status code {next_response.status_code}")
+            continue
+    
+    # Test recommendation step
+    recommendation_payload = {
+        "message": "",
+        "step": "recommendation",
+        "decision_id": decision_id
+    }
+    
+    print("\nTesting anonymous advanced decision - recommendation step")
+    recommendation_response = requests.post(f"{API_URL}/decision/advanced", json=recommendation_payload)
+    
+    if recommendation_response.status_code != 200:
+        print(f"Error: Anonymous advanced decision recommendation step returned status code {recommendation_response.status_code}")
+        print(f"Response: {recommendation_response.text}")
+        return False
+    
+    recommendation_data = recommendation_response.json()
+    
+    # Verify recommendation format
+    if not recommendation_data.get("is_complete") or not recommendation_data.get("recommendation"):
+        print(f"Error: Missing or invalid recommendation: {recommendation_data}")
+        return False
+    
+    recommendation = recommendation_data["recommendation"]
+    required_rec_fields = ["final_recommendation", "next_steps", "confidence_score", "confidence_tooltip", "reasoning", "trace"]
+    for field in required_rec_fields:
+        if field not in recommendation:
+            print(f"Error: Recommendation missing required field '{field}'")
+            return False
+    
+    # Verify trace information
+    trace = recommendation["trace"]
+    required_trace_fields = ["models_used", "frameworks_used", "themes", "confidence_factors", "personas_consulted"]
+    for field in required_trace_fields:
+        if field not in trace:
+            print(f"Error: Trace missing required field '{field}'")
+            return False
+    
+    print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
+    print(f"Models used: {', '.join(trace['models_used'])}")
+    print(f"Frameworks used: {', '.join(trace['frameworks_used'])}")
+    
+    return True
+
 def run_focused_tests():
     """Run the focused tests for the fixed issues"""
     tests = [
@@ -557,7 +777,9 @@ def run_focused_tests():
         ("Anonymous Decision Flow", test_anonymous_decision_flow),
         ("Decision Feedback", test_decision_feedback),
         ("Core Authentication", test_auth_endpoints),
-        ("Decision Types", test_decision_types)
+        ("Decision Types", test_decision_types),
+        ("Advanced Decision Endpoint - Authenticated", test_advanced_decision_endpoint_authenticated),
+        ("Advanced Decision Endpoint - Anonymous", test_advanced_decision_endpoint_anonymous)
     ]
     
     for test_name, test_func in tests:
