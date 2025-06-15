@@ -562,6 +562,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
   const generateFollowups = async (question) => {
     setLoading(true);
+    setProcessingStep('Analyzing your decision and preparing questions...');
     setError('');
     
     try {
