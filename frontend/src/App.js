@@ -588,13 +588,12 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         
         setFollowupQuestions(convertedQuestions);
         
-        // Only add AI response once, without duplicate processing message
+        // Only add AI response once, without step indicator for initial response
         if (data.response && data.response.trim() !== '') {
           setConversationHistory(prev => [...prev, {
             type: 'ai_response',
             content: data.response,
             decision_type: data.decision_type,
-            step: 1,
             timestamp: new Date()
           }]);
         }
