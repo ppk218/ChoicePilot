@@ -789,7 +789,8 @@ def test_advanced_decision_endpoint_anonymous():
         
         if next_response.status_code != 200:
             print(f"Error: Anonymous advanced decision followup step {i} returned status code {next_response.status_code}")
-            continue
+            print(f"Response: {next_response.text}")
+            return False
     
     # Test recommendation step
     recommendation_payload = {
@@ -831,6 +832,7 @@ def test_advanced_decision_endpoint_anonymous():
     print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
     print(f"Models used: {', '.join(trace['models_used'])}")
     print(f"Frameworks used: {', '.join(trace['frameworks_used'])}")
+    print(f"Next steps: {recommendation['next_steps']}")
     
     return True
 
