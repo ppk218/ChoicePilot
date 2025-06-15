@@ -977,6 +977,20 @@ const ConversationCard = ({ item, onFeedback }) => {
                 🤖
               </div>
               <div className="flex-1">
+                {/* Decision Type Badge */}
+                {item.decision_type && (
+                  <div className="mb-2">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      item.decision_type === 'structured' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                      item.decision_type === 'intuitive' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                    }`}>
+                      {item.decision_type === 'structured' ? '📊 Structured Analysis' :
+                       item.decision_type === 'intuitive' ? '💡 Intuitive Approach' :
+                       '🔀 Mixed Analysis'}
+                    </span>
+                  </div>
+                )}
                 {item.step && (
                   <div className="step-indicator mb-2">Step {item.step} of 3</div>
                 )}
