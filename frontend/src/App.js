@@ -537,6 +537,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [currentAnswer, setCurrentAnswer] = useState('');
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [processingStep, setProcessingStep] = useState(''); // Track what's being processed
+  const [questionSubmitted, setQuestionSubmitted] = useState(false); // Prevent duplicate submissions
   const [error, setError] = useState('');
   const [previousDecisions, setPreviousDecisions] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
