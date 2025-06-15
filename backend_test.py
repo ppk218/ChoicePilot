@@ -584,8 +584,11 @@ def test_advanced_decision_endpoint_authenticated():
             return False
     
     # Verify decision type
-    if structured_data["decision_type"] != "structured":
-        print(f"Warning: Expected decision type 'structured' but got '{structured_data['decision_type']}'")
+    if structured_data["decision_type"] not in ["structured", "intuitive", "mixed"]:
+        print(f"Error: Invalid decision type '{structured_data['decision_type']}'")
+        return False
+    else:
+        print(f"Decision type: {structured_data['decision_type']}")
     
     # Verify followup questions format
     if not structured_data["followup_questions"] or not isinstance(structured_data["followup_questions"], list):
@@ -599,8 +602,8 @@ def test_advanced_decision_endpoint_authenticated():
     
     decision_id = structured_data["decision_id"]
     print(f"Advanced decision created with ID: {decision_id}")
-    print(f"Decision type: {structured_data['decision_type']}")
     print(f"First followup question: {structured_data['followup_questions'][0]['question']}")
+    print(f"Nudge: {structured_data['followup_questions'][0]['nudge']}")
     
     # Test followup step
     followup_payload = {
@@ -620,6 +623,64 @@ def test_advanced_decision_endpoint_authenticated():
     
     followup_data = followup_response.json()
     
+    # Complete all followup questions to get recommendation
+    for i in range(2, len(structured_data["followup_questions"]) + 1):
+        next_followup_payload = {
+            "message": f"This is my answer to question {i}.",
+            "step": "followup",
+            "decision_id": decision_id,
+            "step_number": i
+        }
+        
+        next_response = requests.post(f"{API_URL}/decision/advanced", json=next_followup_payload, headers=headers)
+        
+        if next_response.status_code != 200:
+            print(f"Error: Advanced decision followup step {i} returned status code {next_response.status_code}")
+            print(f"Response: {next_response.text}")
+            return False
+    
+    # Test recommendation step
+    recommendation_payload = {
+        "message": "",
+        "step": "recommendation",
+        "decision_id": decision_id
+    }
+    
+    print("\nTesting advanced decision - recommendation step")
+    recommendation_response = requests.post(f"{API_URL}/decision/advanced", json=recommendation_payload, headers=headers)
+    
+    if recommendation_response.status_code != 200:
+        print(f"Error: Advanced decision recommendation step returned status code {recommendation_response.status_code}")
+        print(f"Response: {recommendation_response.text}")
+        return False
+    
+    recommendation_data = recommendation_response.json()
+    
+    # Verify recommendation format
+    if not recommendation_data.get("is_complete") or not recommendation_data.get("recommendation"):
+        print(f"Error: Missing or invalid recommendation: {recommendation_data}")
+        return False
+    
+    recommendation = recommendation_data["recommendation"]
+    required_rec_fields = ["final_recommendation", "next_steps", "confidence_score", "confidence_tooltip", "reasoning", "trace"]
+    for field in required_rec_fields:
+        if field not in recommendation:
+            print(f"Error: Recommendation missing required field '{field}'")
+            return False
+    
+    # Verify trace information
+    trace = recommendation["trace"]
+    required_trace_fields = ["models_used", "frameworks_used", "themes", "confidence_factors", "personas_consulted"]
+    for field in required_trace_fields:
+        if field not in trace:
+            print(f"Error: Trace missing required field '{field}'")
+            return False
+    
+    print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
+    print(f"Models used: {', '.join(trace['models_used'])}")
+    print(f"Frameworks used: {', '.join(trace['frameworks_used'])}")
+    print(f"Next steps: {recommendation['next_steps']}")
+    
     # Test intuitive decision
     intuitive_payload = {
         "message": "What career would make me happy?",
@@ -637,12 +698,15 @@ def test_advanced_decision_endpoint_authenticated():
     intuitive_data = intuitive_response.json()
     
     # Verify decision type
-    if intuitive_data["decision_type"] != "intuitive":
-        print(f"Warning: Expected decision type 'intuitive' but got '{intuitive_data['decision_type']}'")
+    if intuitive_data["decision_type"] not in ["structured", "intuitive", "mixed"]:
+        print(f"Error: Invalid decision type '{intuitive_data['decision_type']}'")
+        return False
+    else:
+        print(f"Decision type: {intuitive_data['decision_type']}")
     
     # Test mixed decision
     mixed_payload = {
-        "message": "Should I start my own business?",
+        "message": "Should I switch careers to data science?",
         "step": "initial"
     }
     
@@ -657,8 +721,11 @@ def test_advanced_decision_endpoint_authenticated():
     mixed_data = mixed_response.json()
     
     # Verify decision type
-    if mixed_data["decision_type"] != "mixed":
-        print(f"Warning: Expected decision type 'mixed' but got '{mixed_data['decision_type']}'")
+    if mixed_data["decision_type"] not in ["structured", "intuitive", "mixed"]:
+        print(f"Error: Invalid decision type '{mixed_data['decision_type']}'")
+        return False
+    else:
+        print(f"Decision type: {mixed_data['decision_type']}")
     
     return True
 
