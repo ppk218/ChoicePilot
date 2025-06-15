@@ -3219,15 +3219,18 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import AI Orchestrator after logger is defined
 try:
-    from ai_orchestrator import (
-        ai_orchestrator, DecisionType, FollowUpQuestion, 
+    from ai_orchestrator_v2 import (
+        create_ai_orchestrator, DecisionType, FollowUpQuestion, 
         DecisionRecommendation, DecisionTrace
     )
     AI_ORCHESTRATOR_AVAILABLE = True
     logger.info("AI Orchestrator loaded successfully")
+    # Create orchestrator instance with LLMRouter
+    ai_orchestrator = create_ai_orchestrator(LLMRouter)
 except ImportError as e:
     logger.warning(f"AI Orchestrator not available: {e}")
     AI_ORCHESTRATOR_AVAILABLE = False
+    ai_orchestrator = None
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
