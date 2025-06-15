@@ -1088,6 +1088,127 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               🔒 Your decision summary includes only the AI-generated recommendation. 
               Private inputs are excluded unless you choose to include them.
             </div>
+            
+            {/* Decision Comparison Display */}
+            {showComparison && previousDecisions.length > 0 && (
+              <Card className="decision-card bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span>🔄</span>
+                    <span>Decision Comparison</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Compare your current decision with the previous version
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Previous Decision */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-foreground border-b pb-2">Previous Decision</h4>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Confidence Score</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold ${getConfidenceColor(previousDecisions[previousDecisions.length - 1].recommendation.confidence_score)}`}>
+                            {previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%
+                          </span>
+                          <div className="w-16 bg-muted rounded-full h-2">
+                            <div 
+                              className="confidence-bar h-2 rounded-full"
+                              style={{ width: `${previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Recommendation</div>
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {previousDecisions[previousDecisions.length - 1].recommendation.recommendation}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Next Steps</div>
+                        <ul className="text-sm space-y-1">
+                          {previousDecisions[previousDecisions.length - 1].recommendation.next_steps?.map((step, index) => (
+                            <li key={index} className="flex items-start gap-1">
+                              <span className="text-primary">•</span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    {/* Current Decision */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-foreground border-b pb-2">Current Decision</h4>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Confidence Score</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold ${getConfidenceColor(recommendation.confidence_score)}`}>
+                            {recommendation.confidence_score}%
+                          </span>
+                          <div className="w-16 bg-muted rounded-full h-2">
+                            <div 
+                              className="confidence-bar h-2 rounded-full"
+                              style={{ width: `${recommendation.confidence_score}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Recommendation</div>
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {recommendation.recommendation}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Next Steps</div>
+                        <ul className="text-sm space-y-1">
+                          {recommendation.next_steps?.map((step, index) => (
+                            <li key={index} className="flex items-start gap-1">
+                              <span className="text-primary">•</span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Comparison Summary */}
+                  <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                    <h5 className="font-medium text-foreground mb-2">Key Changes</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Confidence Change:</span>
+                        <span className={`font-medium ${
+                          recommendation.confidence_score > previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? 
+                          'text-green-600' : 
+                          recommendation.confidence_score < previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ?
+                          'text-red-600' : 'text-muted-foreground'
+                        }`}>
+                          {recommendation.confidence_score > previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? '↗️' : 
+                           recommendation.confidence_score < previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? '↘️' : '➡️'} 
+                          {recommendation.confidence_score - previousDecisions[previousDecisions.length - 1].recommendation.confidence_score > 0 ? '+' : ''}
+                          {recommendation.confidence_score - previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Recommendation Changed:</span>
+                        <span className={`font-medium ${
+                          recommendation.recommendation !== previousDecisions[previousDecisions.length - 1].recommendation.recommendation ? 
+                          'text-orange-600' : 'text-green-600'
+                        }`}>
+                          {recommendation.recommendation !== previousDecisions[previousDecisions.length - 1].recommendation.recommendation ? 
+                           '✏️ Yes' : '✅ No change'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
