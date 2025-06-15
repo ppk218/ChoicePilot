@@ -908,14 +908,66 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               <CardDescription>{currentQuestion.context}</CardDescription>
             </CardHeader>
             
+        {/* Current Input */}
+        {currentStep === 'followup' && currentQuestion && (
+          <Card className="decision-card card-enter">
+            <CardHeader>
+              <div className="step-indicator">Step {currentFollowupIndex + 1} of {followupQuestions.length}</div>
+              <CardTitle className="text-xl text-foreground">{currentQuestion.question}</CardTitle>
+              <CardDescription>{currentQuestion.context}</CardDescription>
+            </CardHeader>
+            
             <CardContent className="space-y-6">
-              <textarea
-                placeholder="Enter your response here..."
-                value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
-                className="chat-input min-h-[120px] resize-none"
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleFollowupSubmit()}
-              />
+              <div className="relative">
+                <textarea
+                  placeholder="Enter your response here..."
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  className="chat-input min-h-[120px] resize-none"
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleFollowupSubmit()}
+                />
+                
+                {/* Enhanced Nudges/Examples */}
+                {currentQuestion.context && !currentAnswer && (
+                  <div className="mt-2 p-3 bg-muted/30 rounded-lg border-l-4 border-primary/50">
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium text-primary">💡 Example responses:</span>
+                      <div className="mt-1 space-y-1 text-xs">
+                        {currentQuestion.category === 'timing' && (
+                          <>
+                            <div>• "I need to decide within the next 2 weeks"</div>
+                            <div>• "This is more of a long-term exploration, no rush"</div>
+                          </>
+                        )}
+                        {currentQuestion.category === 'priorities' && (
+                          <>
+                            <div>• "Financial stability and work-life balance are my top concerns"</div>
+                            <div>• "I value growth opportunities and creative freedom"</div>
+                          </>
+                        )}
+                        {currentQuestion.category === 'constraints' && (
+                          <>
+                            <div>• "Budget is limited to $5000, and I need to stay local"</div>
+                            <div>• "Time is my biggest constraint - I only have evenings available"</div>
+                          </>
+                        )}
+                        {currentQuestion.category === 'values' && (
+                          <>
+                            <div>• "Freedom and flexibility matter more than security to me"</div>
+                            <div>• "I prioritize family time and meaningful work"</div>
+                          </>
+                        )}
+                        {currentQuestion.category === 'general' && (
+                          <>
+                            <div>• "My main concern is that I'll regret not trying"</div>
+                            <div>• "I'm worried about the financial impact on my family"</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <Button
                 onClick={handleFollowupSubmit}
