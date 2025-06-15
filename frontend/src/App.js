@@ -783,6 +783,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
   const generateRecommendation = async () => {
     setLoading(true);
+    setProcessingStep('Curating your personalized decision recommendation...');
     try {
       // Use the advanced decision endpoint for recommendation
       const response = await axios.post(`${API}/api/decision/advanced`, {
