@@ -121,11 +121,12 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
     def select_models(self, decision_type: DecisionType) -> List[str]:
         """
         Select appropriate LLM models based on decision type
+        Use Claude as primary with fallback for both models
         """
         model_mapping = {
-            DecisionType.STRUCTURED: ["claude"],
-            DecisionType.INTUITIVE: ["gpt4o"],
-            DecisionType.MIXED: ["gpt4o", "claude"]  # Use both for mixed reasoning
+            DecisionType.STRUCTURED: ["claude"],  # Analytical decisions
+            DecisionType.INTUITIVE: ["claude"],   # Use Claude for all due to GPT-4o access issues
+            DecisionType.MIXED: ["claude"]        # Use single model but simulate multi-perspective
         }
         return model_mapping.get(decision_type, ["claude"])
 
