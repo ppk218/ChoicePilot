@@ -908,15 +908,6 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               <CardDescription>{currentQuestion.context}</CardDescription>
             </CardHeader>
             
-        {/* Current Input */}
-        {currentStep === 'followup' && currentQuestion && (
-          <Card className="decision-card card-enter">
-            <CardHeader>
-              <div className="step-indicator">Step {currentFollowupIndex + 1} of {followupQuestions.length}</div>
-              <CardTitle className="text-xl text-foreground">{currentQuestion.question}</CardTitle>
-              <CardDescription>{currentQuestion.context}</CardDescription>
-            </CardHeader>
-            
             <CardContent className="space-y-6">
               <div className="relative">
                 <textarea
