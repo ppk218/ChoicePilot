@@ -1866,6 +1866,12 @@ async def process_advanced_decision_step(
     Advanced decision processing with multi-LLM orchestration
     Supports structured/intuitive/mixed decision types with consensus logic
     """
+    if not AI_ORCHESTRATOR_AVAILABLE:
+        raise HTTPException(
+            status_code=503, 
+            detail="Advanced AI orchestration not available"
+        )
+        
     try:
         user_id = current_user.get("id") if current_user else None
         decision_id = request.decision_id or str(uuid.uuid4())
