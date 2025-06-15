@@ -529,23 +529,35 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const generateFollowups = async (question) => {
     setLoading(true);
     try {
-      const endpoint = isAuthenticated ? '/api/decision/step' : '/api/decision/step/anonymous';
-      const response = await axios.post(`${API}${endpoint}`, {
+      // Use the new advanced decision endpoint
+      const response = await axios.post(`${API}/api/decision/advanced`, {
         message: question,
-        step: 'initial'
+        step: 'initial',
+        enable_personalization: isAuthenticated
       });
 
       const data = response.data;
       setDecisionId(data.decision_id);
       
-      // Check if we get a real followup question from the API
-      if (data.followup_question) {
-        setFollowupQuestions([data.followup_question]);
+      // Handle the enhanced response format
+      if (data.followup_questions && data.followup_questions.length > 0) {
+        // Convert enhanced questions to old format for compatibility
+        const convertedQuestions = data.followup_questions.map((q, index) => ({
+          question: q.question,
+          step_number: index + 1,
+          context: q.nudge,
+          category: q.category
+        }));
         
-        // Add AI response to conversation
+        setFollowupQuestions(convertedQuestions);
+        
+        // Add AI response to conversation with decision type info
+        const responseText = data.response || `I've analyzed your ${data.decision_type} decision. Let me ask a few targeted questions to give you the best recommendation.`;
+        
         setConversationHistory(prev => [...prev, {
           type: 'ai_response',
-          content: data.response || "I'll help you think through this decision. Let me ask a few questions to give you the best recommendation.",
+          content: responseText,
+          decision_type: data.decision_type,
           timestamp: new Date()
         }]);
       } else {
