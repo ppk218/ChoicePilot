@@ -845,6 +845,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       trackDecisionCompleted(decisionId, recommendation.confidence_score);
     } finally {
       setLoading(false);
+      setProcessingStep('');
     }
   };
 
