@@ -1224,7 +1224,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 };
 
 // Conversation Card Component
-const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
+const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColor }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackReason, setFeedbackReason] = useState('');
 
