@@ -528,6 +528,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
   const generateFollowups = async (question) => {
     setLoading(true);
+    setError('');
+    
     try {
       // Use the new advanced decision endpoint
       const response = await axios.post(`${API}/api/decision/advanced`, {
@@ -552,12 +554,13 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         setFollowupQuestions(convertedQuestions);
         
         // Add AI response to conversation with decision type info
-        const responseText = data.response || `I've analyzed your ${data.decision_type} decision. Let me ask a few targeted questions to give you the best recommendation.`;
+        const responseText = data.response || `I've analyzed your ${data.decision_type} decision. Let me ask ${data.followup_questions.length} targeted questions to give you the best recommendation.`;
         
         setConversationHistory(prev => [...prev, {
           type: 'ai_response',
           content: responseText,
           decision_type: data.decision_type,
+          processing_note: `Analyzed using ${data.decision_type} decision framework`,
           timestamp: new Date()
         }]);
       } else {
@@ -567,6 +570,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
     } catch (error) {
       console.error('Decision error:', error);
+      setError('We\'re having trouble analyzing your decision. Using our fallback system...');
       // Fallback to local questions on API error
       await generateFallbackFollowups(question);
     } finally {
