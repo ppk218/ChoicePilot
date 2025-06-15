@@ -299,49 +299,61 @@ User Responses:
         decision_type: DecisionType
     ) -> DecisionRecommendation:
         """
-        Generate decision using single model with multiple frameworks
+        Generate decision using single model with multiple frameworks and simulated multi-perspective
         """
         
-        synthesis_prompt = f"""You are a multi-framework decision AI. Analyze the user's situation using multiple approaches:
+        # Simulate multi-model approach by using different persona prompts
+        synthesis_prompt = f"""You are a multi-perspective decision AI that simulates the insights of both GPT-4o (creative/intuitive) and Claude (structured/analytical). Analyze the user's situation using multiple approaches:
 
 **Context:**
 {context}
+
+**Multi-Model Simulation:**
+- **GPT-4o Perspective (Creative/Intuitive)**: Focus on innovative solutions, emotional considerations, alternative approaches, and creative possibilities
+- **Claude Perspective (Structured/Analytical)**: Focus on logical analysis, systematic evaluation, risk assessment, and evidence-based reasoning
 
 **Analysis Framework:**
 1. **Pros/Cons Analysis**: List key advantages and disadvantages
 2. **Priority Alignment**: How well do options align with stated priorities?
 3. **Risk Assessment**: Identify and evaluate potential risks
-4. **Persona Perspectives**: Consider views from different advisor types:
-   - Realist: Practical, risk-aware perspective
-   - Visionary: Optimistic, opportunity-focused perspective  
-   - Pragmatist: Balanced, solution-oriented perspective
+4. **Creative Alternatives**: Innovative approaches and out-of-the-box solutions
+5. **Persona Perspectives**: Consider views from different advisor types:
+   - Realist: "{self.personas['realist']['prompt_modifier']}"
+   - Visionary: "{self.personas['visionary']['prompt_modifier']}"
+   - Pragmatist: "{self.personas['pragmatist']['prompt_modifier']}"
 
 **Decision Type Considerations:**
 {self._get_decision_type_guidance(decision_type)}
 
+**Response Style**: Write the recommendation blending different voices. For example:
+- "From a Visionary perspective, [creative insight]. However, the Realist in me notes [practical concern]."
+- "While GPT-4o would suggest [innovative approach], Claude's structured analysis shows [logical conclusion]."
+
 **Output Format (respond in JSON):**
 {{
-  "final_recommendation": "Clear 2-4 sentence recommendation",
+  "final_recommendation": "Clear 2-4 sentence recommendation with blended perspectives",
   "next_steps": ["Specific action 1", "Specific action 2", "Specific action 3"],
   "confidence_score": 85,
-  "confidence_tooltip": "Based on clarity of priorities, alignment across frameworks, and completeness of information",
-  "reasoning": "Detailed explanation of the reasoning process",
-  "frameworks_used": ["Pros/Cons", "Priority Alignment", "Risk Assessment", "Multi-Persona"],
+  "confidence_tooltip": "Based on consensus between analytical and creative reasoning approaches",
+  "reasoning": "Detailed explanation showing both creative and structured thinking",
+  "frameworks_used": ["Pros/Cons", "Priority Alignment", "Risk Assessment", "Creative Alternatives", "Multi-Persona"],
   "themes": ["Key theme 1", "Key theme 2", "Key theme 3"],
-  "confidence_factors": ["Factor 1", "Factor 2"]
+  "confidence_factors": ["Factor 1", "Factor 2"],
+  "creative_insights": ["Creative suggestion 1", "Alternative approach 2"],
+  "structured_analysis": ["Logical finding 1", "Risk assessment 2"]
 }}"""
 
         try:
             if self.llm_router:
                 response, _ = await self.llm_router.get_llm_response(
-                    "Analyze this decision comprehensively:",
+                    "Analyze this decision using multi-perspective approach:",
                     model,
                     f"synthesis_{hash(context[:100])}",
                     synthesis_prompt,
                     []
                 )
                 
-                return self._parse_synthesis_response(response, [model], decision_type)
+                return self._parse_synthesis_response(response, ["claude", "gpt4o-simulated"], decision_type)
             else:
                 return self._generate_fallback_recommendation(context, [model], decision_type)
                 
