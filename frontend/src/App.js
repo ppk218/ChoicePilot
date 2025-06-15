@@ -706,7 +706,11 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   };
 
   const handleFollowupSubmit = async () => {
-    if (!currentAnswer.trim()) return;
+    if (!currentAnswer.trim() || questionSubmitted) return;
+    
+    setQuestionSubmitted(true); // Prevent duplicate submissions
+    setLoading(true);
+    setProcessingStep('Analyzing your response and determining next steps...');
     
     const currentQuestion = followupQuestions[currentFollowupIndex];
     
@@ -730,54 +734,32 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     trackFollowupAnswered(currentFollowupIndex + 1);
     
     try {
-      // Send the answer to the backend
-      const response = await axios.post(`${API}/api/decision/advanced`, {
-        decision_id: decisionId,
-        message: currentAnswer,
-        step: 'followup',
-        step_number: currentFollowupIndex + 1,
-        enable_personalization: isAuthenticated
-      });
-      
-      // Check if this was the last question and we get a recommendation
-      if (currentFollowupIndex >= followupQuestions.length - 1 && response.data.is_complete && response.data.recommendation) {
-        // We got the final recommendation directly
-        const advancedRec = response.data.recommendation;
-        const recommendation = {
-          recommendation: advancedRec.final_recommendation,
-          confidence_score: advancedRec.confidence_score,
-          reasoning: advancedRec.reasoning,
-          logic_trace: advancedRec.trace.frameworks_used || [],
-          next_steps: advancedRec.next_steps || [],
-          confidence_tooltip: advancedRec.confidence_tooltip,
-          trace: advancedRec.trace
-        };
-        
-        setRecommendation(recommendation);
-        setCurrentStep('recommendation');
-        
-        // Add recommendation to conversation
-        setConversationHistory(prev => [...prev, {
-          type: 'ai_recommendation',
-          content: recommendation,
-          timestamp: new Date()
-        }]);
-        
-        trackDecisionCompleted(decisionId, recommendation.confidence_score);
-        return;
+      // For now, use simple logic until dynamic backend is fully implemented
+      // Move to next question or generate recommendation
+      if (currentFollowupIndex < 2) { // Allow up to 3 questions (0, 1, 2)
+        setProcessingStep('Preparing your next question...');
+        // Move to next question
+        setCurrentFollowupIndex(currentFollowupIndex + 1);
+        setCurrentAnswer('');
+      } else {
+        // Generate final recommendation
+        setProcessingStep('Curating your personalized decision recommendation...');
+        await generateRecommendation();
       }
       
     } catch (error) {
-      console.error('Follow-up submission error:', error);
-      // Continue with frontend flow even if backend call fails
-    }
-    
-    if (currentFollowupIndex < followupQuestions.length - 1) {
-      setCurrentFollowupIndex(currentFollowupIndex + 1);
-      setCurrentAnswer('');
-    } else {
-      // All questions answered, trigger recommendation generation
-      await generateRecommendation();
+      console.error('Followup error:', error);
+      // Fallback behavior
+      if (currentFollowupIndex < followupQuestions.length - 1) {
+        setCurrentFollowupIndex(currentFollowupIndex + 1);
+        setCurrentAnswer('');
+      } else {
+        await generateRecommendation();
+      }
+    } finally {
+      setLoading(false);
+      setProcessingStep('');
+      setQuestionSubmitted(false);
     }
   };
 
