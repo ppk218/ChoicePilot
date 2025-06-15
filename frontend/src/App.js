@@ -895,7 +895,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Conversation History */}
         <div className="space-y-6 mb-8">
           {conversationHistory.map((item, index) => (
-            <ConversationCard key={index} item={item} onFeedback={handleFeedback} />
+            <ConversationCard key={index} item={item} onFeedback={handleFeedback} isAuthenticated={isAuthenticated} />
           ))}
         </div>
 
