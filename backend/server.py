@@ -388,6 +388,49 @@ class DecisionStepResponse(BaseModel):
     followup_question: Optional[DecisionFollowUpQuestion] = None
     recommendation: Optional[DecisionRecommendation] = None
 
+# Enhanced Decision Step Models for Advanced AI Orchestration
+class AdvancedDecisionStepRequest(BaseModel):
+    message: str
+    step: Literal["initial", "followup", "recommendation", "adjust"] = "initial"
+    step_number: Optional[int] = None
+    decision_id: Optional[str] = None
+    enable_personalization: bool = False
+    adjustment_context: Optional[str] = None
+
+class EnhancedFollowUpQuestion(BaseModel):
+    question: str
+    nudge: str
+    category: str
+    step_number: int
+
+class EnhancedDecisionTrace(BaseModel):
+    models_used: List[str]
+    frameworks_used: List[str]
+    themes: List[str]
+    confidence_factors: List[str]
+    used_web_search: bool
+    personas_consulted: List[str]
+    processing_time_ms: int
+
+class EnhancedDecisionRecommendation(BaseModel):
+    final_recommendation: str
+    next_steps: List[str]
+    confidence_score: int
+    confidence_tooltip: str
+    reasoning: str
+    trace: EnhancedDecisionTrace
+
+class AdvancedDecisionStepResponse(BaseModel):
+    decision_id: str
+    step: str
+    step_number: int
+    response: str
+    followup_questions: Optional[List[EnhancedFollowUpQuestion]] = None
+    is_complete: bool = False
+    recommendation: Optional[EnhancedDecisionRecommendation] = None
+    decision_type: Optional[str] = None
+    session_version: int = 1
+
 # Decision categories
 DECISION_CATEGORIES = {
     "general": "General decision making and advice",
