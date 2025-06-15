@@ -891,6 +891,13 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
   const currentQuestion = followupQuestions[currentFollowupIndex];
 
+  // Utility function for confidence color coding
+  const getConfidenceColor = (score) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-3xl mx-auto">
