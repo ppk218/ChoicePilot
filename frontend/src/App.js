@@ -744,11 +744,6 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const generateRecommendation = async () => {
     setLoading(true);
     try {
-      // Collect all answers
-      const allAnswers = conversationHistory
-        .filter(item => item.type === 'user_answer')
-        .map(item => item.content);
-
       // Use the advanced decision endpoint for recommendation
       const response = await axios.post(`${API}/api/decision/advanced`, {
         decision_id: decisionId,
@@ -771,6 +766,9 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         };
       } else {
         // Fallback to intelligent local recommendation
+        const allAnswers = conversationHistory
+          .filter(item => item.type === 'user_answer')
+          .map(item => item.content);
         recommendation = generateIntelligentRecommendation(initialQuestion, allAnswers);
       }
       
@@ -789,9 +787,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     } catch (error) {
       console.error('Recommendation error:', error);
       // Fallback to intelligent local recommendation
-      const recommendation = generateIntelligentRecommendation(initialQuestion, conversationHistory
+      const allAnswers = conversationHistory
         .filter(item => item.type === 'user_answer')
-        .map(item => item.content));
+        .map(item => item.content);
+      const recommendation = generateIntelligentRecommendation(initialQuestion, allAnswers);
       
       setRecommendation(recommendation);
       setCurrentStep('recommendation');
