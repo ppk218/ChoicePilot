@@ -697,12 +697,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
     setFollowupQuestions(followups);
     
-    // Add AI response to conversation
-    setConversationHistory(prev => [...prev, {
-      type: 'ai_response',
-      content: "I'll help you think through this decision step by step. Let me ask a few targeted questions to give you the best recommendation.",
-      timestamp: new Date()
-    }]);
+    // Don't add duplicate messages - only add if no response from backend
   };
 
   const handleFollowupSubmit = async () => {
