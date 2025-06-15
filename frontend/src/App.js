@@ -508,6 +508,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [previousDecisions, setPreviousDecisions] = useState([]);
+  const [showComparison, setShowComparison] = useState(false);
   
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
