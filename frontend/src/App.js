@@ -497,6 +497,36 @@ const LandingPage = ({ onStartDecision }) => {
   );
 };
 
+// Thinking Animation Component
+const ThinkingAnimation = ({ message = "Analyzing your decision..." }) => (
+  <Card className="mr-auto max-w-2xl bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+    <CardContent className="p-6">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/70 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm">🤖</span>
+          </div>
+          <div className="absolute inset-0 w-8 h-8 border-2 border-primary/30 rounded-full animate-ping"></div>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-primary">GetGingee AI</span>
+            <div className="flex gap-1">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
+          <p className="text-foreground">{message}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Applying multi-perspective analysis frameworks...
+          </p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 // Decision Flow Component (Enhanced with Chat History)
 const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [conversationHistory, setConversationHistory] = useState([]);
