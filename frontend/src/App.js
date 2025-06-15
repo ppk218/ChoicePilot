@@ -588,16 +588,16 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         
         setFollowupQuestions(convertedQuestions);
         
-        // Add AI response to conversation with decision type info
-        const responseText = data.response || `I've analyzed your ${data.decision_type} decision. Let me ask ${data.followup_questions.length} targeted questions to give you the best recommendation.`;
-        
-        setConversationHistory(prev => [...prev, {
-          type: 'ai_response',
-          content: responseText,
-          decision_type: data.decision_type,
-          processing_note: `Analyzed using ${data.decision_type} decision framework`,
-          timestamp: new Date()
-        }]);
+        // Only add AI response once, without duplicate processing message
+        if (data.response && data.response.trim() !== '') {
+          setConversationHistory(prev => [...prev, {
+            type: 'ai_response',
+            content: data.response,
+            decision_type: data.decision_type,
+            step: 1,
+            timestamp: new Date()
+          }]);
+        }
       } else {
         // Fallback to generating questions if API doesn't provide them
         await generateFallbackFollowups(question);
