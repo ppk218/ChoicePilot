@@ -1106,18 +1106,30 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               </Button>
             </div>
             
-            {/* Comparison Button */}
+            {/* Enhanced Comparison Section */}
             {previousDecisions.length > 0 && (
-              <div className="text-center">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowComparison(!showComparison)}
-                  className="flex items-center gap-2"
-                >
-                  🔄 Compare with Previous Decision
-                  {showComparison ? ' (Hide)' : ''}
-                </Button>
-              </div>
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                        <span>🔄</span>
+                        <span>Decision Comparison Available</span>
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Compare your current decision with {previousDecisions.length} previous version{previousDecisions.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <Button
+                      variant={showComparison ? "default" : "outline"}
+                      onClick={() => setShowComparison(!showComparison)}
+                      className="flex items-center gap-2"
+                    >
+                      {showComparison ? '👁️ Viewing Comparison' : '👀 View Comparison'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
             
             {/* Privacy Notice */}
