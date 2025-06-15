@@ -920,53 +920,83 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
             <CardContent className="space-y-6">
               <div className="relative">
                 <textarea
-                  placeholder="Enter your response here..."
+                  placeholder={currentQuestion.category === 'timing' ? 
+                    "e.g., 'I need to decide within the next 2 weeks' or 'This is more of a long-term exploration, no rush'" :
+                    currentQuestion.category === 'priorities' ?
+                    "e.g., 'Financial stability and work-life balance are my top concerns'" :
+                    currentQuestion.category === 'constraints' ?
+                    "e.g., 'Budget is limited to $5000, and I need to stay local'" :
+                    currentQuestion.category === 'values' ?
+                    "e.g., 'Freedom and flexibility matter more than security to me'" :
+                    "e.g., 'My main concern is that I'll regret not trying'"
+                  }
                   value={currentAnswer}
                   onChange={(e) => setCurrentAnswer(e.target.value)}
                   className="chat-input min-h-[120px] resize-none"
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleFollowupSubmit()}
                 />
                 
-                {/* Enhanced Nudges/Examples */}
-                {currentQuestion.context && !currentAnswer && (
-                  <div className="mt-2 p-3 bg-muted/30 rounded-lg border-l-4 border-primary/50">
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium text-primary">💡 Example responses:</span>
-                      <div className="mt-1 space-y-1 text-xs">
-                        {currentQuestion.category === 'timing' && (
-                          <>
-                            <div>• "I need to decide within the next 2 weeks"</div>
-                            <div>• "This is more of a long-term exploration, no rush"</div>
-                          </>
-                        )}
-                        {currentQuestion.category === 'priorities' && (
-                          <>
-                            <div>• "Financial stability and work-life balance are my top concerns"</div>
-                            <div>• "I value growth opportunities and creative freedom"</div>
-                          </>
-                        )}
-                        {currentQuestion.category === 'constraints' && (
-                          <>
-                            <div>• "Budget is limited to $5000, and I need to stay local"</div>
-                            <div>• "Time is my biggest constraint - I only have evenings available"</div>
-                          </>
-                        )}
-                        {currentQuestion.category === 'values' && (
-                          <>
-                            <div>• "Freedom and flexibility matter more than security to me"</div>
-                            <div>• "I prioritize family time and meaningful work"</div>
-                          </>
-                        )}
-                        {currentQuestion.category === 'general' && (
-                          <>
-                            <div>• "My main concern is that I'll regret not trying"</div>
-                            <div>• "I'm worried about the financial impact on my family"</div>
-                          </>
-                        )}
-                      </div>
+                {/* Enhanced Nudges/Examples - Always Visible */}
+                <div className="mt-3 p-4 bg-gradient-to-r from-primary/5 to-mint/5 rounded-lg border border-primary/20">
+                  <div className="text-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-semibold text-primary">💡 Helpful Examples:</span>
+                      <span className="text-xs text-muted-foreground">(to guide your response)</span>
+                    </div>
+                    <div className="grid gap-2 text-xs">
+                      {currentQuestion.category === 'timing' && (
+                        <>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-blue-400">
+                            <span className="text-blue-600 font-medium">⏰</span> "I need to decide within the next 2 weeks"
+                          </div>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-green-400">
+                            <span className="text-green-600 font-medium">🌱</span> "This is more of a long-term exploration, no rush"
+                          </div>
+                        </>
+                      )}
+                      {currentQuestion.category === 'priorities' && (
+                        <>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-purple-400">
+                            <span className="text-purple-600 font-medium">💼</span> "Financial stability and work-life balance are my top concerns"
+                          </div>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-orange-400">
+                            <span className="text-orange-600 font-medium">🚀</span> "I value growth opportunities and creative freedom"
+                          </div>
+                        </>
+                      )}
+                      {currentQuestion.category === 'constraints' && (
+                        <>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-red-400">
+                            <span className="text-red-600 font-medium">💰</span> "Budget is limited to $5000, and I need to stay local"
+                          </div>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-yellow-400">
+                            <span className="text-yellow-600 font-medium">⏰</span> "Time is my biggest constraint - I only have evenings available"
+                          </div>
+                        </>
+                      )}
+                      {currentQuestion.category === 'values' && (
+                        <>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-emerald-400">
+                            <span className="text-emerald-600 font-medium">🕊️</span> "Freedom and flexibility matter more than security to me"
+                          </div>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-pink-400">
+                            <span className="text-pink-600 font-medium">👨‍👩‍👧‍👦</span> "I prioritize family time and meaningful work"
+                          </div>
+                        </>
+                      )}
+                      {currentQuestion.category === 'general' && (
+                        <>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-indigo-400">
+                            <span className="text-indigo-600 font-medium">💭</span> "My main concern is that I'll regret not trying"
+                          </div>
+                          <div className="p-2 bg-card/60 rounded border-l-2 border-teal-400">
+                            <span className="text-teal-600 font-medium">💸</span> "I'm worried about the financial impact on my family"
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
               
               <Button
