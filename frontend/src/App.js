@@ -665,7 +665,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     }]);
   };
 
-  const handleFollowupSubmit = () => {
+  const handleFollowupSubmit = async () => {
     if (!currentAnswer.trim()) return;
     
     const currentQuestion = followupQuestions[currentFollowupIndex];
@@ -688,6 +688,20 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     ]);
     
     trackFollowupAnswered(currentFollowupIndex + 1);
+    
+    try {
+      // Send the answer to the backend
+      await axios.post(`${API}/api/decision/advanced`, {
+        decision_id: decisionId,
+        message: currentAnswer,
+        step: 'followup',
+        step_number: currentFollowupIndex + 1,
+        enable_personalization: isAuthenticated
+      });
+    } catch (error) {
+      console.error('Follow-up submission error:', error);
+      // Continue with frontend flow even if backend call fails
+    }
     
     if (currentFollowupIndex < followupQuestions.length - 1) {
       setCurrentFollowupIndex(currentFollowupIndex + 1);
