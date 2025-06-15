@@ -1140,16 +1140,14 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated }) => {
             <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="font-medium">Confidence Score</span>
-                {item.content.confidence_tooltip && (
-                  <div className="group relative">
-                    <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help">
-                      ℹ️
-                    </div>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs">
-                      {item.content.confidence_tooltip}
-                    </div>
+                <div className="group relative">
+                  <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help hover:bg-muted-foreground/20 transition-colors">
+                    ℹ️
                   </div>
-                )}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
+                    This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`font-bold text-lg ${getConfidenceColor(item.content.confidence_score)}`}>
