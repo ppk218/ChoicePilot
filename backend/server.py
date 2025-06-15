@@ -2109,6 +2109,174 @@ async def _generate_advanced_recommendation(
             detail="Error generating advanced recommendation"
         )
 
+# Decision Version Management
+@api_router.get("/decision/{decision_id}/versions")
+async def get_decision_versions(
+    decision_id: str,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Get all versions of a decision for comparison
+    """
+    try:
+        session = await db.decision_sessions_advanced.find_one({"id": decision_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Decision session not found")
+        
+        # Check permission
+        user_id = current_user.get("id") if current_user else None
+        if session.get("user_id") and session.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        versions = session.get("versions", [])
+        current_version = {
+            "version": session.get("version", 1),
+            "answers": session.get("followup_answers", []),
+            "recommendation": session.get("recommendation"),
+            "created_at": session.get("last_active", session.get("created_at"))
+        }
+        
+        all_versions = versions + [current_version]
+        
+        return {
+            "decision_id": decision_id,
+            "initial_question": session.get("initial_question"),
+            "decision_type": session.get("decision_type"),
+            "versions": all_versions,
+            "total_versions": len(all_versions)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Version retrieval error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error retrieving decision versions")
+
+@api_router.post("/decision/{decision_id}/compare")
+async def compare_decision_versions(
+    decision_id: str,
+    request: dict,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Compare two versions of a decision
+    """
+    try:
+        version1 = request.get("version1")
+        version2 = request.get("version2")
+        
+        if not version1 or not version2:
+            raise HTTPException(status_code=400, detail="Both version numbers required")
+        
+        session = await db.decision_sessions_advanced.find_one({"id": decision_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Decision session not found")
+        
+        # Check permission
+        user_id = current_user.get("id") if current_user else None
+        if session.get("user_id") and session.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        versions = session.get("versions", [])
+        current_version = {
+            "version": session.get("version", 1),
+            "answers": session.get("followup_answers", []),
+            "recommendation": session.get("recommendation"),
+            "created_at": session.get("last_active")
+        }
+        
+        all_versions = {v["version"]: v for v in versions + [current_version]}
+        
+        if version1 not in all_versions or version2 not in all_versions:
+            raise HTTPException(status_code=404, detail="Version not found")
+        
+        v1_data = all_versions[version1]
+        v2_data = all_versions[version2]
+        
+        # Generate comparison analysis
+        comparison = {
+            "decision_id": decision_id,
+            "version1": {
+                "version": version1,
+                "recommendation": v1_data.get("recommendation", {}).get("final_recommendation", ""),
+                "confidence": v1_data.get("recommendation", {}).get("confidence_score", 0),
+                "next_steps": v1_data.get("recommendation", {}).get("next_steps", []),
+                "created_at": v1_data.get("created_at")
+            },
+            "version2": {
+                "version": version2,
+                "recommendation": v2_data.get("recommendation", {}).get("final_recommendation", ""),
+                "confidence": v2_data.get("recommendation", {}).get("confidence_score", 0),
+                "next_steps": v2_data.get("recommendation", {}).get("next_steps", []),
+                "created_at": v2_data.get("created_at")
+            },
+            "differences": {
+                "confidence_change": v2_data.get("recommendation", {}).get("confidence_score", 0) - v1_data.get("recommendation", {}).get("confidence_score", 0),
+                "recommendation_changed": v1_data.get("recommendation", {}).get("final_recommendation", "") != v2_data.get("recommendation", {}).get("final_recommendation", ""),
+                "steps_changed": v1_data.get("recommendation", {}).get("next_steps", []) != v2_data.get("recommendation", {}).get("next_steps", [])
+            }
+        }
+        
+        return comparison
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Version comparison error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error comparing decision versions")
+
+# Export Decision Endpoint
+@api_router.get("/decision/{decision_id}/export")
+async def export_decision(
+    decision_id: str,
+    format: str = "json",
+    include_trace: bool = False,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Export decision in various formats (JSON, PDF)
+    """
+    try:
+        session = await db.decision_sessions_advanced.find_one({"id": decision_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Decision session not found")
+        
+        # Check permission
+        user_id = current_user.get("id") if current_user else None
+        if session.get("user_id") and session.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        recommendation = session.get("recommendation", {})
+        
+        export_data = {
+            "decision_id": decision_id,
+            "question": session.get("initial_question"),
+            "decision_type": session.get("decision_type"),
+            "recommendation": recommendation.get("final_recommendation", ""),
+            "next_steps": recommendation.get("next_steps", []),
+            "confidence_score": recommendation.get("confidence_score", 0),
+            "reasoning": recommendation.get("reasoning", ""),
+            "created_at": session.get("created_at"),
+            "completed_at": session.get("completed_at")
+        }
+        
+        if include_trace:
+            export_data["trace"] = recommendation.get("trace", {})
+        
+        if format.lower() == "json":
+            return export_data
+        elif format.lower() == "pdf":
+            # TODO: Implement PDF generation using reportlab/weasyprint
+            raise HTTPException(status_code=501, detail="PDF export not yet implemented")
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported export format")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Export error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error exporting decision")
+
 # Decision Feedback Endpoint
 @api_router.post("/decision/feedback/{decision_id}")
 async def submit_decision_feedback(decision_id: str, request: dict):
