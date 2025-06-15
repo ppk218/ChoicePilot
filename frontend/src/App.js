@@ -930,27 +930,95 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
         {/* Action Buttons */}
         {currentStep === 'recommendation' && (
-          <div className="flex gap-3 mt-8">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCurrentStep('followup');
-                setCurrentFollowupIndex(0);
-                setCurrentAnswer('');
-              }}
-              className="flex-1"
-            >
-              Adjust Decision
-            </Button>
-            <Button
-              onClick={() => {
-                // Save decision and redirect to dashboard
-                onSaveAndContinue();
-              }}
-              className="flex-1 cta-button"
-            >
-              Take Action
-            </Button>
+          <div className="space-y-4 mt-8">
+            {/* Take Action Card */}
+            <Card className="decision-card bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>🚀</span>
+                  <span>Take Action</span>
+                </CardTitle>
+                <CardDescription>
+                  Export, share, or explore more options for your decision
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Export functionality
+                    console.log('Export decision');
+                  }}
+                  className="flex items-center gap-2 justify-start"
+                >
+                  📄 Export as PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Share functionality
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Share link copied to clipboard!');
+                  }}
+                  className="flex items-center gap-2 justify-start"
+                >
+                  📤 Share Decision
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Simulate alternatives
+                    setCurrentStep('followup');
+                    setCurrentFollowupIndex(0);
+                    setCurrentAnswer('');
+                  }}
+                  className="flex items-center gap-2 justify-start"
+                >
+                  🔮 Explore Alternatives
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Upgrade prompt
+                    alert('Upgrade to Pro for voice input, unlimited decisions, and advanced features!');
+                  }}
+                  className="flex items-center gap-2 justify-start"
+                >
+                  ⭐ Upgrade to Pro
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Primary Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Adjust decision logic
+                  setCurrentStep('followup');
+                  setCurrentFollowupIndex(0);
+                  setCurrentAnswer('');
+                }}
+                className="flex-1 flex items-center gap-2"
+              >
+                🔁 Adjust Decision
+              </Button>
+              <Button
+                onClick={() => {
+                  // Save decision and redirect to dashboard
+                  onSaveAndContinue();
+                }}
+                className="flex-1 cta-button flex items-center gap-2"
+              >
+                ✅ Implement This
+              </Button>
+            </div>
+            
+            {/* Privacy Notice */}
+            <div className="text-center text-xs text-muted-foreground">
+              🔒 Your decision summary includes only the AI-generated recommendation. 
+              Private inputs are excluded unless you choose to include them.
+            </div>
           </div>
         )}
       </div>
