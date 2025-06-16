@@ -2155,22 +2155,25 @@ Focus on filling gaps in understanding their priorities, constraints, emotions, 
 """
                 
                 try:
-                    # Import classes for type creation
-                    from ai_orchestrator_v2 import SmartClassification, ComplexityLevel, EmotionalIntent
-                    
                     # Generate the NEXT smart question dynamically
-                    next_questions = await ai_orchestrator.generate_smart_followup_questions(
-                        session.get('initial_question', ''),
-                        SmartClassification(
-                            complexity=ComplexityLevel(complexity),
-                            intent=EmotionalIntent(intent),
-                            routed_models=smart_classification.get("routed_models", ["gpt4o-mini"]),
-                            cost_estimate=smart_classification.get("cost_estimate", "low")
-                        ),
-                        session_id=decision_id,
-                        max_questions=1,  # Only generate the next question
-                        previous_answers=current_answers  # Pass previous answers for context
-                    )
+                    # Use a simplified approach instead of complex class imports
+                    dynamic_question_context = f"""
+Initial Question: {session.get('initial_question', '')}
+Previous Answers: {' | '.join(current_answers)}
+Complexity: {complexity}
+Intent: {intent}
+"""
+                    
+                    # Generate dynamic followup using the smart engine directly
+                    next_questions = await ai_orchestrator.followup_engine.generate_smart_followups(
+                        dynamic_question_context,
+                        {
+                            "complexity": complexity,
+                            "intent": intent
+                        },
+                        smart_classification.get("routed_models", ["gpt4o-mini"]),
+                        decision_id
+                    ) if ai_orchestrator.followup_engine else []
                     
                     if next_questions and len(next_questions) > 0:
                         next_question = next_questions[0]
