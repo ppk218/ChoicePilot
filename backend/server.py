@@ -2759,9 +2759,14 @@ User's problem: {user_message}"""
                 if attempt > 0:  # Increase temperature for retries
                     temperature = min(0.9 + (attempt * 0.1), 1.0)
                 
+                # 🎯 DYNAMIC SESSION ID: Use content hash to ensure different conversation contexts
+                import hashlib
+                content_hash = hashlib.md5(last_answer.encode()).hexdigest()[:8] if last_answer else "default"
+                unique_session_id = f"{session_id}_{content_hash}_attempt_{attempt}"
+                
                 chat = LlmChat(
                     api_key=api_key,
-                    session_id=f"{session_id}_attempt_{attempt}",
+                    session_id=unique_session_id,
                     system_message=followup_prompt
                 ).with_model(provider, model_name).with_max_tokens(1000).with_temperature(temperature)
                 
