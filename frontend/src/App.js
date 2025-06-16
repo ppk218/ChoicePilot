@@ -576,17 +576,21 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       const data = response.data;
       setDecisionId(data.decision_id);
       
-      // Handle the enhanced response format
+      // Handle the enhanced response format - Only take the FIRST question
       if (data.followup_questions && data.followup_questions.length > 0) {
-        // Convert enhanced questions to old format for compatibility
-        const convertedQuestions = data.followup_questions.map((q, index) => ({
-          question: q.question,
-          step_number: index + 1,
-          context: q.nudge,
-          category: q.category
-        }));
+        // Only take the first question for dynamic flow
+        const firstQuestion = data.followup_questions[0];
+        const convertedQuestion = {
+          question: firstQuestion.question,
+          step_number: 1,
+          context: firstQuestion.nudge,
+          category: firstQuestion.category,
+          persona: firstQuestion.persona || 'realist', // Add persona support
+          nudge: firstQuestion.nudge
+        };
         
-        setFollowupQuestions(convertedQuestions);
+        // Set only the first question - others will be generated dynamically
+        setFollowupQuestions([convertedQuestion]);
         
         // Only add AI response once, without step indicator for initial response
         if (data.response && data.response.trim() !== '') {
