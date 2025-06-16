@@ -2754,11 +2754,16 @@ User's problem: {user_message}"""
             max_retries = 3 if is_context_aware else 1
             
             for attempt in range(max_retries):
+                # 🎯 DYNAMIC TEMPERATURE: Increase randomness for better variation
+                temperature = 0.8 if is_context_aware else 0.7  # Higher temperature for context-aware
+                if attempt > 0:  # Increase temperature for retries
+                    temperature = min(0.9 + (attempt * 0.1), 1.0)
+                
                 chat = LlmChat(
                     api_key=api_key,
                     session_id=f"{session_id}_attempt_{attempt}",
                     system_message=followup_prompt
-                ).with_model(provider, model_name).with_max_tokens(1000)
+                ).with_model(provider, model_name).with_max_tokens(1000).with_temperature(temperature)
                 
                 user_msg = UserMessage(text=user_message)
                 response = await chat.send_message(user_msg)
