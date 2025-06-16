@@ -551,15 +551,19 @@ User Responses:
                 
             parsed = json.loads(response_clean)
             
+            # Extract persona voices if available
+            persona_voices = parsed.get("persona_voices", {})
+            personas_consulted = list(persona_voices.keys()) if persona_voices else ["Realist", "Visionary", "Pragmatist", "Supportive"]
+            
             trace = DecisionTrace(
                 models_used=models_used,
-                frameworks_used=parsed.get("frameworks_used", ["Multi-Framework Analysis"]),
-                themes=parsed.get("themes", ["Decision analysis completed"]),
-                confidence_factors=parsed.get("confidence_factors", ["Analysis completed"]),
+                frameworks_used=parsed.get("frameworks_used", ["Emotional Alignment", "Multi-Persona Synthesis", "Value-Based Decision Making"]),
+                themes=parsed.get("themes", ["Personal values alignment", "Risk-opportunity balance", "Emotional considerations"]),
+                confidence_factors=parsed.get("confidence_factors", ["User response quality", "Multi-perspective analysis"]),
                 used_web_search=False,
-                personas_consulted=["Realist", "Visionary", "Pragmatist"],
+                personas_consulted=personas_consulted,
                 processing_time_ms=0,  # Will be set by caller
-                classification={}  # Empty classification for backward compatibility
+                classification={"persona_voices": persona_voices}  # Include persona voices in classification
             )
             
             return DecisionRecommendation(
