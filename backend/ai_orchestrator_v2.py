@@ -222,17 +222,36 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
         initial_question: str, 
         classification: SmartClassification,
         session_id: str = None,
-        max_questions: int = 3
+        max_questions: int = 3,
+        previous_answers: List[str] = None
     ) -> List[FollowUpQuestion]:
         """
         Generate intelligent follow-up questions using smart followup engine with personas
+        Now supports context-aware question generation based on previous answers
         """
         
         try:
             # Use smart followup engine if available
             if self.followup_engine:
+                # Create enhanced context including previous answers
+                if previous_answers and len(previous_answers) > 0:
+                    context = f"""Initial Question: {initial_question}
+
+Previous Answers:
+{chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(previous_answers)])}
+
+Based on the user's previous responses, generate the next most valuable follow-up question.
+Focus on areas that need clarification or deeper exploration based on what they've already shared.
+Adapt the question style based on their answer tone:
+- If vague: ask sharper, more specific questions
+- If conflicted: ask clarifying questions about priorities
+- If detailed: go deeper into specific concerns they mentioned
+"""
+                else:
+                    context = initial_question
+                
                 questions_data = await self.followup_engine.generate_smart_followups(
-                    initial_question,
+                    context,
                     {
                         "complexity": classification.complexity.value,
                         "intent": classification.intent.value
