@@ -2622,43 +2622,66 @@ class SmartFollowupEngine:
     ) -> list:
         """Generate 1-3 smart follow-up questions with persona alignment"""
         
-        # Check if this is a context-aware follow-up (has previous answers in the message)
+        # Enhanced detection for context-aware follow-up (more flexible)
         is_context_aware = ("Previous Answers:" in user_message or 
                            "Answer 1:" in user_message or 
                            "Answer 2:" in user_message or
                            "answers so far" in user_message.lower() or
-                           "Based on the user's answers" in user_message)
+                           "Based on the user's answers" in user_message or
+                           "Initial Question:" in user_message or
+                           "Previous answers:" in user_message.lower() or
+                           "user's answers:" in user_message.lower())
         
         if is_context_aware:
-            # Context-aware follow-up prompt for dynamic question generation
-            followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has already answered some questions, and you need to generate the NEXT best follow-up question based on their previous responses.
+            # 🧩 ENHANCED DYNAMIC CONTEXT INJECTION - Step 1 & 2
+            followup_prompt = f"""You are a dynamic question engine for a decision assistant. The user has already answered some questions, and you need to generate the NEXT best follow-up question based on their previous responses.
 
 {user_message}
 
-CRITICAL REQUIREMENTS:
-1. **Analyze the Previous Answers**: What did they reveal? What information is still missing?
-2. **Generate a COMPLETELY DIFFERENT Question**: This must be different from typical first questions
-3. **Reference Their Response**: The question should acknowledge what they just shared
-4. **Fill Information Gaps**: Focus on the biggest missing piece for a good recommendation
-5. **Adapt to Their Style**: 
-   - If they were vague/short → ask for specific details and examples
-   - If they were conflicted → ask clarifying questions about priorities/values  
-   - If they were detailed → go deeper into specific concerns they mentioned
-   - If they mentioned specific factors → explore those factors further
+🧩 **DYNAMIC CONTEXT INJECTION REQUIREMENTS:**
 
+1️⃣ **REFLECT ON USER'S ANSWERS**: What did they reveal? What information is still missing?
+2️⃣ **GENERATE UNIQUE FOLLOW-UP**: This must be a [Clarification] or [Exploration] question
+3️⃣ **NEVER REPEAT PATTERNS**: Each question must be different from generic first questions
+4️⃣ **ACTIVE PROMPTING - SELF-ASK PATTERN**: 
+   - Ask yourself: "What's the biggest information gap for making a recommendation?"
+   - Ask yourself: "What specific details from their answer can I reference?"
+   - Ask yourself: "What question would be most valuable given their response style?"
+
+🔍 **STEP-BY-STEP DYNAMIC ANALYSIS:**
+
+1️⃣ **Reflect on the user's answer and identify one unclear area**
+2️⃣ **Ask a clarifying question labeled [Clarification]**  
+3️⃣ **Ask a deeper exploration question labeled [Exploration]**
+4️⃣ **Never repeat tone or ask generic questions**
+
+**ADAPTATION RULES:**
+- If they were vague/uncertain → ask for specific examples and details
+- If they were conflicted → ask clarifying questions about priorities/values
+- If they were detailed → go deeper into specific concerns they mentioned
+- If they mentioned specific factors → explore those factors with direct quotes
+
+**EXAMPLES OF DYNAMIC CONTEXT INJECTION:**
+❌ Generic: "Why are you anxious?"
+✅ Good: "You said you're anxious—what part of leaving your job feels most uncertain to you?"
+
+❌ Generic: "What are your goals?"
+✅ Good: "You mentioned wanting 'more freedom'—what does freedom look like in your daily life?"
+
+**FORMAT REQUIREMENTS:**
 Generate exactly ONE follow-up question that:
-- Builds directly on what they've already shared
-- References specific details from their previous answer
+- Directly quotes or references something from their previous answer
+- Uses their exact words when possible (e.g., "You said...", "You mentioned...")
 - Fills the biggest information gap for making a recommendation
-- Uses appropriate persona based on what they need most
+- Adapts to their communication style and emotional state
 
 Return JSON:
 {{
   "questions": [
     {{
-      "q": "[Question that specifically references something from their previous answer]",
+      "q": "[Clarification] You mentioned [specific user quote] - what specifically about [their concern/factor] is most [important/worrying/exciting] to you?",
       "nudge": "[Example that fits their specific context and situation]",
-      "persona": "[Choose: realist/visionary/creative/pragmatist/supportive - based on what they need]"
+      "persona": "[Choose based on what they need: realist/visionary/creative/pragmatist/supportive]"
     }}
   ]
 }}
@@ -2670,7 +2693,7 @@ Available Personas:
 - pragmatist: balanced, focused on trade-offs and systematic evaluation
 - supportive: empathetic, focused on emotions and validation
 
-IMPORTANT: The question MUST be different from generic first questions. It must acknowledge and build on their specific previous answer."""
+**CRITICAL**: The question MUST reference specific details from their previous answer and use their own words when possible."""
         else:
             # Original prompt for initial question generation
             followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
