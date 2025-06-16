@@ -2021,13 +2021,21 @@ async def process_advanced_decision_step(
         session = await db.decision_sessions_advanced.find_one({"id": decision_id})
         
         if not session and request.step == "initial":
-            # Classify the decision type
-            decision_type = await ai_orchestrator.classify_question(
+            # Use smart classification and routing
+            smart_classification = await ai_orchestrator.smart_classify_and_route(
                 request.message, 
-                f"{decision_id}_classification"
+                current_user.get("plan", "free") if current_user else "free"
             )
             
-            # Create new advanced session
+            # Convert to legacy decision type for compatibility
+            if smart_classification.complexity.value == "LOW":
+                decision_type = DecisionType.STRUCTURED
+            elif smart_classification.complexity.value == "HIGH":
+                decision_type = DecisionType.INTUITIVE
+            else:
+                decision_type = DecisionType.MIXED
+            
+            # Create new advanced session with smart classification data
             session = {
                 "id": decision_id,
                 "user_id": user_id,
