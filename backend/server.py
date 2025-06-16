@@ -2804,6 +2804,9 @@ User's problem: {user_message}"""
                     # Modify the prompt to be more specific for the retry
                     followup_prompt += f"\n\n**RETRY #{attempt + 2}**: The previous attempt generated a generic question. You MUST generate a unique question that specifically references the user's answer details."
             
+            # If all retries failed, return fallback questions
+            return SmartFollowupEngine._generate_fallback_questions(classification)
+            
         except Exception as e:
             logging.warning(f"Smart followup generation failed: {str(e)}")
             # Fallback to simple questions
