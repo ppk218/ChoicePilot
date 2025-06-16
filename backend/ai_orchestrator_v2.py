@@ -580,7 +580,8 @@ User Responses:
             confidence_factors=["Basic analysis completed"],
             used_web_search=False,
             personas_consulted=[],
-            processing_time_ms=0
+            processing_time_ms=0,
+            classification={}  # Empty classification for backward compatibility
         )
         
         return DecisionRecommendation(
