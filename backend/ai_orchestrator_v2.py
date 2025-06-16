@@ -279,9 +279,12 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
             decision_type = DecisionType.MIXED
         
         return await self.generate_followup_questions(initial_question, decision_type, max_questions)
-        """
-        Generate intelligent follow-up questions with nudges
-        """
+    async def generate_followup_questions(
+        self, 
+        initial_question: str, 
+        decision_type: DecisionType,
+        max_questions: int = 3
+    ) -> List[FollowUpQuestion]:
         
         # Select appropriate model for follow-up generation
         models = self.select_models(decision_type)
