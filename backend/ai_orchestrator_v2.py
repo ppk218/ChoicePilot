@@ -217,12 +217,68 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
         }
         return model_mapping.get(decision_type, ["claude"])
 
-    async def generate_followup_questions(
+    async def generate_smart_followup_questions(
         self, 
         initial_question: str, 
-        decision_type: DecisionType,
+        classification: SmartClassification,
+        session_id: str = None,
         max_questions: int = 3
     ) -> List[FollowUpQuestion]:
+        """
+        Generate intelligent follow-up questions using smart followup engine with personas
+        """
+        
+        try:
+            # Use smart followup engine if available
+            if self.followup_engine:
+                questions_data = await self.followup_engine.generate_smart_followups(
+                    initial_question,
+                    {
+                        "complexity": classification.complexity.value,
+                        "intent": classification.intent.value
+                    },
+                    classification.routed_models,
+                    session_id or f"session_{datetime.now().timestamp()}"
+                )
+                
+                # Convert to FollowUpQuestion objects
+                followup_questions = []
+                for q_data in questions_data:
+                    followup_questions.append(FollowUpQuestion(
+                        question=q_data["question"],
+                        nudge=q_data["nudge"],
+                        category=q_data["category"],
+                        persona=q_data["persona"]
+                    ))
+                
+                return followup_questions
+            else:
+                # Fallback to legacy method
+                return await self._generate_legacy_followups(initial_question, classification, max_questions)
+                
+        except Exception as e:
+            logger.error(f"Smart followup generation failed: {str(e)}")
+            return await self._generate_legacy_followups(initial_question, classification, max_questions)
+
+    async def _generate_legacy_followups(
+        self, 
+        initial_question: str, 
+        classification: SmartClassification,
+        max_questions: int = 3
+    ) -> List[FollowUpQuestion]:
+        """
+        Legacy fallback for follow-up generation
+        """
+        
+        # Map classification to decision type for legacy compatibility
+        if classification.complexity == ComplexityLevel.LOW:
+            decision_type = DecisionType.STRUCTURED
+        elif classification.complexity == ComplexityLevel.HIGH:
+            decision_type = DecisionType.INTUITIVE
+        else:
+            decision_type = DecisionType.MIXED
+        
+        return await self.generate_followup_questions(initial_question, decision_type, max_questions)
         """
         Generate intelligent follow-up questions with nudges
         """
