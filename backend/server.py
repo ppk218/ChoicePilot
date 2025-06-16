@@ -2060,7 +2060,7 @@ async def process_advanced_decision_step(
             
             await db.decision_sessions_advanced.insert_one(session)
             
-            # Generate smart follow-up questions using new engine
+            # 🧠 HYBRID AI-LED: Generate ALL 3 questions upfront using decision coach approach
             followup_questions = await ai_orchestrator.generate_smart_followup_questions(
                 request.message,
                 smart_classification,
@@ -2068,37 +2068,40 @@ async def process_advanced_decision_step(
                 max_questions=3
             )
             
-            # Convert to response format with persona information
-            enhanced_questions = [
-                EnhancedFollowUpQuestion(
-                    question=q.question,
-                    nudge=q.nudge,
-                    category=q.category,
+            # Convert to response format with step numbers
+            enhanced_questions = []
+            for i, q in enumerate(followup_questions):
+                enhanced_questions.append(EnhancedFollowUpQuestion(
+                    question=q.get("question", ""),
+                    nudge=q.get("nudge", ""),
+                    category=q.get("category", "general"),
                     step_number=i + 1,
-                    persona=getattr(q, 'persona', 'realist')  # Include persona from followup question
-                ) for i, q in enumerate(followup_questions)
-            ]
+                    persona=q.get("persona", "realist")
+                ))
             
-            # Store questions in session
+            # Store ALL questions in session upfront (Hybrid AI-Led approach)
             await db.decision_sessions_advanced.update_one(
                 {"id": decision_id},
                 {
                     "$set": {
                         "followup_questions": [q.dict() for q in enhanced_questions],
                         "current_step": "followup",
+                        "step_number": 1,  # Start with question 1
+                        "total_questions": len(enhanced_questions),
                         "last_active": datetime.utcnow()
                     }
                 }
             )
             
-            response_text = f"I've analyzed your {decision_type.value} decision. Let me ask a few targeted questions to give you the best recommendation."
+            response_text = f"I've analyzed your {decision_type.value} decision. Let me ask you some targeted questions to give you the best recommendation."
             
+            # Return ONLY the first question to match frontend step-by-step flow
             return AdvancedDecisionStepResponse(
                 decision_id=decision_id,
                 step="initial",
-                step_number=0,  # Initial step before questions
+                step_number=1,
                 response=response_text,
-                followup_questions=enhanced_questions,  # Return ALL 3 questions upfront
+                followup_questions=[enhanced_questions[0]] if enhanced_questions else [],  # Only first question
                 decision_type=decision_type.value,
                 session_version=1
             )
