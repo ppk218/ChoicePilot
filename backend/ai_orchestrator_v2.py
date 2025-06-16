@@ -647,10 +647,16 @@ User Responses:
         
         return DecisionRecommendation(
             final_recommendation="Based on your responses, take time to carefully weigh your options against your stated priorities. Consider both the practical implications and how each choice aligns with your personal values.",
+            summary="This decision requires balancing practical considerations with personal values. Take time to evaluate each option systematically.",
             next_steps=[
                 "List out your top 3 priorities for this decision",
                 "Research any additional information you need",
                 "Set a timeline for making your final choice"
+            ],
+            next_steps_with_time=[
+                {"step": "List out your top 3 priorities for this decision", "time_estimate": "30 minutes", "description": "Write down what matters most to you"},
+                {"step": "Research any additional information you need", "time_estimate": "2-3 hours", "description": "Gather missing details and data"},
+                {"step": "Set a timeline for making your final choice", "time_estimate": "15 minutes", "description": "Decide when you'll make the final decision"}
             ],
             confidence_score=70,
             confidence_tooltip="Based on structured analysis of your priorities",
