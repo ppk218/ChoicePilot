@@ -2104,6 +2104,10 @@ async def process_advanced_decision_step(
             )
             
         elif request.step == "followup" and session:
+            # 📝 COLLECT ANSWERS: Just store the answer, no reactive question generation
+            current_answers = session.get("followup_answers", [])
+            total_questions = session.get("total_questions", 3)
+            
             # Store the follow-up answer
             await db.decision_sessions_advanced.update_one(
                 {"id": decision_id},
@@ -2113,102 +2117,36 @@ async def process_advanced_decision_step(
                 }
             )
             
-            current_answers = session.get("followup_answers", []) + [request.message]
+            current_answers.append(request.message)
+            answers_collected = len(current_answers)
             
-            # Get smart classification from session for dynamic decision making
-            smart_classification = session.get("smart_classification", {})
-            complexity = smart_classification.get("complexity", "MEDIUM")
-            intent = smart_classification.get("intent", "CLARITY")
-            
-            # DYNAMIC DECISION: Should we ask another question or proceed to recommendation?
-            total_questions_answered = len(current_answers)
-            
-            # AI decides: Do we need more context?
-            need_more_context = False
-            
-            # Enhanced heuristic for dynamic question generation:
-            if total_questions_answered == 1:
-                # After first answer, usually need at least one more question
-                need_more_context = True
-            elif total_questions_answered == 2:
-                # After second answer, check if answers are detailed enough
-                avg_answer_length = sum(len(answer.split()) for answer in current_answers) / len(current_answers)
-                if avg_answer_length < 15:  # Answers are too short/vague
-                    need_more_context = True
-                elif complexity == "HIGH" and intent in ["REASSURANCE", "EMPOWERMENT"]:
-                    need_more_context = True  # Complex emotional decisions need more context
-            
-            # Max 3 questions total to prevent infinite loops
-            if total_questions_answered >= 3:
-                need_more_context = False
-            
-            if need_more_context:
-                # 🧩 ENHANCED DYNAMIC CONTEXT INJECTION - Properly format user answers
-                last_user_answer = current_answers[-1] if current_answers else ""
+            # Check if we have all answers
+            if answers_collected >= total_questions:
+                # All answers collected - ready for recommendation
+                await db.decision_sessions_advanced.update_one(
+                    {"id": decision_id},
+                    {"$set": {"current_step": "ready_for_recommendation"}}
+                )
                 
-                # Format the context to match the enhanced prompt patterns
-                dynamic_question_context = f"""Initial Question: {session.get('initial_question', '')}
-
-Previous Answers:
-{chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(current_answers)])}
-
-User's most recent answer: "{last_user_answer}"
-
-Generate a follow-up question that directly references and builds on what the user just shared. Use their exact words when possible and fill the biggest information gap for a comprehensive recommendation."""
-                
-                try:
-                    
-                    # Generate dynamic followup using the smart engine directly
-                    next_questions = await ai_orchestrator.followup_engine.generate_smart_followups(
-                        dynamic_question_context,
-                        {
-                            "complexity": complexity,
-                            "intent": intent
-                        },
-                        smart_classification.get("routed_models", ["gpt4o-mini"]),
-                        decision_id
-                    ) if ai_orchestrator.followup_engine else []
-                    
-                    if next_questions and len(next_questions) > 0:
-                        # Handle both dict and object formats
-                        next_question_data = next_questions[0]
-                        if isinstance(next_question_data, dict):
-                            question_text = next_question_data.get("question", "")
-                            nudge_text = next_question_data.get("nudge", "")
-                            category_text = next_question_data.get("category", "general")
-                            persona_text = next_question_data.get("persona", "realist")
-                        else:
-                            question_text = getattr(next_question_data, 'question', "")
-                            nudge_text = getattr(next_question_data, 'nudge', "")
-                            category_text = getattr(next_question_data, 'category', "general")
-                            persona_text = getattr(next_question_data, 'persona', "realist")
-                        
-                        enhanced_question = EnhancedFollowUpQuestion(
-                            question=question_text,
-                            nudge=nudge_text,
-                            category=category_text,
-                            step_number=total_questions_answered + 1,
-                            persona=persona_text
-                        )
-                        
-                        return AdvancedDecisionStepResponse(
-                            decision_id=decision_id,
-                            step="followup",
-                            step_number=total_questions_answered + 1,
-                            response="",
-                            followup_questions=[enhanced_question],
-                            is_complete=False,
-                            decision_type=session.get("decision_type"),
-                            session_version=session.get("version", 1)
-                        )
-                except Exception as e:
-                    logging.warning(f"Dynamic question generation failed: {e}")
-                    # Fall through to recommendation
-            
-            # If we reach here, AI decided we have enough context - proceed to recommendation
-            return await _generate_advanced_recommendation(
-                decision_id, session, current_answers
-            )
+                return AdvancedDecisionStepResponse(
+                    decision_id=decision_id,
+                    step="complete",
+                    step_number=answers_collected,
+                    response="Thank you! I have all the information I need. Ready to generate your recommendation.",
+                    is_complete=True,
+                    decision_type=session.get("decision_type"),
+                    session_version=1
+                )
+            else:
+                # Still collecting answers
+                return AdvancedDecisionStepResponse(
+                    decision_id=decision_id,
+                    step="collecting",
+                    step_number=answers_collected,
+                    response=f"Got it! Please answer the remaining questions ({answers_collected}/{total_questions} completed).",
+                    decision_type=session.get("decision_type"),
+                    session_version=1
+                )
                 
         elif request.step == "recommendation" and session:
             # Direct recommendation request
