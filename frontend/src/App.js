@@ -1021,34 +1021,27 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 </div>
               </div>
               
-              {/* Context/Description if available */}
-              {currentQuestion.context && currentQuestion.context !== currentQuestion.nudge && (
-                <CardDescription className="mb-3">{currentQuestion.context}</CardDescription>
+              {/* Enhanced Nudge Display Below Question */}
+              {currentQuestion.nudge && (
+                <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <span className="font-medium">Example: </span>
+                    <span className="italic">{currentQuestion.nudge}</span>
+                  </div>
+                </div>
               )}
             </CardHeader>
             
             <CardContent className="space-y-4">
               <div className="relative">
                 <textarea
-                  placeholder={currentQuestion.nudge || "Share your thoughts here..."}
+                  placeholder="Share your thoughts here..."
                   value={currentAnswer}
                   onChange={(e) => setCurrentAnswer(e.target.value)}
                   className="chat-input min-h-[120px] resize-none"
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !questionSubmitted && handleFollowupSubmit()}
                   disabled={questionSubmitted}
                 />
-                
-                {/* Enhanced Nudge Display with Arrow */}
-                {currentQuestion.nudge && !currentAnswer && (
-                  <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-start gap-2">
-                      <span className="text-blue-600 dark:text-blue-400 text-sm mt-0.5">➡️</span>
-                      <div className="text-sm text-blue-700 dark:text-blue-300">
-                        <span className="italic">{currentQuestion.nudge}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               
               <Button
