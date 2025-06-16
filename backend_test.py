@@ -836,9 +836,317 @@ def test_advanced_decision_endpoint_anonymous():
     
     return True
 
+def test_smart_classification_system():
+    """Test the new smart classification and persona-based follow-up system"""
+    print("Testing smart classification and persona-based follow-up system...")
+    
+    # Register a test user
+    response, user_data = register_test_user()
+    if response.status_code != 200:
+        print(f"Error: Failed to register test user: {response.status_code} - {response.text}")
+        return False
+    
+    token = response.json().get("access_token")
+    headers = get_auth_headers(token)
+    
+    # Test cases with different complexity levels
+    test_cases = [
+        {
+            "message": "What phone should I buy?",
+            "expected_complexity": "LOW",
+            "description": "Simple question"
+        },
+        {
+            "message": "Should I switch careers to data science?",
+            "expected_complexity": "MEDIUM",
+            "description": "Medium complexity question"
+        },
+        {
+            "message": "Should I leave my marriage?",
+            "expected_complexity": "HIGH",
+            "description": "High complexity question"
+        }
+    ]
+    
+    all_passed = True
+    
+    for test_case in test_cases:
+        print(f"\nTesting {test_case['description']}: '{test_case['message']}'")
+        
+        # Test with initial step
+        initial_payload = {
+            "message": test_case["message"],
+            "step": "initial"
+        }
+        
+        initial_response = requests.post(f"{API_URL}/decision/advanced", json=initial_payload, headers=headers)
+        
+        if initial_response.status_code != 200:
+            print(f"Error: Advanced decision endpoint returned status code {initial_response.status_code}")
+            print(f"Response: {initial_response.text}")
+            all_passed = False
+            continue
+        
+        initial_data = initial_response.json()
+        
+        # Verify response format
+        required_fields = ["decision_id", "step", "step_number", "response", "followup_questions", "decision_type", "session_version"]
+        for field in required_fields:
+            if field not in initial_data:
+                print(f"Error: Response missing required field '{field}'")
+                all_passed = False
+                continue
+        
+        # Get the session data to check classification
+        decision_id = initial_data["decision_id"]
+        
+        # Check followup questions have persona information
+        if not initial_data["followup_questions"] or not isinstance(initial_data["followup_questions"], list):
+            print(f"Error: Missing or invalid followup questions: {initial_data['followup_questions']}")
+            all_passed = False
+            continue
+        
+        for question in initial_data["followup_questions"]:
+            if "question" not in question or "nudge" not in question or "category" not in question:
+                print(f"Error: Followup question missing required fields: {question}")
+                all_passed = False
+                continue
+        
+        # Check if personas are assigned to follow-up questions
+        persona_found = False
+        for question in initial_data["followup_questions"]:
+            if "persona" in question:
+                persona_found = True
+                print(f"Persona found in follow-up question: {question.get('persona', 'None')}")
+                break
+        
+        if not persona_found:
+            print("Warning: No persona information found in follow-up questions")
+        
+        print(f"Decision type: {initial_data['decision_type']}")
+        print(f"First followup question: {initial_data['followup_questions'][0]['question']}")
+        print(f"Nudge: {initial_data['followup_questions'][0]['nudge']}")
+        
+        # Test followup step
+        followup_payload = {
+            "message": "This is my answer to the follow-up question.",
+            "step": "followup",
+            "decision_id": decision_id,
+            "step_number": 1
+        }
+        
+        print("\nTesting followup step")
+        followup_response = requests.post(f"{API_URL}/decision/advanced", json=followup_payload, headers=headers)
+        
+        if followup_response.status_code != 200:
+            print(f"Error: Followup step returned status code {followup_response.status_code}")
+            print(f"Response: {followup_response.text}")
+            all_passed = False
+            continue
+        
+        # Complete all followup questions to get recommendation
+        followup_data = followup_response.json()
+        for i in range(2, len(initial_data["followup_questions"]) + 1):
+            next_followup_payload = {
+                "message": f"This is my answer to question {i}.",
+                "step": "followup",
+                "decision_id": decision_id,
+                "step_number": i
+            }
+            
+            next_response = requests.post(f"{API_URL}/decision/advanced", json=next_followup_payload, headers=headers)
+            
+            if next_response.status_code != 200:
+                print(f"Error: Followup step {i} returned status code {next_response.status_code}")
+                print(f"Response: {next_response.text}")
+                all_passed = False
+                break
+        
+        # Test recommendation step
+        recommendation_payload = {
+            "message": "",
+            "step": "recommendation",
+            "decision_id": decision_id
+        }
+        
+        print("\nTesting recommendation step")
+        recommendation_response = requests.post(f"{API_URL}/decision/advanced", json=recommendation_payload, headers=headers)
+        
+        if recommendation_response.status_code != 200:
+            print(f"Error: Recommendation step returned status code {recommendation_response.status_code}")
+            print(f"Response: {recommendation_response.text}")
+            all_passed = False
+            continue
+        
+        recommendation_data = recommendation_response.json()
+        
+        # Verify recommendation format
+        if not recommendation_data.get("is_complete") or not recommendation_data.get("recommendation"):
+            print(f"Error: Missing or invalid recommendation: {recommendation_data}")
+            all_passed = False
+            continue
+        
+        recommendation = recommendation_data["recommendation"]
+        required_rec_fields = ["final_recommendation", "next_steps", "confidence_score", "confidence_tooltip", "reasoning", "trace"]
+        for field in required_rec_fields:
+            if field not in recommendation:
+                print(f"Error: Recommendation missing required field '{field}'")
+                all_passed = False
+                continue
+        
+        # Verify trace information
+        trace = recommendation["trace"]
+        required_trace_fields = ["models_used", "frameworks_used", "themes", "confidence_factors", "personas_consulted"]
+        for field in required_trace_fields:
+            if field not in trace:
+                print(f"Error: Trace missing required field '{field}'")
+                all_passed = False
+                continue
+        
+        print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
+        print(f"Models used: {', '.join(trace['models_used'])}")
+        print(f"Frameworks used: {', '.join(trace['frameworks_used'])}")
+        print(f"Personas consulted: {', '.join(trace['personas_consulted'])}")
+        
+    return all_passed
+
+def test_anonymous_smart_classification():
+    """Test the smart classification system with anonymous user"""
+    print("Testing smart classification with anonymous user...")
+    
+    # Test with a medium complexity question
+    initial_payload = {
+        "message": "Should I switch careers to data science?",
+        "step": "initial"
+    }
+    
+    print("Testing anonymous advanced decision with medium complexity question")
+    initial_response = requests.post(f"{API_URL}/decision/advanced", json=initial_payload)
+    
+    if initial_response.status_code != 200:
+        print(f"Error: Anonymous advanced decision endpoint returned status code {initial_response.status_code}")
+        print(f"Response: {initial_response.text}")
+        return False
+    
+    initial_data = initial_response.json()
+    
+    # Verify response format
+    required_fields = ["decision_id", "step", "step_number", "response", "followup_questions", "decision_type", "session_version"]
+    for field in required_fields:
+        if field not in initial_data:
+            print(f"Error: Response missing required field '{field}'")
+            return False
+    
+    decision_id = initial_data["decision_id"]
+    print(f"Anonymous advanced decision created with ID: {decision_id}")
+    print(f"Decision type: {initial_data['decision_type']}")
+    
+    # Check followup questions have persona information
+    if not initial_data["followup_questions"] or not isinstance(initial_data["followup_questions"], list):
+        print(f"Error: Missing or invalid followup questions: {initial_data['followup_questions']}")
+        return False
+    
+    for question in initial_data["followup_questions"]:
+        if "question" not in question or "nudge" not in question or "category" not in question:
+            print(f"Error: Followup question missing required fields: {question}")
+            return False
+    
+    # Check if personas are assigned to follow-up questions
+    persona_found = False
+    for question in initial_data["followup_questions"]:
+        if "persona" in question:
+            persona_found = True
+            print(f"Persona found in follow-up question: {question.get('persona', 'None')}")
+            break
+    
+    if not persona_found:
+        print("Warning: No persona information found in follow-up questions")
+    
+    print(f"First followup question: {initial_data['followup_questions'][0]['question']}")
+    print(f"Nudge: {initial_data['followup_questions'][0]['nudge']}")
+    
+    # Test followup step
+    followup_payload = {
+        "message": "I'm currently a marketing manager but I'm interested in data science because of the analytical aspects.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 1
+    }
+    
+    print("\nTesting anonymous followup step")
+    followup_response = requests.post(f"{API_URL}/decision/advanced", json=followup_payload)
+    
+    if followup_response.status_code != 200:
+        print(f"Error: Anonymous followup step returned status code {followup_response.status_code}")
+        print(f"Response: {followup_response.text}")
+        return False
+    
+    # Complete all followup questions to get recommendation
+    followup_data = followup_response.json()
+    for i in range(2, len(initial_data["followup_questions"]) + 1):
+        next_followup_payload = {
+            "message": f"This is my answer to question {i}.",
+            "step": "followup",
+            "decision_id": decision_id,
+            "step_number": i
+        }
+        
+        next_response = requests.post(f"{API_URL}/decision/advanced", json=next_followup_payload)
+        
+        if next_response.status_code != 200:
+            print(f"Error: Anonymous followup step {i} returned status code {next_response.status_code}")
+            print(f"Response: {next_response.text}")
+            return False
+    
+    # Test recommendation step
+    recommendation_payload = {
+        "message": "",
+        "step": "recommendation",
+        "decision_id": decision_id
+    }
+    
+    print("\nTesting anonymous recommendation step")
+    recommendation_response = requests.post(f"{API_URL}/decision/advanced", json=recommendation_payload)
+    
+    if recommendation_response.status_code != 200:
+        print(f"Error: Anonymous recommendation step returned status code {recommendation_response.status_code}")
+        print(f"Response: {recommendation_response.text}")
+        return False
+    
+    recommendation_data = recommendation_response.json()
+    
+    # Verify recommendation format
+    if not recommendation_data.get("is_complete") or not recommendation_data.get("recommendation"):
+        print(f"Error: Missing or invalid recommendation: {recommendation_data}")
+        return False
+    
+    recommendation = recommendation_data["recommendation"]
+    required_rec_fields = ["final_recommendation", "next_steps", "confidence_score", "confidence_tooltip", "reasoning", "trace"]
+    for field in required_rec_fields:
+        if field not in recommendation:
+            print(f"Error: Recommendation missing required field '{field}'")
+            return False
+    
+    # Verify trace information
+    trace = recommendation["trace"]
+    required_trace_fields = ["models_used", "frameworks_used", "themes", "confidence_factors", "personas_consulted"]
+    for field in required_trace_fields:
+        if field not in trace:
+            print(f"Error: Trace missing required field '{field}'")
+            return False
+    
+    print(f"Successfully received anonymous recommendation with confidence score: {recommendation['confidence_score']}")
+    print(f"Models used: {', '.join(trace['models_used'])}")
+    print(f"Frameworks used: {', '.join(trace['frameworks_used'])}")
+    print(f"Personas consulted: {', '.join(trace['personas_consulted'])}")
+    
+    return True
+
 def run_focused_tests():
     """Run the focused tests for the fixed issues"""
     tests = [
+        ("Smart Classification System", test_smart_classification_system),
+        ("Anonymous Smart Classification", test_anonymous_smart_classification),
         ("Email Validation", test_email_validation),
         ("Name Validation", test_name_validation),
         ("Password Requirements", test_password_requirements),
