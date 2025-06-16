@@ -109,6 +109,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "Conducted additional testing with a different question type (financial/lifestyle decision about buying vs. renting). The enhanced personalization system continues to work effectively across different decision types. The recommendation directly referenced user-provided details like '8 years of renting', '$60,000 down payment', '30% higher monthly cost', etc. The next steps were specifically tailored to the user's situation, including getting pre-approved in their stated price range of '$350,000-$400,000'. The system used appropriate frameworks for this type of decision, including 'Financial Readiness Assessment' and 'Timeline-Based Decision Making'. Multiple personas were consulted (realist, visionary, pragmatist, supportive) to provide a balanced perspective. The recommendation addressed both practical financial concerns and emotional aspects like valuing customization and planning for a family. This confirms that the enhanced personalization system works consistently across different types of decisions."
+        
+  - task: "Enhanced Context-Aware Dynamic Follow-Up System"
+    implemented: true
+    working: false
+    file: "ai_orchestrator_v2.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented enhanced context-aware dynamic follow-up system that adapts questions based on what the user said in their previous answers. The system should now reference and build on previous answers, adapt question style based on user's answer style, and identify information gaps based on what the user already shared."
+      - working: false
+        agent: "testing"
+        comment: "Conducted comprehensive testing of the enhanced context-aware dynamic follow-up system. The system is partially working as expected. Out of 5 test scenarios, only 2 passed successfully (40% success rate). The system correctly handles vague answers by generating sharper follow-up questions, and it properly addresses conflicted answers with clarifying follow-up questions. However, it fails in three key areas: 1) It doesn't consistently generate deeper follow-up questions for detailed answers, 2) Follow-up questions often don't reference specific details from previous answers, and 3) Questions don't consistently fill information gaps based on what the user already shared. The implementation in generate_smart_followup_questions() in ai_orchestrator_v2.py includes code for context-aware question generation, but the actual questions generated don't consistently demonstrate this awareness. The system needs improvements to make the follow-up questions truly responsive to the user's previous answers."
 
 frontend:
   - task: "Advanced AI Frontend Integration"
