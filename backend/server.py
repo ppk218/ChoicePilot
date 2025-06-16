@@ -2176,13 +2176,28 @@ Intent: {intent}
                     ) if ai_orchestrator.followup_engine else []
                     
                     if next_questions and len(next_questions) > 0:
-                        next_question = next_questions[0]
+                        # Handle both dict and object formats
+                        next_question_data = next_questions[0]
+                        if isinstance(next_question_data, dict):
+                            question_text = next_question_data.get("question", "")
+                            nudge_text = next_question_data.get("nudge", "")
+                            category_text = next_question_data.get("category", "general")
+                            persona_text = next_question_data.get("persona", "realist")
+                        else:
+                            question_text = getattr(next_question_data, 'question', "")
+                            nudge_text = getattr(next_question_data, 'nudge', "")
+                            category_text = getattr(next_question_data, 'category', "general")
+                            persona_text = getattr(next_question_data, 'persona', "realist")
+                        
                         enhanced_question = EnhancedFollowUpQuestion(
-                            question=next_question.question,
-                            nudge=next_question.nudge,
-                            category=next_question.category,
+                            question=question_text,
+                            nudge=nudge_text,
+                            category=category_text,
                             step_number=total_questions_answered + 1
                         )
+                        
+                        # Add persona information to the response
+                        enhanced_question.persona = persona_text
                         
                         return AdvancedDecisionStepResponse(
                             decision_id=decision_id,
