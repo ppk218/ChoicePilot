@@ -116,7 +116,7 @@ backend:
     file: "ai_orchestrator_v2.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -133,6 +133,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Tested the TRULY FIXED DYNAMIC FOLLOW-UP SYSTEM with the completely rewritten SmartFollowupEngine. The system is still only partially working. Out of 4 test scenarios, only 2 passed successfully (50% success rate). The system correctly handles vague vs. detailed answers - when given a vague answer like 'I'm not sure, maybe' it asks for more specifics, and when given a detailed answer about career change with financial concerns, it asks about financial buffer. The system also correctly identifies information gaps - when given financial information about house buying but no timeline/personal factors, it asks about non-financial factors. However, it still fails in two critical areas: 1) Basic Dynamic Follow-up Test - The system returns the same follow-up question regardless of different answers to the same initial question. When testing with 'Should I quit my job?' and providing two different answers ('I hate my job and want to start my own business' vs 'I love my job but got a higher salary offer elsewhere'), the system returned the exact same second question: 'What emotions are driving this decision?'. 2) Conflicted Answer Test - When given a conflicted answer about moving cities (job opportunity vs. family ties), the follow-up question doesn't specifically address this conflict. The code in SmartFollowupEngine in server.py has been rewritten with proper context-aware logic and enhanced prompt engineering, but the implementation is still not effectively generating truly context-aware questions based on previous answers in all scenarios."
+      - working: "testing_required"
+        agent: "main"
+        comment: "MAJOR IMPLEMENTATION OVERHAUL: Implemented enhanced Dynamic Context Injection with Active Prompting + Self-Ask Pattern based on user guidance. Key improvements: 1) Enhanced detection for context-aware follow-up with more flexible triggers, 2) New dynamic context injection prompt template that forces AI to quote user's exact words, 3) Step-by-step analysis requirements (Reflect -> Clarification -> Exploration), 4) Active prompting with self-ask pattern to force reasoning, 5) Better context formatting that includes user's previous answers with explicit instructions to reference them. The new system uses templates like 'You said [quote] - what specifically about [concern] is most [important/worrying] to you?' and includes adaptation rules for different response styles. This should significantly improve the dynamic question generation that was previously failing."
 
 frontend:
   - task: "Advanced AI Frontend Integration"
