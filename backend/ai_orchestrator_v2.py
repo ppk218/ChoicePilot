@@ -227,26 +227,30 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
     ) -> List[FollowUpQuestion]:
         """
         Generate intelligent follow-up questions using smart followup engine with personas
-        Now supports context-aware question generation based on previous answers
+        Enhanced with dynamic context injection for truly responsive questions
         """
         
         try:
             # Use smart followup engine if available
             if self.followup_engine:
-                # Create enhanced context including previous answers
+                # 🧩 ENHANCED CONTEXT CREATION - Step 1: Dynamic Context Injection
                 if previous_answers and len(previous_answers) > 0:
+                    # Format context to trigger dynamic prompting with user's exact answers
+                    last_answer = previous_answers[-1]
                     context = f"""Initial Question: {initial_question}
 
 Previous Answers:
 {chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(previous_answers)])}
 
-Based on the user's previous responses, generate the next most valuable follow-up question.
-Focus on areas that need clarification or deeper exploration based on what they've already shared.
-Adapt the question style based on their answer tone:
-- If vague: ask sharper, more specific questions
-- If conflicted: ask clarifying questions about priorities
-- If detailed: go deeper into specific concerns they mentioned
-"""
+User's most recent answer: "{last_answer}"
+
+Generate a follow-up question that directly references specific details from the user's answers.
+Use their exact words and phrases when possible (e.g., "You mentioned...", "You said...")
+Focus on the biggest information gap for making a comprehensive recommendation.
+Adapt your question style based on their response:
+- If vague → ask for specific examples
+- If conflicted → ask about priorities/values  
+- If detailed → explore specific concerns they mentioned"""
                 else:
                     context = initial_question
                 
@@ -263,12 +267,21 @@ Adapt the question style based on their answer tone:
                 # Convert to FollowUpQuestion objects
                 followup_questions = []
                 for q_data in questions_data:
-                    followup_questions.append(FollowUpQuestion(
-                        question=q_data["question"],
-                        nudge=q_data["nudge"],
-                        category=q_data["category"],
-                        persona=q_data["persona"]
-                    ))
+                    # Handle both dict and object formats
+                    if isinstance(q_data, dict):
+                        followup_questions.append(FollowUpQuestion(
+                            question=q_data.get("question", ""),
+                            nudge=q_data.get("nudge", ""),
+                            category=q_data.get("category", "general"),
+                            persona=q_data.get("persona", "realist")
+                        ))
+                    else:
+                        followup_questions.append(FollowUpQuestion(
+                            question=getattr(q_data, 'question', ""),
+                            nudge=getattr(q_data, 'nudge', ""),
+                            category=getattr(q_data, 'category', "general"),
+                            persona=getattr(q_data, 'persona', "realist")
+                        ))
                 
                 return followup_questions
             else:
