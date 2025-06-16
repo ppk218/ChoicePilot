@@ -547,7 +547,8 @@ User Responses:
                 confidence_factors=parsed.get("confidence_factors", ["Analysis completed"]),
                 used_web_search=False,
                 personas_consulted=["Realist", "Visionary", "Pragmatist"],
-                processing_time_ms=0  # Will be set by caller
+                processing_time_ms=0,  # Will be set by caller
+                classification={}  # Empty classification for backward compatibility
             )
             
             return DecisionRecommendation(
