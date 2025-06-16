@@ -990,33 +990,40 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           )}
         </div>
 
-        {/* Current Input */}
+        {/* Current Input with Enhanced Persona Display */}
         {currentStep === 'followup' && currentQuestion && !loading && (
           <Card className="decision-card card-enter">
             <CardHeader>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <div className="step-indicator">Step {currentFollowupIndex + 1}</div>
-                {/* Persona Badge */}
-                {currentQuestion.persona && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-primary/10 to-mint/10 rounded-full border border-primary/20">
-                    <span className="text-sm">
-                      {currentQuestion.persona === 'realist' ? '🧠' :
-                       currentQuestion.persona === 'visionary' ? '🚀' :
-                       currentQuestion.persona === 'creative' ? '🎨' :
-                       currentQuestion.persona === 'pragmatist' ? '⚖️' :
-                       currentQuestion.persona === 'supportive' ? '💙' : '🧠'}
-                    </span>
-                    <span className="text-xs font-medium text-primary capitalize">
-                      {currentQuestion.persona} asks:
-                    </span>
-                  </div>
-                )}
               </div>
-              <CardTitle className="text-xl text-foreground">{currentQuestion.question}</CardTitle>
-              <CardDescription>{currentQuestion.context}</CardDescription>
+              
+              {/* Enhanced Persona Badge */}
+              <div className="flex items-center gap-3 mb-4 p-4 bg-gradient-to-r from-primary/10 to-mint/10 rounded-lg border border-primary/20">
+                <span className="text-2xl">
+                  {currentQuestion.persona === 'realist' ? '🧠' :
+                   currentQuestion.persona === 'visionary' ? '🚀' :
+                   currentQuestion.persona === 'creative' ? '🎨' :
+                   currentQuestion.persona === 'pragmatist' ? '⚖️' :
+                   currentQuestion.persona === 'supportive' ? '💙' : '🧠'}
+                </span>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-primary capitalize">
+                    {currentQuestion.persona || 'Realist'} asks:
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mt-1">
+                    {currentQuestion.question}
+                  </h3>
+                </div>
+              </div>
+              
+              {/* Context/Description if available */}
+              {currentQuestion.context && currentQuestion.context !== currentQuestion.nudge && (
+                <CardDescription className="mb-3">{currentQuestion.context}</CardDescription>
+              )}
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="relative">
                 <textarea
                   placeholder={currentQuestion.nudge || "Share your thoughts here..."}
@@ -1027,13 +1034,12 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                   disabled={questionSubmitted}
                 />
                 
-                {/* Enhanced Nudge Display */}
+                {/* Enhanced Nudge Display with Arrow */}
                 {currentQuestion.nudge && !currentAnswer && (
                   <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                     <div className="flex items-start gap-2">
-                      <span className="text-blue-600 dark:text-blue-400 text-sm mt-0.5">💡</span>
+                      <span className="text-blue-600 dark:text-blue-400 text-sm mt-0.5">➡️</span>
                       <div className="text-sm text-blue-700 dark:text-blue-300">
-                        <span className="font-medium">Example: </span>
                         <span className="italic">{currentQuestion.nudge}</span>
                       </div>
                     </div>
