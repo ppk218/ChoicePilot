@@ -92,7 +92,7 @@ backend:
         agent: "testing"
         comment: "Performed detailed testing of the advanced AI orchestration system focusing on the dynamic question generation, advanced recommendation system, and decision flow integration. The /api/decision/advanced endpoint correctly handles all steps of the flow: 'initial' for first questions, 'followup' for dynamic question progression, and 'recommendation' for final enhanced recommendations. The system successfully analyzes each user answer and determines appropriate follow-up questions with helpful nudges. The recommendations include all required enhanced features: confidence scores (ranging from 75-85), detailed reasoning, specific next steps as actionable bullet points, and comprehensive trace information showing models used (Claude and GPT-4o), frameworks used (Pros/Cons, Priority Alignment, Risk Assessment, etc.), themes, confidence factors, and personas consulted. All tests passed with a 100% success rate for both authenticated and anonymous users."
       
-  - task: "Smart Classification and Persona-Based Follow-Up System"
+  - task: "Enhanced Personalization System"
     implemented: true
     working: true
     file: "ai_orchestrator_v2.py"
@@ -102,13 +102,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented smart classification system that classifies decisions by complexity (LOW/MEDIUM/HIGH) and emotional intent (CLARITY/CONFIDENCE/REASSURANCE/EMPOWERMENT). Added cost-effective model routing that routes to optimal models based on classification. Implemented persona-based follow-ups with different personas (Realist 🧠, Visionary 🚀, Creative 🎨, Pragmatist ⚖️, Supportive 💙). Enhanced nudges with better examples and guidance for user responses."
-      - working: false
-        agent: "testing"
-        comment: "Tested the new smart classification and persona-based follow-up system. The initial classification step works correctly - the system properly classifies questions by complexity (LOW/MEDIUM/HIGH) and provides appropriate follow-up questions with nudges. However, there's an error in the recommendation generation step. The error log shows: 'AIOrchestrator' object has no attribute 'personas'. This is causing 500 Internal Server Error responses when trying to generate recommendations. The persona information is defined in the followup_personas attribute but the code is trying to access a non-existent 'personas' attribute in the _single_model_synthesis method. The smart classification is working, but the persona-based follow-up system is not fully functional due to this implementation error."
+        comment: "Implemented enhanced personalization system with direct user answer references, emotional resonance, personalized next steps, improved framework labeling, and persona voice panel."
       - working: true
         agent: "testing"
-        comment: "Fixed the issues in the AIOrchestrator class. There were two problems: 1) The code was trying to access a non-existent 'personas' attribute in the _single_model_synthesis method. This was fixed by hardcoding the persona descriptions directly in the prompt. 2) The DecisionTrace class was missing the 'classification' parameter in its constructor calls. This was fixed by adding an empty classification dictionary to maintain backward compatibility. After these fixes, all tests passed successfully. The smart classification system now correctly classifies questions by complexity (LOW/MEDIUM/HIGH) and provides appropriate follow-up questions with nudges. The recommendation generation is working properly, providing enhanced trace information with models used, frameworks used, themes, confidence factors, and personas consulted."
+        comment: "Tested the enhanced personalization system with an emotional/complex decision scenario. All five key features are working correctly: 1) User Answer Integration - the recommendation directly references specific user responses like '6 months of savings', 'partner', 'part-time', etc. 2) Personalized Next Steps - the next steps are tailored to the user's specific situation, mentioning galleries, marketing skills, and other personal context. 3) Enhanced Logic Trace - the frameworks used have meaningful names like 'Emotional Alignment', 'Risk Mitigation', etc. 4) Persona Voice Panel - multiple personas are consulted including realist, visionary, pragmatist, and supportive. 5) Emotional Resonance - the recommendation addresses emotional aspects like fear, regret, and dreams. The system successfully provides personalized recommendations that reference user answers directly and offer specific next steps customized to the user's context."
 
 frontend:
   - task: "Advanced AI Frontend Integration"
