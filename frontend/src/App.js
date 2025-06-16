@@ -719,6 +719,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         type: 'ai_question',
         content: currentQuestion.question,
         context: currentQuestion.context,
+        persona: currentQuestion.persona,
         step: currentFollowupIndex + 1,
         timestamp: new Date()
       },
@@ -732,7 +733,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     trackFollowupAnswered(currentFollowupIndex + 1);
     
     try {
-      // Send the answer to the backend for dynamic analysis
+      // Send the answer to the backend for DYNAMIC next step determination
       const response = await axios.post(`${API}/api/decision/advanced`, {
         decision_id: decisionId,
         message: currentAnswer,
@@ -741,10 +742,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         enable_personalization: isAuthenticated
       });
       
-      // Check if backend provides a direct recommendation
-      if (response.data.is_complete && response.data.recommendation) {
-        // We got the final recommendation directly from backend
-        const advancedRec = response.data.recommendation;
+      const data = response.data;
+      
+      // Check what the AI decided to do next
+      if (data.is_complete && data.recommendation) {
+        // AI decided we have enough info - generate final recommendation
+        setProcessingStep('AI determined sufficient context gathered. Generating recommendation...');
+        
+        const advancedRec = data.recommendation;
         const recommendation = {
           recommendation: advancedRec.final_recommendation,
           confidence_score: advancedRec.confidence_score,
@@ -766,21 +771,22 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         }]);
         
         trackDecisionCompleted(decisionId, recommendation.confidence_score);
-        return;
-      }
-      
-      // Check if backend provides next dynamic questions
-      if (response.data.followup_questions && response.data.followup_questions.length > 0) {
-        // AI determined we need another question - add it dynamically
-        const newQuestion = response.data.followup_questions[0];
+        
+      } else if (data.followup_questions && data.followup_questions.length > 0) {
+        // AI decided we need another question - get the NEXT dynamic question
+        setProcessingStep('AI determined more context needed. Preparing next question...');
+        
+        const nextQuestion = data.followup_questions[0]; // AI provides the next best question
         const convertedQuestion = {
-          question: newQuestion.question,
+          question: nextQuestion.question,
           step_number: currentFollowupIndex + 2,
-          context: newQuestion.nudge,
-          category: newQuestion.category
+          context: nextQuestion.nudge,
+          category: nextQuestion.category,
+          persona: nextQuestion.persona || 'realist',
+          nudge: nextQuestion.nudge
         };
         
-        // Update the questions array with the new question if it doesn't exist
+        // Add the new dynamic question to our array
         setFollowupQuestions(prev => {
           const updated = [...prev];
           if (updated.length <= currentFollowupIndex + 1) {
@@ -792,16 +798,18 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         // Move to the next question
         setCurrentFollowupIndex(currentFollowupIndex + 1);
         setCurrentAnswer('');
+        
       } else {
-        // Backend says we're done or no new questions - generate recommendation
+        // No more questions and no recommendation - generate final recommendation
         setProcessingStep('Curating your personalized decision recommendation...');
         await generateRecommendation();
       }
       
     } catch (error) {
       console.error('Followup error:', error);
-      // Fallback behavior - use simple logic
-      if (currentFollowupIndex < 2) { // Allow up to 3 questions (0, 1, 2)
+      // Fallback behavior - limit to max 3 questions
+      if (currentFollowupIndex < 2) {
+        // Generate a simple next question locally as fallback
         setCurrentFollowupIndex(currentFollowupIndex + 1);
         setCurrentAnswer('');
       } else {
