@@ -1,0 +1,245 @@
+Using API URL: https://19796eb2-cebc-4afd-ac64-827a660b4eeb.preview.emergentagent.com/api
+
+================================================================================
+Running test: Smart Classification System
+================================================================================
+Testing smart classification and persona-based follow-up system...
+
+Testing Simple question: 'What phone should I buy?'
+Warning: No persona information found in follow-up questions
+Decision type: structured
+First followup question: What is your budget range for the new phone?
+Nudge: e.g., $300-$500 or $700-$1000
+
+Testing followup step
+
+Testing recommendation step
+Successfully received recommendation with confidence score: 70
+Models used: claude, gpt4o-simulated
+Frameworks used: Fallback Analysis
+Personas consulted: 
+
+Testing Medium complexity question: 'Should I switch careers to data science?'
+Warning: No persona information found in follow-up questions
+Decision type: mixed
+First followup question: What skills do you currently have related to data science?
+Nudge: e.g., programming, statistics, analytical thinking
+
+Testing followup step
+
+Testing recommendation step
+Successfully received recommendation with confidence score: 70
+Models used: claude, gpt4o-simulated
+Frameworks used: Fallback Analysis
+Personas consulted: 
+
+Testing High complexity question: 'Should I leave my marriage?'
+Warning: No persona information found in follow-up questions
+Decision type: intuitive
+First followup question: What emotions are driving this decision?
+Nudge: e.g., fear, excitement, uncertainty, hope
+
+Testing followup step
+
+Testing recommendation step
+Successfully received recommendation with confidence score: 70
+Models used: claude, gpt4o-simulated
+Frameworks used: Fallback Analysis
+Personas consulted: 
+✅ Test PASSED: Smart Classification System
+
+================================================================================
+Running test: Anonymous Smart Classification
+================================================================================
+Testing smart classification with anonymous user...
+Testing anonymous advanced decision with medium complexity question
+Anonymous advanced decision created with ID: cba35cd8-d4b2-4ed2-baf4-b1e1a00ba3a6
+Decision type: mixed
+Warning: No persona information found in follow-up questions
+First followup question: What factors matter most to you?
+Nudge: e.g., time, money, relationships, career growth
+
+Testing anonymous followup step
+
+Testing anonymous recommendation step
+Successfully received anonymous recommendation with confidence score: 75
+Models used: claude, gpt4o-simulated
+Frameworks used: Pros/Cons, Priority Alignment, Risk Assessment, Creative Alternatives, Multi-Persona
+Personas consulted: Realist, Visionary, Pragmatist
+✅ Test PASSED: Anonymous Smart Classification
+
+================================================================================
+Running test: Email Validation
+================================================================================
+Testing email validation...
+✓ Success: Invalid email 'abc123' was rejected with status 422
+✓ Success: Invalid email 'user@' was rejected with status 422
+✓ Success: Invalid email '@domain.com' was rejected with status 422
+✓ Success: Invalid email 'user@domain' was rejected with status 422
+✓ Success: Invalid email 'user.domain.com' was rejected with status 422
+✓ Success: Invalid email 'user@.com' was rejected with status 422
+✓ Success: Invalid email 'user@domain..com' was rejected with status 422
+✓ Success: Valid email 'valid_675a56c9@example.com' was accepted
+✅ Test PASSED: Email Validation
+
+================================================================================
+Running test: Name Validation
+================================================================================
+Testing name validation...
+✓ Success: Invalid name '123456' was rejected with status 400
+✓ Success: Invalid name 'User123' was rejected with status 400
+✓ Success: Invalid name '!@#$%^' was rejected with status 400
+✓ Success: Invalid name 'User!' was rejected with status 400
+✓ Success: Invalid name '' was rejected with status 400
+✓ Success: Valid name 'John Smith' was accepted
+✅ Test PASSED: Name Validation
+
+================================================================================
+Running test: Password Requirements
+================================================================================
+Testing password requirements...
+✓ Success: Invalid password 'short' was rejected with status 400
+✓ Success: Invalid password 'password' was rejected with status 400
+✓ Success: Invalid password 'PASSWORD' was rejected with status 400
+✓ Success: Invalid password 'Password' was rejected with status 400
+✓ Success: Invalid password 'Password1' was rejected with status 400
+✓ Success: Invalid password 'password!' was rejected with status 400
+✓ Success: Invalid password 'PASSWORD1' was rejected with status 400
+✓ Success: Invalid password 'Pass!' was rejected with status 400
+✓ Success: Valid password 'TestPassword123!' was accepted
+✅ Test PASSED: Password Requirements
+
+================================================================================
+Running test: Authenticated Decision Flow
+================================================================================
+Testing authenticated decision flow...
+Testing authenticated decision flow - initial step
+Authenticated decision flow created with ID: 18def995-f43e-4684-8716-a52bb6d86c84
+Followup question: What specific aspects of this job opportunity are most appealing to you compared to your current situation?
+✅ Test PASSED: Authenticated Decision Flow
+
+================================================================================
+Running test: Anonymous Decision Flow
+================================================================================
+Testing anonymous decision flow...
+Testing anonymous decision flow - initial step
+Anonymous decision flow created with ID: d70bcbc8-b603-4470-8370-e9f74bdb4926
+Followup question: What programming languages and development environments will you primarily be using, and do you prefer macOS or Windows/Linux?
+
+Testing anonymous decision flow - followup step
+Second followup question: What programming languages and ML frameworks do you primarily use, and do you prefer macOS or Windows/Linux development environments?
+✅ Test PASSED: Anonymous Decision Flow
+
+================================================================================
+Running test: Decision Feedback
+================================================================================
+Testing decision feedback endpoint...
+Creating a decision for feedback testing
+Created decision with ID: 56ce01fc-6f0f-4960-b09d-20413a875376
+
+Testing decision feedback - positive
+Positive feedback submitted successfully: Feedback submitted successfully
+
+Testing decision feedback - negative with text
+Negative feedback submitted successfully: Feedback submitted successfully
+
+Testing decision feedback - invalid (missing helpful field)
+Invalid feedback correctly returns 400 Bad Request
+✅ Test PASSED: Decision Feedback
+
+================================================================================
+Running test: Core Authentication
+================================================================================
+Testing core authentication endpoints...
+Successfully registered user: test_330f426e@example.com
+Successfully logged in test user: test_330f426e@example.com
+Successfully logged in user: test_330f426e@example.com
+Successfully retrieved user info: test_330f426e@example.com
+Successfully verified decision ID format: 51cf0177-4ff7-4f40-a159-491b14033601
+✅ Test PASSED: Core Authentication
+
+================================================================================
+Running test: Decision Types
+================================================================================
+Testing different decision types...
+
+Testing career decision type
+Successfully created career decision with ID: f95f95a0-6c11-4d2d-8e7f-0984a4d23c14
+Followup question: What specific aspects of your current marketing role are you finding unfulfilling or motivating you to consider this change?
+
+Testing purchase decision type
+Successfully created purchase decision with ID: c0d63d99-f1f4-4b68-9e44-2b440cd13ad0
+Followup question: What specific tasks are you struggling with on your current laptop, and how old is it?
+
+Testing relocation decision type
+Successfully created relocation decision with ID: 1ed95b48-52bf-428c-97f5-e3e9869c8e49
+Followup question: What's the salary difference between your current job and the Seattle opportunity, and how does that compare to Seattle's cost of living?
+
+Testing general decision type
+Successfully created general decision with ID: 0e902f27-d254-4e24-96f8-acd3522c2f7d
+Followup question: What type of music do you most enjoy listening to, and do you have any specific songs or artists that inspire you?
+✅ Test PASSED: Decision Types
+
+================================================================================
+Running test: Advanced Decision Endpoint - Authenticated
+================================================================================
+Testing advanced decision endpoint with authenticated user...
+Testing advanced decision - structured question
+Decision type: structured
+Advanced decision created with ID: e7f09f8b-4a26-4c94-8e2e-eddd68e8062b
+First followup question: What specific features are most important to you?
+Nudge: e.g., camera quality, battery life, user interface
+
+Testing advanced decision - followup step
+
+Testing advanced decision - recommendation step
+Successfully received recommendation with confidence score: 75
+Models used: claude, gpt4o-simulated
+Frameworks used: Pros/Cons, Priority Alignment, Risk Assessment, Creative Alternatives, Multi-Persona
+Next steps: ['Research current iPhone models and compare features you actually use daily', 'Calculate total cost of ownership including accessories and potential trade-in value', "Test Samsung's latest flagship in-store to quantify what you'd be giving up in customization"]
+
+Testing advanced decision - intuitive question
+Decision type: intuitive
+
+Testing advanced decision - mixed question
+Decision type: mixed
+✅ Test PASSED: Advanced Decision Endpoint - Authenticated
+
+================================================================================
+Running test: Advanced Decision Endpoint - Anonymous
+================================================================================
+Testing advanced decision endpoint with anonymous user...
+Testing anonymous advanced decision - structured question
+Anonymous advanced decision created with ID: 51e6fd5b-4d71-479d-924a-93ba7938f628
+Decision type: structured
+
+Testing anonymous advanced decision - followup step
+
+Testing anonymous advanced decision - recommendation step
+Successfully received recommendation with confidence score: 70
+Models used: claude, gpt4o-simulated
+Frameworks used: Fallback Analysis
+Next steps: ['List out your top 3 priorities for this decision', 'Research any additional information you need', 'Set a timeline for making your final choice']
+✅ Test PASSED: Advanced Decision Endpoint - Anonymous
+
+================================================================================
+Test Summary
+================================================================================
+Total tests: 12
+Passed: 12
+Failed: 0
+Success rate: 100.0%
+
+Detailed Results:
+✅ Smart Classification System: PASSED
+✅ Anonymous Smart Classification: PASSED
+✅ Email Validation: PASSED
+✅ Name Validation: PASSED
+✅ Password Requirements: PASSED
+✅ Authenticated Decision Flow: PASSED
+✅ Anonymous Decision Flow: PASSED
+✅ Decision Feedback: PASSED
+✅ Core Authentication: PASSED
+✅ Decision Types: PASSED
+✅ Advanced Decision Endpoint - Authenticated: PASSED
+✅ Advanced Decision Endpoint - Anonymous: PASSED
