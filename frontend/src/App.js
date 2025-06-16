@@ -979,6 +979,21 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     return 'text-red-600';
   };
 
+  // Utility function to highlight differences between text
+  const highlightDifferences = (newText, oldText) => {
+    if (newText === oldText) return newText;
+    
+    const words1 = newText.split(' ');
+    const words2 = oldText.split(' ');
+    
+    return words1.map((word, index) => {
+      const isDifferent = words2[index] !== word;
+      return isDifferent ? 
+        `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${word}</mark>` : 
+        word;
+    }).join(' ');
+  };
+
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-3xl mx-auto">
