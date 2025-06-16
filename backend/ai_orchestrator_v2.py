@@ -597,5 +597,22 @@ User Responses:
 
 # Function to create orchestrator instance (to be called from server)
 def create_ai_orchestrator(llm_router):
-    """Create AI orchestrator with LLM router dependency injection"""
-    return AIOrchestrator(llm_router)
+    """Create enhanced AI orchestrator with smart classification and routing systems"""
+    # Import the smart classes here to avoid circular imports
+    try:
+        from server import DecisionClassifier, SmartModelRouter, SmartFollowupEngine
+        
+        classifier = DecisionClassifier()
+        smart_router = SmartModelRouter()
+        followup_engine = SmartFollowupEngine()
+        
+        return AIOrchestrator(
+            llm_router=llm_router,
+            classifier=classifier,
+            smart_router=smart_router,
+            followup_engine=followup_engine
+        )
+    except ImportError as e:
+        # Fallback to basic orchestrator if smart systems not available
+        logger.warning(f"Smart systems not available, using basic orchestrator: {e}")
+        return AIOrchestrator(llm_router=llm_router)
