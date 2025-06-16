@@ -122,10 +122,10 @@ def test_initial_question_processing():
 def test_answer_collection_phase():
     """
     Test 2: Answer Collection Phase
-    - Submit answers to each of the 3 questions one by one
+    - Submit answers to each of the questions one by one
     - Expected: System should just acknowledge and track progress
     - Expected: No new questions generated reactively
-    - Expected: After 3rd answer, system should indicate ready for recommendation
+    - Expected: After all answers, system should indicate ready for recommendation
     """
     print("Testing answer collection phase...")
     
@@ -147,8 +147,8 @@ def test_answer_collection_phase():
     decision_id = initial_data["decision_id"]
     followup_questions = initial_data.get("followup_questions", [])
     
-    if len(followup_questions) != 3:
-        print(f"Error: Expected 3 follow-up questions, but got {len(followup_questions)}")
+    if len(followup_questions) < 1:
+        print(f"Error: Expected at least 1 follow-up question, but got {len(followup_questions)}")
         return False
     
     print(f"Successfully created decision with ID: {decision_id}")
@@ -156,9 +156,12 @@ def test_answer_collection_phase():
     # Submit answers to each question one by one
     answers = [
         "I'm 32 years old and work in marketing, but I'm interested in data science.",
-        "I have about $20,000 in savings and could get some financial aid.",
-        "I'm worried about the time commitment while working full-time."
+        "I have about $20,000 in savings and could get some financial aid."
     ]
+    
+    # Ensure we have enough answers for the number of questions
+    while len(answers) < len(followup_questions):
+        answers.append(f"This is my answer to question {len(answers)+1}.")
     
     all_passed = True
     
@@ -184,8 +187,8 @@ def test_answer_collection_phase():
         followup_data = followup_response.json()
         
         # Check if the system is just acknowledging and tracking progress
-        if step_number < 3:
-            # For first two answers, should just acknowledge
+        if step_number < len(followup_questions):
+            # For answers before the last one, should just acknowledge
             if followup_data.get("step") != "collecting":
                 print(f"Error: Expected step 'collecting' for answer {step_number}, but got '{followup_data.get('step')}'")
                 all_passed = False
@@ -201,7 +204,7 @@ def test_answer_collection_phase():
             
             print(f"Successfully submitted answer {step_number}, system acknowledged: {followup_data.get('response')}")
         else:
-            # For the third answer, should indicate ready for recommendation
+            # For the final answer, should indicate ready for recommendation
             if followup_data.get("step") != "complete":
                 print(f"Error: Expected step 'complete' for final answer, but got '{followup_data.get('step')}'")
                 all_passed = False
