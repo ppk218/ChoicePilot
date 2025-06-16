@@ -46,6 +46,7 @@ class FollowUpQuestion:
     question: str
     nudge: str
     category: str
+    persona: str  # Added persona field
 
 @dataclass
 class DecisionTrace:
@@ -56,6 +57,7 @@ class DecisionTrace:
     used_web_search: bool
     personas_consulted: List[str]
     processing_time_ms: int
+    classification: dict  # Added classification data
 
 @dataclass
 class DecisionRecommendation:
