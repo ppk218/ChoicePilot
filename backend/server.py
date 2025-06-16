@@ -2107,8 +2107,9 @@ async def process_advanced_decision_step(
             )
             
         elif request.step == "followup" and session:
-            # 📝 COLLECT ANSWERS: Just store the answer, no reactive question generation
-            current_answers = session.get("followup_answers", [])
+            # 🧠 HYBRID AI-LED: Serve pre-generated questions one at a time
+            stored_questions = session.get("followup_questions", [])
+            current_step_number = session.get("step_number", 1)
             total_questions = session.get("total_questions", 3)
             
             # Store the follow-up answer
@@ -2120,35 +2121,48 @@ async def process_advanced_decision_step(
                 }
             )
             
-            current_answers.append(request.message)
-            answers_collected = len(current_answers)
+            current_answers = session.get("followup_answers", []) + [request.message]
+            next_step_number = current_step_number + 1
             
-            # Check if we have all answers
-            if answers_collected >= total_questions:
-                # All answers collected - ready for recommendation
+            # Check if we have more pre-generated questions to serve
+            if next_step_number <= total_questions and next_step_number <= len(stored_questions):
+                # Serve the next pre-generated question
+                next_question_data = stored_questions[next_step_number - 1]  # Array is 0-indexed
+                
+                next_question = EnhancedFollowUpQuestion(
+                    question=next_question_data.get("question", ""),
+                    nudge=next_question_data.get("nudge", ""),
+                    category=next_question_data.get("category", "general"),
+                    step_number=next_step_number,
+                    persona=next_question_data.get("persona", "realist")
+                )
+                
+                # Update step number
+                await db.decision_sessions_advanced.update_one(
+                    {"id": decision_id},
+                    {"$set": {"step_number": next_step_number}}
+                )
+                
+                return AdvancedDecisionStepResponse(
+                    decision_id=decision_id,
+                    step="followup",
+                    step_number=next_step_number,
+                    response="Thank you for that information.",
+                    followup_questions=[next_question],
+                    is_complete=False,
+                    decision_type=session.get("decision_type"),
+                    session_version=1
+                )
+            else:
+                # All questions answered - ready for recommendation
                 await db.decision_sessions_advanced.update_one(
                     {"id": decision_id},
                     {"$set": {"current_step": "ready_for_recommendation"}}
                 )
                 
-                return AdvancedDecisionStepResponse(
-                    decision_id=decision_id,
-                    step="complete",
-                    step_number=answers_collected,
-                    response="Thank you! I have all the information I need. Ready to generate your recommendation.",
-                    is_complete=True,
-                    decision_type=session.get("decision_type"),
-                    session_version=1
-                )
-            else:
-                # Still collecting answers
-                return AdvancedDecisionStepResponse(
-                    decision_id=decision_id,
-                    step="collecting",
-                    step_number=answers_collected,
-                    response=f"Got it! Please answer the remaining questions ({answers_collected}/{total_questions} completed).",
-                    decision_type=session.get("decision_type"),
-                    session_version=1
+                # Generate the final recommendation using AI
+                return await _generate_advanced_recommendation(
+                    decision_id, session, current_answers
                 )
                 
         elif request.step == "recommendation" and session:
