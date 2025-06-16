@@ -2074,7 +2074,8 @@ async def process_advanced_decision_step(
                     question=q.question,
                     nudge=q.nudge,
                     category=q.category,
-                    step_number=i + 1
+                    step_number=i + 1,
+                    persona=getattr(q, 'persona', 'realist')  # Include persona from followup question
                 ) for i, q in enumerate(followup_questions)
             ]
             
