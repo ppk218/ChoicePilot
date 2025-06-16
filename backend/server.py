@@ -2626,66 +2626,71 @@ class SmartFollowupEngine:
         
         if is_context_aware:
             # 🧩 ENHANCED DYNAMIC CONTEXT INJECTION - Step 1 & 2
-            followup_prompt = f"""You are a dynamic question engine for a decision assistant. The user has already answered some questions, and you need to generate the NEXT best follow-up question based on their previous responses.
+            # Extract the last user answer for explicit comparison
+            last_answer = ""
+            if "User's most recent answer:" in user_message:
+                parts = user_message.split("User's most recent answer:")
+                if len(parts) > 1:
+                    last_answer = parts[1].strip().replace('"', '').strip()
+            
+            followup_prompt = f"""You are a dynamic question engine for a decision assistant. You MUST generate a unique follow-up question that directly builds on the user's specific previous answer.
 
 {user_message}
 
-🧩 **DYNAMIC CONTEXT INJECTION REQUIREMENTS:**
+🧩 **CRITICAL UNIQUENESS REQUIREMENTS:**
 
-1️⃣ **REFLECT ON USER'S ANSWERS**: What did they reveal? What information is still missing?
-2️⃣ **GENERATE UNIQUE FOLLOW-UP**: This must be a [Clarification] or [Exploration] question
-3️⃣ **NEVER REPEAT PATTERNS**: Each question must be different from generic first questions
-4️⃣ **ACTIVE PROMPTING - SELF-ASK PATTERN**: 
-   - Ask yourself: "What's the biggest information gap for making a recommendation?"
-   - Ask yourself: "What specific details from their answer can I reference?"
-   - Ask yourself: "What question would be most valuable given their response style?"
+1️⃣ **MANDATORY ANSWER REFERENCE**: You MUST quote or paraphrase the user's exact words from their previous answer
+2️⃣ **FORCED DIFFERENTIATION**: The question must be completely different from generic questions like "What emotions are driving this decision?" or "What are your priorities?"
+3️⃣ **SPECIFIC DETAIL EXTRACTION**: Pick ONE specific detail from their answer and dive deeper into it
+4️⃣ **SEMANTIC SIMILARITY AVOIDANCE**: Avoid generating questions that could apply to any decision
 
-🔍 **STEP-BY-STEP DYNAMIC ANALYSIS:**
-
-1️⃣ **Reflect on the user's answer and identify one unclear area**
-2️⃣ **Ask a clarifying question labeled [Clarification]**  
-3️⃣ **Ask a deeper exploration question labeled [Exploration]**
-4️⃣ **Never repeat tone or ask generic questions**
+🔍 **DYNAMIC ANALYSIS PATTERN** (Self-Ask):
+- Q: "What specific detail did they mention?" A: [Extract exact phrase/word]
+- Q: "What's the biggest unknown about that detail?" A: [Identify information gap]
+- Q: "How can I quote their words in my question?" A: [Use "You mentioned...", "You said...", etc.]
 
 **ADAPTATION RULES:**
-- If they were vague/uncertain → ask for specific examples and details
-- If they were conflicted → ask clarifying questions about priorities/values
-- If they were detailed → go deeper into specific concerns they mentioned
-- If they mentioned specific factors → explore those factors with direct quotes
+- If they mentioned specific NUMBERS → ask about those numbers
+- If they mentioned specific CONCERNS → ask about those exact concerns
+- If they mentioned specific PEOPLE → ask about those relationships
+- If they mentioned specific TIMELINES → ask about timing details
+- If they mentioned specific EMOTIONS → ask about the source of those emotions
 
-**EXAMPLES OF DYNAMIC CONTEXT INJECTION:**
-❌ Generic: "Why are you anxious?"
-✅ Good: "You said you're anxious—what part of leaving your job feels most uncertain to you?"
+**PROHIBITED GENERIC QUESTIONS** (DO NOT USE THESE):
+❌ "What emotions are driving this decision?"
+❌ "What are your priorities?"
+❌ "What factors matter most?"
+❌ "What would success look like?"
+❌ "What constraints do you have?"
 
-❌ Generic: "What are your goals?"
-✅ Good: "You mentioned wanting 'more freedom'—what does freedom look like in your daily life?"
+**REQUIRED FORMAT - Pick ONE approach:**
 
-**FORMAT REQUIREMENTS:**
-Generate exactly ONE follow-up question that:
-- Directly quotes or references something from their previous answer
-- Uses their exact words when possible (e.g., "You said...", "You mentioned...")
-- Fills the biggest information gap for making a recommendation
-- Adapts to their communication style and emotional state
+**Approach 1 - Direct Quote Reference:**
+"You mentioned [exact user phrase] - what specifically about [that detail] is most [relevant adjective] to you?"
+
+**Approach 2 - Concern Exploration:**
+"You said you're [user emotion/concern] about [specific thing] - what aspect of [that thing] worries/excites you most?"
+
+**Approach 3 - Detail Expansion:**  
+"When you say [user specific detail], what would [logical next question about that detail] look like for you?"
+
+**VALIDATION CHECK:**
+- Does my question include a direct quote or reference to their answer? YES/NO
+- Is this question unique to their specific situation? YES/NO
+- Would this question make sense for someone with a different answer? NO = GOOD
 
 Return JSON:
 {{
   "questions": [
     {{
-      "q": "[Clarification] You mentioned [specific user quote] - what specifically about [their concern/factor] is most [important/worrying/exciting] to you?",
-      "nudge": "[Example that fits their specific context and situation]",
-      "persona": "[Choose based on what they need: realist/visionary/creative/pragmatist/supportive]"
+      "q": "[Question using one of the three approaches above with direct user quote]",
+      "nudge": "[Example specific to their context]",
+      "persona": "[realist/visionary/creative/pragmatist/supportive]"
     }}
   ]
 }}
 
-Available Personas:
-- realist: practical, focused on constraints and realistic concerns
-- visionary: inspiring, focused on possibilities and long-term outcomes  
-- creative: imaginative, focused on alternatives and innovative solutions
-- pragmatist: balanced, focused on trade-offs and systematic evaluation
-- supportive: empathetic, focused on emotions and validation
-
-**CRITICAL**: The question MUST reference specific details from their previous answer and use their own words when possible."""
+**CRITICAL**: Your question MUST be specific to their unique answer and include direct references to what they said."""
         else:
             # Original prompt for initial question generation
             followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
