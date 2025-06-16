@@ -2084,7 +2084,7 @@ async def process_advanced_decision_step(
                 {"id": decision_id},
                 {
                     "$set": {
-                        "followup_questions": [q.dict() for q in enhanced_questions],
+                        "followup_questions": followup_questions,  # Store original dictionaries
                         "current_step": "followup",
                         "step_number": 1,  # Start with question 1
                         "total_questions": len(enhanced_questions),
