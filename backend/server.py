@@ -466,7 +466,9 @@ class EnhancedDecisionTrace(BaseModel):
 
 class EnhancedDecisionRecommendation(BaseModel):
     final_recommendation: str
+    summary: str  # New: 1-paragraph TL;DR summary
     next_steps: List[str]
+    next_steps_with_time: List[dict]  # New: steps with time estimates
     confidence_score: int
     confidence_tooltip: str
     reasoning: str
