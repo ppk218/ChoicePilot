@@ -982,7 +982,24 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {currentStep === 'followup' && currentQuestion && !loading && (
           <Card className="decision-card card-enter">
             <CardHeader>
-              <div className="step-indicator">Step {currentFollowupIndex + 1}</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="step-indicator">Step {currentFollowupIndex + 1}</div>
+                {/* Persona Badge */}
+                {currentQuestion.persona && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-primary/10 to-mint/10 rounded-full border border-primary/20">
+                    <span className="text-sm">
+                      {currentQuestion.persona === 'realist' ? '🧠' :
+                       currentQuestion.persona === 'visionary' ? '🚀' :
+                       currentQuestion.persona === 'creative' ? '🎨' :
+                       currentQuestion.persona === 'pragmatist' ? '⚖️' :
+                       currentQuestion.persona === 'supportive' ? '💙' : '🧠'}
+                    </span>
+                    <span className="text-xs font-medium text-primary capitalize">
+                      {currentQuestion.persona} asks:
+                    </span>
+                  </div>
+                )}
+              </div>
               <CardTitle className="text-xl text-foreground">{currentQuestion.question}</CardTitle>
               <CardDescription>{currentQuestion.context}</CardDescription>
             </CardHeader>
@@ -990,13 +1007,26 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
             <CardContent className="space-y-6">
               <div className="relative">
                 <textarea
-                  placeholder="Share your thoughts here..."
+                  placeholder={currentQuestion.nudge || "Share your thoughts here..."}
                   value={currentAnswer}
                   onChange={(e) => setCurrentAnswer(e.target.value)}
                   className="chat-input min-h-[120px] resize-none"
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !questionSubmitted && handleFollowupSubmit()}
                   disabled={questionSubmitted}
                 />
+                
+                {/* Enhanced Nudge Display */}
+                {currentQuestion.nudge && !currentAnswer && (
+                  <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-600 dark:text-blue-400 text-sm mt-0.5">💡</span>
+                      <div className="text-sm text-blue-700 dark:text-blue-300">
+                        <span className="font-medium">Example: </span>
+                        <span className="italic">{currentQuestion.nudge}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <Button
