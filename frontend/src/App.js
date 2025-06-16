@@ -1267,9 +1267,15 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground mb-1">Recommendation</div>
-                        <p className="text-sm text-foreground leading-relaxed">
-                          {recommendation.recommendation}
-                        </p>
+                        <div 
+                          className="text-sm text-foreground leading-relaxed"
+                          dangerouslySetInnerHTML={{
+                            __html: highlightDifferences(
+                              recommendation.recommendation,
+                              previousDecisions[previousDecisions.length - 1].recommendation.recommendation
+                            )
+                          }}
+                        />
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground mb-1">Next Steps</div>
