@@ -2622,7 +2622,58 @@ class SmartFollowupEngine:
     ) -> list:
         """Generate 1-3 smart follow-up questions with persona alignment"""
         
-        followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
+        # Check if this is a context-aware follow-up (has previous answers in the message)
+        is_context_aware = ("Previous Answers:" in user_message or 
+                           "Answer 1:" in user_message or 
+                           "Answer 2:" in user_message or
+                           "answers so far" in user_message.lower() or
+                           "Based on the user's answers" in user_message)
+        
+        if is_context_aware:
+            # Context-aware follow-up prompt for dynamic question generation
+            followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has already answered some questions, and you need to generate the NEXT best follow-up question based on their previous responses.
+
+{user_message}
+
+CRITICAL REQUIREMENTS:
+1. **Analyze the Previous Answers**: What did they reveal? What information is still missing?
+2. **Generate a COMPLETELY DIFFERENT Question**: This must be different from typical first questions
+3. **Reference Their Response**: The question should acknowledge what they just shared
+4. **Fill Information Gaps**: Focus on the biggest missing piece for a good recommendation
+5. **Adapt to Their Style**: 
+   - If they were vague/short → ask for specific details and examples
+   - If they were conflicted → ask clarifying questions about priorities/values  
+   - If they were detailed → go deeper into specific concerns they mentioned
+   - If they mentioned specific factors → explore those factors further
+
+Generate exactly ONE follow-up question that:
+- Builds directly on what they've already shared
+- References specific details from their previous answer
+- Fills the biggest information gap for making a recommendation
+- Uses appropriate persona based on what they need most
+
+Return JSON:
+{{
+  "questions": [
+    {{
+      "q": "[Question that specifically references something from their previous answer]",
+      "nudge": "[Example that fits their specific context and situation]",
+      "persona": "[Choose: realist/visionary/creative/pragmatist/supportive - based on what they need]"
+    }}
+  ]
+}}
+
+Available Personas:
+- realist: practical, focused on constraints and realistic concerns
+- visionary: inspiring, focused on possibilities and long-term outcomes  
+- creative: imaginative, focused on alternatives and innovative solutions
+- pragmatist: balanced, focused on trade-offs and systematic evaluation
+- supportive: empathetic, focused on emotions and validation
+
+IMPORTANT: The question MUST be different from generic first questions. It must acknowledge and build on their specific previous answer."""
+        else:
+            # Original prompt for initial question generation
+            followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
 
 Decision Classification:
 - Complexity: {classification.get('complexity', 'MEDIUM')}
@@ -2631,7 +2682,7 @@ Decision Classification:
 Each question should:
 - Be short and clear (max 15 words)
 - Include a helpful nudge (example of how to answer)
-- Align with a persona tone: Realist, Visionary, Creative, Pragmatist, Supportive
+- Align with a persona tone: realist, visionary, creative, pragmatist, supportive
 
 Your goal is to gather exactly the context needed for the AI to make a well-informed recommendation.
 
@@ -2641,12 +2692,12 @@ Return JSON:
     {{
       "q": "How urgent is this decision for you?",
       "nudge": "e.g., I need to decide this week vs just exploring",
-      "persona": "Realist"
+      "persona": "realist"
     }},
     {{
       "q": "What outcome do you most hope for?",
       "nudge": "e.g., peace of mind, growth, clarity",
-      "persona": "Visionary"
+      "persona": "visionary"
     }}
   ]
 }}
