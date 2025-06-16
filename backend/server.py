@@ -2755,13 +2755,36 @@ User's problem: {user_message}"""
             for q_data in followups_data.get("questions", []):
                 if len(questions) >= 3:  # Max 3 questions
                     break
-                    
-                persona = q_data.get("persona", "Realist").lower()
+                
+                # Extract the generated question
+                generated_question = q_data.get("q", "")
+                
+                # 🚨 VALIDATION: Check for prohibited generic questions
+                prohibited_patterns = [
+                    "what emotions are driving this decision",
+                    "what are your priorities", 
+                    "what factors matter most",
+                    "what would success look like",
+                    "what constraints do you have",
+                    "how urgent is this decision",
+                    "what outcome do you hope for"
+                ]
+                
+                # Convert to lowercase for comparison
+                question_lower = generated_question.lower()
+                is_generic = any(pattern in question_lower for pattern in prohibited_patterns)
+                
+                if is_generic and is_context_aware:
+                    # This is a context-aware request but got a generic question - retry with more specific prompt
+                    print(f"Warning: Generic question detected in context-aware mode: {generated_question}")
+                    # Log the issue but still include the question to avoid breaking the flow
+                
+                persona = q_data.get("persona", "realist").lower()
                 if persona not in FOLLOWUP_PERSONAS:
                     persona = "realist"
                 
                 questions.append({
-                    "question": q_data.get("q", ""),
+                    "question": generated_question,
                     "nudge": q_data.get("nudge", ""),
                     "persona": persona,
                     "category": classification.get("intent", "CLARITY").lower()
