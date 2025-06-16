@@ -2633,64 +2633,77 @@ class SmartFollowupEngine:
                 if len(parts) > 1:
                     last_answer = parts[1].strip().replace('"', '').strip()
             
-            followup_prompt = f"""You are a dynamic question engine for a decision assistant. You MUST generate a unique follow-up question that directly builds on the user's specific previous answer.
+            # 🎯 DYNAMIC ROLE ASSIGNMENT based on answer content
+            # This forces the AI to take different perspectives based on specific answer keywords
+            role_assignment = ""
+            answer_lower = last_answer.lower()
+            
+            if any(word in answer_lower for word in ["hate", "dislike", "terrible", "awful", "stressed", "burned out"]):
+                role_assignment = "You are a CAREER TRANSITION SPECIALIST focused on helping people escape toxic work situations."
+            elif any(word in answer_lower for word in ["love", "enjoy", "great", "happy", "satisfied", "fulfilling"]):
+                role_assignment = "You are a STRATEGIC CAREER ADVISOR focused on optimizing already good situations."
+            elif any(word in answer_lower for word in ["money", "salary", "pay", "financial", "cost", "expensive", "budget"]):
+                role_assignment = "You are a FINANCIAL DECISION COUNSELOR focused on economic implications."
+            elif any(word in answer_lower for word in ["family", "parents", "spouse", "children", "relationship", "partner"]):
+                role_assignment = "You are a LIFE BALANCE COACH focused on relationship and family considerations."
+            elif any(word in answer_lower for word in ["business", "startup", "entrepreneur", "own company", "freelance"]):
+                role_assignment = "You are an ENTREPRENEURSHIP MENTOR focused on business ventures and self-employment."
+            elif any(word in answer_lower for word in ["opportunity", "chance", "offer", "promotion", "advancement"]):
+                role_assignment = "You are a STRATEGIC OPPORTUNITY ANALYST focused on evaluating prospects."
+            elif any(word in answer_lower for word in ["scared", "afraid", "worried", "anxious", "uncertain", "nervous"]):
+                role_assignment = "You are a CONFIDENCE BUILDING COACH focused on addressing fears and uncertainties."
+            else:
+                role_assignment = "You are a DECISION CLARITY EXPERT focused on uncovering hidden motivations."
+            
+            followup_prompt = f"""{role_assignment}
+
+The user has already answered some questions about their decision. You need to generate a unique follow-up question that builds on their specific answer.
 
 {user_message}
 
-🧩 **CRITICAL UNIQUENESS REQUIREMENTS:**
+🧩 **ROLE-SPECIFIC REQUIREMENTS:**
 
-1️⃣ **MANDATORY ANSWER REFERENCE**: You MUST quote or paraphrase the user's exact words from their previous answer
-2️⃣ **FORCED DIFFERENTIATION**: The question must be completely different from generic questions like "What emotions are driving this decision?" or "What are your priorities?"
-3️⃣ **SPECIFIC DETAIL EXTRACTION**: Pick ONE specific detail from their answer and dive deeper into it
-4️⃣ **SEMANTIC SIMILARITY AVOIDANCE**: Avoid generating questions that could apply to any decision
+As a {role_assignment.split(' focused on')[0].replace('You are a ', '')}, you must ask a question that is specifically relevant to your area of expertise and the user's situation.
 
-🔍 **DYNAMIC ANALYSIS PATTERN** (Self-Ask):
-- Q: "What specific detail did they mention?" A: [Extract exact phrase/word]
-- Q: "What's the biggest unknown about that detail?" A: [Identify information gap]
-- Q: "How can I quote their words in my question?" A: [Use "You mentioned...", "You said...", etc.]
+1️⃣ **MANDATORY ANSWER REFERENCE**: Quote the user's exact words using "You mentioned..." or "You said..."
+2️⃣ **ROLE-SPECIFIC FOCUS**: Your question must reflect your specialized perspective
+3️⃣ **SEMANTIC UNIQUENESS**: Generate a question that only someone in your role would ask
+4️⃣ **SPECIFIC DETAIL EXTRACTION**: Pick ONE specific phrase from their answer and dive deeper
 
-**ADAPTATION RULES:**
-- If they mentioned specific NUMBERS → ask about those numbers
-- If they mentioned specific CONCERNS → ask about those exact concerns
-- If they mentioned specific PEOPLE → ask about those relationships
-- If they mentioned specific TIMELINES → ask about timing details
-- If they mentioned specific EMOTIONS → ask about the source of those emotions
+🔍 **ROLE-BASED ANALYSIS PATTERN**:
+- What specific detail in their answer relates to my expertise area?
+- What question would someone in my role naturally ask next?
+- How can I reference their exact words while staying in character?
 
-**PROHIBITED GENERIC QUESTIONS** (DO NOT USE THESE):
-❌ "What emotions are driving this decision?"
-❌ "What are your priorities?"
-❌ "What factors matter most?"
-❌ "What would success look like?"
-❌ "What constraints do you have?"
+**MANDATORY QUESTION FORMATS** (Choose the most relevant):
 
-**REQUIRED FORMAT - Pick ONE approach:**
+**Format 1 - Direct Quote + Role Expertise:**
+"You said '[exact user phrase]' - from my experience as a [your role], what specific aspect of [their detail] is most [relevant concern] to you?"
 
-**Approach 1 - Direct Quote Reference:**
-"You mentioned [exact user phrase] - what specifically about [that detail] is most [relevant adjective] to you?"
+**Format 2 - Professional Perspective:**
+"As a [your role], when I hear you mention '[user quote]', I'm curious about [role-specific question about that detail]?"
 
-**Approach 2 - Concern Exploration:**
-"You said you're [user emotion/concern] about [specific thing] - what aspect of [that thing] worries/excites you most?"
+**Format 3 - Expertise-Driven Follow-up:**
+"You mentioned [user concern] - in my work helping people with [your specialty], the key question is: [specific question only someone in your role would ask]?"
 
-**Approach 3 - Detail Expansion:**  
-"When you say [user specific detail], what would [logical next question about that detail] look like for you?"
-
-**VALIDATION CHECK:**
-- Does my question include a direct quote or reference to their answer? YES/NO
-- Is this question unique to their specific situation? YES/NO
-- Would this question make sense for someone with a different answer? NO = GOOD
+**VALIDATION REQUIREMENTS:**
+✅ Does my question include an exact quote from their answer?
+✅ Would only someone with my professional expertise ask this question?
+✅ Is this question specific to their unique situation?
+✅ Would this question be different if they had given a different answer?
 
 Return JSON:
 {{
   "questions": [
     {{
-      "q": "[Question using one of the three approaches above with direct user quote]",
-      "nudge": "[Example specific to their context]",
+      "q": "[Question using role-specific format with direct user quote]",
+      "nudge": "[Example specific to their context and your expertise area]",
       "persona": "[realist/visionary/creative/pragmatist/supportive]"
     }}
   ]
 }}
 
-**CRITICAL**: Your question MUST be specific to their unique answer and include direct references to what they said."""
+**CRITICAL**: Your question must be something only a {role_assignment.split(' focused on')[0].replace('You are a ', '')} would ask, and must reference their specific answer."""
         else:
             # Original prompt for initial question generation
             followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
