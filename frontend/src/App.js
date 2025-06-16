@@ -1502,7 +1502,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                       <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
                         {item.content.trace.used_web_search ? 
                           '🔍 External Knowledge Accessed: Web Search' : 
-                          '📋 No external search used – analysis based on user input and AI reasoning only'
+                          '🧠 AI relied on personal context and internal reasoning to maintain emotional consistency'
                         }
                       </span>
                     </div>
