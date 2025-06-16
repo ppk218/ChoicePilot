@@ -1306,6 +1306,21 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           </div>
         )}
       </div>
+      
+      {/* Floating Upgrade to Pro Button */}
+      {currentStep === 'recommendation' && !isAuthenticated && (
+        <div className="fixed top-4 right-4 z-50">
+          <Button 
+            className="bg-gradient-to-r from-primary to-mint text-white shadow-lg hover:shadow-xl transition-all duration-300 border-none"
+            onClick={() => {
+              alert('Upgrade to Pro for unlimited decisions, advanced analytics, and priority support!');
+            }}
+          >
+            <span className="mr-2">✨</span>
+            Unlock More Decisions – Go Pro
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
