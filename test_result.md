@@ -190,8 +190,8 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus: ["Enhanced Context-Aware Dynamic Follow-Up System"]
+  stuck_tasks: ["Enhanced Context-Aware Dynamic Follow-Up System"]
   test_all: false
   test_priority: "high_first"
 
