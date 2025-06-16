@@ -3684,6 +3684,18 @@ except ImportError as e:
     AI_ORCHESTRATOR_AVAILABLE = False
     ai_orchestrator = None
 
+@api_router.get("/debug/ai-orchestrator")
+async def debug_ai_orchestrator():
+    """Debug endpoint to check AI orchestrator status"""
+    return {
+        "ai_orchestrator_available": AI_ORCHESTRATOR_AVAILABLE,
+        "ai_orchestrator_type": str(type(ai_orchestrator)),
+        "llm_router_available": hasattr(ai_orchestrator, "llm_router") if ai_orchestrator else False,
+        "classifier_available": hasattr(ai_orchestrator, "classifier") if ai_orchestrator else False,
+        "smart_router_available": hasattr(ai_orchestrator, "smart_router") if ai_orchestrator else False,
+        "followup_engine_available": hasattr(ai_orchestrator, "followup_engine") if ai_orchestrator else False
+    }
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
