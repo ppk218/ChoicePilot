@@ -2041,6 +2041,12 @@ async def process_advanced_decision_step(
                 "user_id": user_id,
                 "initial_question": request.message,
                 "decision_type": decision_type.value,
+                "smart_classification": {
+                    "complexity": smart_classification.complexity.value,
+                    "intent": smart_classification.intent.value,
+                    "routed_models": smart_classification.routed_models,
+                    "cost_estimate": smart_classification.cost_estimate
+                },
                 "current_step": "initial",
                 "step_number": 1,
                 "followup_answers": [],
@@ -2053,10 +2059,11 @@ async def process_advanced_decision_step(
             
             await db.decision_sessions_advanced.insert_one(session)
             
-            # Generate follow-up questions using AI orchestrator
-            followup_questions = await ai_orchestrator.generate_followup_questions(
+            # Generate smart follow-up questions using new engine
+            followup_questions = await ai_orchestrator.generate_smart_followup_questions(
                 request.message,
-                decision_type,
+                smart_classification,
+                session_id=decision_id,
                 max_questions=3
             )
             
