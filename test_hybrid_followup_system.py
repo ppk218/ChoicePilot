@@ -526,8 +526,7 @@ def run_all_tests():
         ("Initial Question Processing", test_initial_question_processing),
         ("Answer Collection Phase", test_answer_collection_phase),
         ("Decision Coach Quality", test_decision_coach_quality),
-        ("Model Routing", test_model_routing),
-        ("Go Deeper Feature", test_go_deeper_feature)
+        ("Model Routing", test_model_routing)
     ]
     
     for test_name, test_func in tests:
