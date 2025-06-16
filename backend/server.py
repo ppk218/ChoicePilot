@@ -2603,7 +2603,7 @@ async def get_decision_info(decision_id: str, current_user: dict = Depends(get_c
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Error retrieving decision information")
 
 class SmartFollowupEngine:
-    """Generates intelligent follow-up questions with persona alignment and nudges"""
+    """Hybrid AI-Led Follow-Up Engine - Generates 3 intelligent questions upfront"""
     
     @staticmethod
     async def generate_smart_followups(
@@ -2612,147 +2612,105 @@ class SmartFollowupEngine:
         models: list,
         session_id: str
     ) -> list:
-        """Generate 1-3 smart follow-up questions with persona alignment"""
+        """Generate 3 smart follow-up questions using AI reasoning in one shot"""
         
-        # Enhanced detection for context-aware follow-up (more flexible)
-        is_context_aware = ("Previous Answers:" in user_message or 
-                           "Answer 1:" in user_message or 
-                           "Answer 2:" in user_message or
-                           "answers so far" in user_message.lower() or
-                           "Based on the user's answers" in user_message or
-                           "Initial Question:" in user_message or
-                           "Previous answers:" in user_message.lower() or
-                           "user's answers:" in user_message.lower())
+        # 🧠 HYBRID AI-LED APPROACH: Generate all 3 questions upfront with intelligent planning
+        complexity = classification.get('complexity', 'MEDIUM')
+        intent = classification.get('intent', 'CLARITY')
         
-        if is_context_aware:
-            # 🚨 TEMPLATE-BASED APPROACH: Force variation through explicit templates
-            # Extract the last user answer for template selection
-            last_answer = ""
-            if "User's most recent answer:" in user_message:
-                parts = user_message.split("User's most recent answer:")
-                if len(parts) > 1:
-                    last_answer = parts[1].strip().replace('"', '').strip()
-            
-            # 🎯 FORCED VARIATION: Select template based on answer content
-            answer_lower = last_answer.lower()
-            answer_words = last_answer.split()[:8]  # First 8 words for quoting
-            answer_snippet = " ".join(answer_words)
-            
-            # Define specific question templates for different scenarios
-            if any(word in answer_lower for word in ["hate", "dislike", "terrible", "awful"]):
-                template_type = "NEGATIVE_EMOTION"
-                question_template = f'You said "{answer_snippet}" - what specific aspect of your current situation is causing you the most stress daily?'
-            elif any(word in answer_lower for word in ["love", "enjoy", "great", "happy"]):
-                template_type = "POSITIVE_EMOTION"
-                question_template = f'You mentioned "{answer_snippet}" - what would need to change about the new opportunity to make leaving worth giving up what you love?'
-            elif any(word in answer_lower for word in ["business", "startup", "entrepreneur", "own company"]):
-                template_type = "BUSINESS_VENTURE"
-                question_template = f'You said "{answer_snippet}" - what specific preparations have you made so far for this business venture?'
-            elif any(word in answer_lower for word in ["salary", "pay", "money", "offer"]):
-                template_type = "FINANCIAL"
-                question_template = f'You mentioned "{answer_snippet}" - beyond the money, what other factors are making this decision difficult?'
-            elif any(word in answer_lower for word in ["family", "parents", "spouse", "children"]):
-                template_type = "FAMILY"
-                question_template = f'You said "{answer_snippet}" - how have you discussed this decision with the family members who would be affected?'
-            elif any(word in answer_lower for word in ["opportunity", "chance", "offer"]):
-                template_type = "OPPORTUNITY"
-                question_template = f'You mentioned "{answer_snippet}" - what specific deadline or timeline are you working with for this decision?'
-            else:
-                template_type = "GENERAL"
-                question_template = f'You said "{answer_snippet}" - what would help you feel more confident about moving forward?'
-            
-            # 🔧 SIMPLE TEMPLATE APPROACH: No AI generation, just template filling
-            persona_map = {
-                "NEGATIVE_EMOTION": "supportive",
-                "POSITIVE_EMOTION": "pragmatist", 
-                "BUSINESS_VENTURE": "creative",
-                "FINANCIAL": "realist",
-                "FAMILY": "supportive",
-                "OPPORTUNITY": "visionary",
-                "GENERAL": "realist"
-            }
-            
-            nudge_map = {
-                "NEGATIVE_EMOTION": "e.g., workload, boss relationship, lack of growth",
-                "POSITIVE_EMOTION": "e.g., career advancement, work-life balance, team culture",
-                "BUSINESS_VENTURE": "e.g., business plan, funding, market research",
-                "FINANCIAL": "e.g., job security, work satisfaction, growth potential",
-                "FAMILY": "e.g., family meetings, compromise options, timeline discussions",
-                "OPPORTUNITY": "e.g., next week, end of month, no specific deadline",
-                "GENERAL": "e.g., more information, time to think, expert advice"
-            }
-            
-            # Return the template-based question
-            return [{
-                "question": question_template,
-                "nudge": nudge_map.get(template_type, "e.g., consider your specific situation"),
-                "persona": persona_map.get(template_type, "realist"),
-                "category": classification.get("intent", "CLARITY").lower()
-            }]
-        
+        # 🎯 SMART MODEL ROUTING based on complexity
+        if complexity == "LOW":
+            primary_model = "claude-haiku"  # Cheapest, sufficient
+        elif complexity == "HIGH":
+            primary_model = "claude-sonnet"  # Deepest reasoning
         else:
-            # Original AI-based approach for initial questions
-            followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
+            primary_model = "gpt4o-mini"  # Good balance for medium complexity
+        
+        # Use first available model from routing if specified
+        if models and len(models) > 0:
+            primary_model = models[0]
+        
+        # 🧩 DECISION COACH PROMPT: Think like a human coach who plans ahead
+        followup_prompt = f"""You are a decision coach AI helping a user gain clarity on their decision.
 
-Decision Classification:
-- Complexity: {classification.get('complexity', 'MEDIUM')}
-- Intent: {classification.get('intent', 'CLARITY')}
+Their question:
+"{user_message}"
 
-Each question should:
-- Be short and clear (max 15 words)
-- Include a helpful nudge (example of how to answer)
-- Align with a persona tone: realist, visionary, creative, pragmatist, supportive
+Metadata:
+- Decision Type: {classification.get('decision_type', 'mixed')}
+- Complexity: {complexity}
+- Intent: {intent}
 
-Your goal is to gather exactly the context needed for the AI to make a well-informed recommendation.
+Your job:
+- Ask 3 distinct, high-quality follow-up questions that will help them make the best decision
+- Cover different dimensions (e.g., emotional, practical, risk, values, timeline)
+- Do not reference prior answers — this is your only chance to go wide and gather comprehensive input
+- Think like a human coach who wants the full picture to give excellent advice
+- Each question should explore a different angle of their dilemma
 
-Return JSON:
+Requirements:
+- Questions should be conversational and clear (max 20 words each)
+- Include a helpful nudge/example for each question
+- Assign appropriate personas: realist, visionary, creative, pragmatist, supportive
+- Avoid generic questions - make them specific to their decision context
+
+Return JSON format:
 {{
   "questions": [
     {{
-      "q": "How urgent is this decision for you?",
-      "nudge": "e.g., I need to decide this week vs just exploring",
+      "q": "[Practical/logistics question specific to their decision]",
+      "nudge": "[helpful example specific to their context]",
       "persona": "realist"
     }},
     {{
-      "q": "What outcome do you most hope for?",
-      "nudge": "e.g., peace of mind, growth, clarity",
+      "q": "[Emotional/values question about what matters most]",
+      "nudge": "[example that helps them reflect]",
+      "persona": "supportive"
+    }},
+    {{
+      "q": "[Future/outcome question about success or goals]",
+      "nudge": "[example that helps them envision outcomes]",
       "persona": "visionary"
     }}
   ]
 }}
 
-User's problem: {user_message}"""
+Generate exactly 3 questions that will give you the best foundation for an excellent decision recommendation."""
 
         try:
-            # Use the first routed model for follow-up generation
-            primary_model = models[0] if models else "gpt4o-mini"
-            
+            # Set up the model call
             if primary_model.startswith("claude"):
                 api_key = ANTHROPIC_API_KEY
                 provider = "anthropic"
-                model_name = LLM_MODELS[primary_model]["model"]
+                model_name = LLM_MODELS.get(primary_model, {}).get("model", "claude-haiku-3-20240307")
             else:
                 api_key = OPENAI_API_KEY
                 provider = "openai"
-                model_name = LLM_MODELS[primary_model]["model"]
+                model_name = LLM_MODELS.get(primary_model, {}).get("model", "gpt-4o-mini")
             
             chat = LlmChat(
                 api_key=api_key,
                 session_id=session_id,
                 system_message=followup_prompt
-            ).with_model(provider, model_name).with_max_tokens(1000)
+            ).with_model(provider, model_name).with_max_tokens(1500).with_temperature(0.7)
             
-            user_msg = UserMessage(text=user_message)
+            user_msg = UserMessage(text=f"Generate 3 thoughtful follow-up questions for: {user_message}")
             response = await chat.send_message(user_msg)
             
             # Parse JSON response
             import json
-            followups_data = json.loads(response.strip())
+            response_clean = response.strip()
+            if response_clean.startswith('```json'):
+                response_clean = response_clean[7:-3]
+            elif response_clean.startswith('```'):
+                response_clean = response_clean[3:-3]
+            
+            followups_data = json.loads(response_clean)
             
             # Validate and format questions
             questions = []
-            for q_data in followups_data.get("questions", []):
-                if len(questions) >= 3:  # Max 3 questions
+            for i, q_data in enumerate(followups_data.get("questions", [])):
+                if len(questions) >= 3:  # Exactly 3 questions
                     break
                     
                 persona = q_data.get("persona", "realist").lower()
@@ -2763,14 +2721,25 @@ User's problem: {user_message}"""
                     "question": q_data.get("q", ""),
                     "nudge": q_data.get("nudge", ""),
                     "persona": persona,
-                    "category": classification.get("intent", "CLARITY").lower()
+                    "category": intent.lower(),
+                    "step_number": i + 1
                 })
             
-            return questions
+            # Ensure we have exactly 3 questions
+            while len(questions) < 3:
+                questions.append({
+                    "question": "What factors are most important to you in making this decision?",
+                    "nudge": "e.g., timing, cost, impact on others, personal values",
+                    "persona": "pragmatist",
+                    "category": intent.lower(),
+                    "step_number": len(questions) + 1
+                })
+            
+            return questions[:3]  # Return exactly 3 questions
             
         except Exception as e:
-            logging.warning(f"Smart followup generation failed: {str(e)}")
-            # Fallback to simple questions
+            logging.warning(f"AI-led followup generation failed: {str(e)}")
+            # Fallback to structured questions
             return SmartFollowupEngine._generate_fallback_questions(classification)
     
     @staticmethod
