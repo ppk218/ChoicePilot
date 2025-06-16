@@ -266,6 +266,30 @@ ADVISOR_STYLES = {
     }
 }
 
+# Follow-up Question Personas (Streamlined for Smart Questions)
+FOLLOWUP_PERSONAS = {
+    "realist": {
+        "name": "Realist", "icon": "🧠", "color": "blue",
+        "style": "practical and direct", "focus": "facts and constraints"
+    },
+    "visionary": {
+        "name": "Visionary", "icon": "🚀", "color": "purple", 
+        "style": "inspiring and forward-thinking", "focus": "possibilities and outcomes"
+    },
+    "creative": {
+        "name": "Creative", "icon": "🎨", "color": "pink",
+        "style": "imaginative and lateral", "focus": "alternatives and innovation"
+    },
+    "pragmatist": {
+        "name": "Pragmatist", "icon": "⚖️", "color": "green",
+        "style": "balanced and systematic", "focus": "trade-offs and priorities"
+    },
+    "supportive": {
+        "name": "Supportive", "icon": "💙", "color": "teal",
+        "style": "empathetic and validating", "focus": "emotions and well-being"
+    }
+}
+
 # User and Subscription Models
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
