@@ -2194,11 +2194,9 @@ Intent: {intent}
                             question=question_text,
                             nudge=nudge_text,
                             category=category_text,
-                            step_number=total_questions_answered + 1
+                            step_number=total_questions_answered + 1,
+                            persona=persona_text
                         )
-                        
-                        # Add persona information to the response
-                        enhanced_question.persona = persona_text
                         
                         return AdvancedDecisionStepResponse(
                             decision_id=decision_id,
