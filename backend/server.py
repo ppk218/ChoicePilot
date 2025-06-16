@@ -902,6 +902,96 @@ async def get_subscription_plans():
         "credit_costs": CREDIT_COSTS
     }
 
+# Enhanced AI Orchestration Classes
+class DecisionClassifier:
+    """Classifies decisions by complexity and emotional intent for smart model routing"""
+    
+    @staticmethod
+    async def classify_decision(message: str) -> dict:
+        """Classify decision complexity and emotional intent using cost-effective models"""
+        
+        classification_prompt = """You are a decision classifier for an AI assistant.
+
+Given a user's input describing a problem or decision, classify it along two axes:
+
+1. Complexity:
+- LOW: Simple, factual, or straightforward decisions (e.g., what phone to buy).
+- MEDIUM: Multi-factor or contextual decisions (e.g., switching jobs, choosing between offers).
+- HIGH: Ambiguous, emotional, or deeply personal decisions (e.g., whether to break up, move cities).
+
+2. Emotional Intent:
+- CLARITY: The user seeks direction or simplicity.
+- CONFIDENCE: The user seeks to validate or confirm a choice.
+- REASSURANCE: The user needs support, safety, or empathy.
+- EMPOWERMENT: The user wants bold insight or a confidence boost.
+
+Return output in this format:
+{
+  "complexity": "MEDIUM",
+  "intent": "CLARITY"
+}
+
+User input: """ + message
+
+        try:
+            # Use cost-effective model for classification
+            chat = LlmChat(
+                api_key=OPENAI_API_KEY,
+                session_id=f"classifier_{uuid.uuid4()}",
+                system_message=classification_prompt
+            ).with_model("openai", "gpt-4o-mini").with_max_tokens(100)
+            
+            user_message = UserMessage(text=message)
+            response = await chat.send_message(user_message)
+            
+            # Parse JSON response
+            import json
+            classification = json.loads(response.strip())
+            
+            # Validate classification
+            if classification.get("complexity") not in ["LOW", "MEDIUM", "HIGH"]:
+                classification["complexity"] = "MEDIUM"
+            if classification.get("intent") not in ["CLARITY", "CONFIDENCE", "REASSURANCE", "EMPOWERMENT"]:
+                classification["intent"] = "CLARITY"
+                
+            return classification
+            
+        except Exception as e:
+            logging.warning(f"Classification failed: {str(e)}")
+            # Fallback classification
+            return {"complexity": "MEDIUM", "intent": "CLARITY"}
+
+class SmartModelRouter:
+    """Routes to optimal models based on classification for cost-effectiveness"""
+    
+    @staticmethod
+    def route_models(classification: dict, user_plan: str = "free") -> list:
+        """Route to best models based on complexity and intent"""
+        
+        complexity = classification.get("complexity", "MEDIUM")
+        intent = classification.get("intent", "CLARITY")
+        
+        # LOW complexity - use cheapest effective model
+        if complexity == "LOW":
+            return ["gpt4o-mini"]
+        
+        # MEDIUM complexity - balance cost and capability
+        if complexity == "MEDIUM":
+            if intent in ["CLARITY", "CONFIDENCE"]:
+                return ["gpt4o-mini"]
+            else:  # REASSURANCE, EMPOWERMENT
+                return ["claude-haiku"]
+        
+        # HIGH complexity - use best models (combo for emotional + logical)
+        if complexity == "HIGH":
+            if user_plan == "pro":
+                return ["claude-sonnet", "gpt4o-mini"]  # Premium combo
+            else:
+                return ["claude-haiku", "gpt4o-mini"]  # Cost-effective combo
+        
+        # Fallback
+        return ["gpt4o-mini"]
+
 # LLM Router with monetization
 class LLMRouter:
     """Intelligent LLM routing engine with monetization checks"""
