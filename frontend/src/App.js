@@ -1507,19 +1507,49 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                       </span>
                     </div>
 
-                    {/* Advisory Perspectives */}
+                    {/* Enhanced Advisory Perspectives with Persona Voices */}
                     {item.content.trace.personas_consulted && item.content.trace.personas_consulted.length > 0 && (
                       <div>
-                        <h5 className="text-sm font-medium text-foreground mb-1">Advisory Perspectives</h5>
-                        <div className="flex gap-2">
-                          {item.content.trace.personas_consulted.map((persona, index) => (
-                            <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                              {persona === 'Realist' ? '🎯 Realist' : 
-                               persona === 'Visionary' ? '🚀 Visionary' : 
-                               '⚖️ Pragmatist'}
-                            </span>
-                          ))}
-                        </div>
+                        <h5 className="text-sm font-medium text-foreground mb-2">Advisory Perspectives</h5>
+                        
+                        {/* Check if we have detailed persona voices */}
+                        {item.content.trace.classification?.persona_voices ? (
+                          <div className="space-y-3">
+                            {Object.entries(item.content.trace.classification.persona_voices).map(([persona, voice], index) => (
+                              <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
+                                <span className="text-lg mt-0.5">
+                                  {persona === 'realist' ? '🧠' :
+                                   persona === 'visionary' ? '🚀' :
+                                   persona === 'pragmatist' ? '⚖️' :
+                                   persona === 'supportive' ? '💙' :
+                                   persona === 'creative' ? '🎨' : '🎯'}
+                                </span>
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm text-foreground capitalize mb-1">
+                                    {persona}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground italic">
+                                    "{voice}"
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          /* Fallback to simple badges if no detailed voices */
+                          <div className="flex flex-wrap gap-2">
+                            {item.content.trace.personas_consulted.map((persona, index) => (
+                              <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
+                                {persona === 'Realist' ? '🧠 Realist' : 
+                                 persona === 'Visionary' ? '🚀 Visionary' : 
+                                 persona === 'Pragmatist' ? '⚖️ Pragmatist' :
+                                 persona === 'Supportive' ? '💙 Supportive' :
+                                 persona === 'Creative' ? '🎨 Creative' : 
+                                 `🎯 ${persona}`}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
