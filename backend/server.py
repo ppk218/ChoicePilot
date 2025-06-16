@@ -2625,87 +2625,73 @@ class SmartFollowupEngine:
                            "user's answers:" in user_message.lower())
         
         if is_context_aware:
-            # 🧩 ENHANCED DYNAMIC CONTEXT INJECTION - Step 1 & 2
-            # Extract the last user answer for explicit comparison
+            # 🚨 TEMPLATE-BASED APPROACH: Force variation through explicit templates
+            # Extract the last user answer for template selection
             last_answer = ""
             if "User's most recent answer:" in user_message:
                 parts = user_message.split("User's most recent answer:")
                 if len(parts) > 1:
                     last_answer = parts[1].strip().replace('"', '').strip()
             
-            # 🎯 DYNAMIC ROLE ASSIGNMENT based on answer content
-            # This forces the AI to take different perspectives based on specific answer keywords
-            role_assignment = ""
+            # 🎯 FORCED VARIATION: Select template based on answer content
             answer_lower = last_answer.lower()
+            answer_words = last_answer.split()[:8]  # First 8 words for quoting
+            answer_snippet = " ".join(answer_words)
             
-            if any(word in answer_lower for word in ["hate", "dislike", "terrible", "awful", "stressed", "burned out"]):
-                role_assignment = "You are a CAREER TRANSITION SPECIALIST focused on helping people escape toxic work situations."
-            elif any(word in answer_lower for word in ["love", "enjoy", "great", "happy", "satisfied", "fulfilling"]):
-                role_assignment = "You are a STRATEGIC CAREER ADVISOR focused on optimizing already good situations."
-            elif any(word in answer_lower for word in ["money", "salary", "pay", "financial", "cost", "expensive", "budget"]):
-                role_assignment = "You are a FINANCIAL DECISION COUNSELOR focused on economic implications."
-            elif any(word in answer_lower for word in ["family", "parents", "spouse", "children", "relationship", "partner"]):
-                role_assignment = "You are a LIFE BALANCE COACH focused on relationship and family considerations."
-            elif any(word in answer_lower for word in ["business", "startup", "entrepreneur", "own company", "freelance"]):
-                role_assignment = "You are an ENTREPRENEURSHIP MENTOR focused on business ventures and self-employment."
-            elif any(word in answer_lower for word in ["opportunity", "chance", "offer", "promotion", "advancement"]):
-                role_assignment = "You are a STRATEGIC OPPORTUNITY ANALYST focused on evaluating prospects."
-            elif any(word in answer_lower for word in ["scared", "afraid", "worried", "anxious", "uncertain", "nervous"]):
-                role_assignment = "You are a CONFIDENCE BUILDING COACH focused on addressing fears and uncertainties."
+            # Define specific question templates for different scenarios
+            if any(word in answer_lower for word in ["hate", "dislike", "terrible", "awful"]):
+                template_type = "NEGATIVE_EMOTION"
+                question_template = f'You said "{answer_snippet}" - what specific aspect of your current situation is causing you the most stress daily?'
+            elif any(word in answer_lower for word in ["love", "enjoy", "great", "happy"]):
+                template_type = "POSITIVE_EMOTION"
+                question_template = f'You mentioned "{answer_snippet}" - what would need to change about the new opportunity to make leaving worth giving up what you love?'
+            elif any(word in answer_lower for word in ["business", "startup", "entrepreneur", "own company"]):
+                template_type = "BUSINESS_VENTURE"
+                question_template = f'You said "{answer_snippet}" - what specific preparations have you made so far for this business venture?'
+            elif any(word in answer_lower for word in ["salary", "pay", "money", "offer"]):
+                template_type = "FINANCIAL"
+                question_template = f'You mentioned "{answer_snippet}" - beyond the money, what other factors are making this decision difficult?'
+            elif any(word in answer_lower for word in ["family", "parents", "spouse", "children"]):
+                template_type = "FAMILY"
+                question_template = f'You said "{answer_snippet}" - how have you discussed this decision with the family members who would be affected?'
+            elif any(word in answer_lower for word in ["opportunity", "chance", "offer"]):
+                template_type = "OPPORTUNITY"
+                question_template = f'You mentioned "{answer_snippet}" - what specific deadline or timeline are you working with for this decision?'
             else:
-                role_assignment = "You are a DECISION CLARITY EXPERT focused on uncovering hidden motivations."
+                template_type = "GENERAL"
+                question_template = f'You said "{answer_snippet}" - what would help you feel more confident about moving forward?'
             
-            followup_prompt = f"""{role_assignment}
-
-The user has already answered some questions about their decision. You need to generate a unique follow-up question that builds on their specific answer.
-
-{user_message}
-
-🧩 **ROLE-SPECIFIC REQUIREMENTS:**
-
-As a {role_assignment.split(' focused on')[0].replace('You are a ', '')}, you must ask a question that is specifically relevant to your area of expertise and the user's situation.
-
-1️⃣ **MANDATORY ANSWER REFERENCE**: Quote the user's exact words using "You mentioned..." or "You said..."
-2️⃣ **ROLE-SPECIFIC FOCUS**: Your question must reflect your specialized perspective
-3️⃣ **SEMANTIC UNIQUENESS**: Generate a question that only someone in your role would ask
-4️⃣ **SPECIFIC DETAIL EXTRACTION**: Pick ONE specific phrase from their answer and dive deeper
-
-🔍 **ROLE-BASED ANALYSIS PATTERN**:
-- What specific detail in their answer relates to my expertise area?
-- What question would someone in my role naturally ask next?
-- How can I reference their exact words while staying in character?
-
-**MANDATORY QUESTION FORMATS** (Choose the most relevant):
-
-**Format 1 - Direct Quote + Role Expertise:**
-"You said '[exact user phrase]' - from my experience as a [your role], what specific aspect of [their detail] is most [relevant concern] to you?"
-
-**Format 2 - Professional Perspective:**
-"As a [your role], when I hear you mention '[user quote]', I'm curious about [role-specific question about that detail]?"
-
-**Format 3 - Expertise-Driven Follow-up:**
-"You mentioned [user concern] - in my work helping people with [your specialty], the key question is: [specific question only someone in your role would ask]?"
-
-**VALIDATION REQUIREMENTS:**
-✅ Does my question include an exact quote from their answer?
-✅ Would only someone with my professional expertise ask this question?
-✅ Is this question specific to their unique situation?
-✅ Would this question be different if they had given a different answer?
-
-Return JSON:
-{{
-  "questions": [
-    {{
-      "q": "[Question using role-specific format with direct user quote]",
-      "nudge": "[Example specific to their context and your expertise area]",
-      "persona": "[realist/visionary/creative/pragmatist/supportive]"
-    }}
-  ]
-}}
-
-**CRITICAL**: Your question must be something only a {role_assignment.split(' focused on')[0].replace('You are a ', '')} would ask, and must reference their specific answer."""
+            # 🔧 SIMPLE TEMPLATE APPROACH: No AI generation, just template filling
+            persona_map = {
+                "NEGATIVE_EMOTION": "supportive",
+                "POSITIVE_EMOTION": "pragmatist", 
+                "BUSINESS_VENTURE": "creative",
+                "FINANCIAL": "realist",
+                "FAMILY": "supportive",
+                "OPPORTUNITY": "visionary",
+                "GENERAL": "realist"
+            }
+            
+            nudge_map = {
+                "NEGATIVE_EMOTION": "e.g., workload, boss relationship, lack of growth",
+                "POSITIVE_EMOTION": "e.g., career advancement, work-life balance, team culture",
+                "BUSINESS_VENTURE": "e.g., business plan, funding, market research",
+                "FINANCIAL": "e.g., job security, work satisfaction, growth potential",
+                "FAMILY": "e.g., family meetings, compromise options, timeline discussions",
+                "OPPORTUNITY": "e.g., next week, end of month, no specific deadline",
+                "GENERAL": "e.g., more information, time to think, expert advice"
+            }
+            
+            # Return the template-based question
+            return [{
+                "question": question_template,
+                "nudge": nudge_map.get(template_type, "e.g., consider your specific situation"),
+                "persona": persona_map.get(template_type, "realist"),
+                "category": classification.get("intent", "CLARITY").lower()
+            }]
+        
         else:
-            # Original prompt for initial question generation
+            # Original AI-based approach for initial questions
             followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
 
 Decision Classification:
@@ -2750,85 +2736,37 @@ User's problem: {user_message}"""
                 provider = "openai"
                 model_name = LLM_MODELS[primary_model]["model"]
             
-            # Try up to 3 times to get a non-generic question for context-aware requests
-            max_retries = 3 if is_context_aware else 1
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=session_id,
+                system_message=followup_prompt
+            ).with_model(provider, model_name).with_max_tokens(1000)
             
-            for attempt in range(max_retries):
-                # 🎯 DYNAMIC TEMPERATURE: Increase randomness for better variation
-                temperature = 0.8 if is_context_aware else 0.7  # Higher temperature for context-aware
-                if attempt > 0:  # Increase temperature for retries
-                    temperature = min(0.9 + (attempt * 0.1), 1.0)
-                
-                # 🎯 DYNAMIC SESSION ID: Use content hash to ensure different conversation contexts
-                import hashlib
-                content_hash = hashlib.md5(last_answer.encode()).hexdigest()[:8] if last_answer else "default"
-                unique_session_id = f"{session_id}_{content_hash}_attempt_{attempt}"
-                
-                chat = LlmChat(
-                    api_key=api_key,
-                    session_id=unique_session_id,
-                    system_message=followup_prompt
-                ).with_model(provider, model_name).with_max_tokens(1000).with_temperature(temperature)
-                
-                user_msg = UserMessage(text=user_message)
-                response = await chat.send_message(user_msg)
-                
-                # Parse JSON response
-                import json
-                followups_data = json.loads(response.strip())
-                
-                # Validate and format questions
-                questions = []
-                for q_data in followups_data.get("questions", []):
-                    if len(questions) >= 3:  # Max 3 questions
-                        break
-                    
-                    # Extract the generated question
-                    generated_question = q_data.get("q", "")
-                    
-                    # 🚨 VALIDATION: Check for prohibited generic questions
-                    prohibited_patterns = [
-                        "what emotions are driving this decision",
-                        "what are your priorities", 
-                        "what factors matter most",
-                        "what would success look like",
-                        "what constraints do you have",
-                        "how urgent is this decision",
-                        "what outcome do you hope for"
-                    ]
-                    
-                    # Convert to lowercase for comparison
-                    question_lower = generated_question.lower()
-                    is_generic = any(pattern in question_lower for pattern in prohibited_patterns)
-                    
-                    if is_generic and is_context_aware and attempt < max_retries - 1:
-                        # This is a context-aware request but got a generic question - retry
-                        print(f"Attempt {attempt + 1}: Generic question detected, retrying: {generated_question}")
-                        break  # Break out of the question loop to retry
-                    
-                    persona = q_data.get("persona", "realist").lower()
-                    if persona not in FOLLOWUP_PERSONAS:
-                        persona = "realist"
-                    
-                    questions.append({
-                        "question": generated_question,
-                        "nudge": q_data.get("nudge", ""),
-                        "persona": persona,
-                        "category": classification.get("intent", "CLARITY").lower()
-                    })
-                
-                # If we got non-generic questions or it's the last attempt, return them
-                if questions and (not is_context_aware or attempt == max_retries - 1 or not is_generic):
-                    return questions
-                
-                # If no questions or generic detected, continue to next attempt
-                if attempt < max_retries - 1:
-                    print(f"Retrying question generation (attempt {attempt + 2}/{max_retries})")
-                    # Modify the prompt to be more specific for the retry
-                    followup_prompt += f"\n\n**RETRY #{attempt + 2}**: The previous attempt generated a generic question. You MUST generate a unique question that specifically references the user's answer details."
+            user_msg = UserMessage(text=user_message)
+            response = await chat.send_message(user_msg)
             
-            # If all retries failed, return fallback questions
-            return SmartFollowupEngine._generate_fallback_questions(classification)
+            # Parse JSON response
+            import json
+            followups_data = json.loads(response.strip())
+            
+            # Validate and format questions
+            questions = []
+            for q_data in followups_data.get("questions", []):
+                if len(questions) >= 3:  # Max 3 questions
+                    break
+                    
+                persona = q_data.get("persona", "realist").lower()
+                if persona not in FOLLOWUP_PERSONAS:
+                    persona = "realist"
+                
+                questions.append({
+                    "question": q_data.get("q", ""),
+                    "nudge": q_data.get("nudge", ""),
+                    "persona": persona,
+                    "category": classification.get("intent", "CLARITY").lower()
+                })
+            
+            return questions
             
         except Exception as e:
             logging.warning(f"Smart followup generation failed: {str(e)}")
