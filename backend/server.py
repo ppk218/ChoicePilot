@@ -2112,27 +2112,92 @@ async def process_advanced_decision_step(
             )
             
             current_answers = session.get("followup_answers", []) + [request.message]
-            followup_questions = session.get("followup_questions", [])
             
-            if len(current_answers) < len(followup_questions):
-                # More questions to answer
-                next_step = len(current_answers) + 1
-                next_question = followup_questions[len(current_answers)]
+            # Get smart classification from session for dynamic decision making
+            smart_classification = session.get("smart_classification", {})
+            complexity = smart_classification.get("complexity", "MEDIUM")
+            intent = smart_classification.get("intent", "CLARITY")
+            
+            # DYNAMIC DECISION: Should we ask another question or proceed to recommendation?
+            total_questions_answered = len(current_answers)
+            
+            # AI decides: Do we need more context?
+            need_more_context = False
+            
+            # Enhanced heuristic for dynamic question generation:
+            if total_questions_answered == 1:
+                # After first answer, usually need at least one more question
+                need_more_context = True
+            elif total_questions_answered == 2:
+                # After second answer, check if answers are detailed enough
+                avg_answer_length = sum(len(answer.split()) for answer in current_answers) / len(current_answers)
+                if avg_answer_length < 15:  # Answers are too short/vague
+                    need_more_context = True
+                elif complexity == "HIGH" and intent in ["REASSURANCE", "EMPOWERMENT"]:
+                    need_more_context = True  # Complex emotional decisions need more context
+            
+            # Max 3 questions total to prevent infinite loops
+            if total_questions_answered >= 3:
+                need_more_context = False
+            
+            if need_more_context:
+                # Generate NEXT dynamic question based on previous answers and context
+                session_context = f"""
+Initial Question: {session.get('initial_question', '')}
+Decision Type: {session.get('decision_type', '')}
+Classification: Complexity={complexity}, Intent={intent}
+
+Previous Answers:
+{chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(current_answers)])}
+
+Based on the user's answers so far, what's the most valuable follow-up question to ask next?
+Focus on filling gaps in understanding their priorities, constraints, emotions, or desired outcomes.
+"""
                 
-                return AdvancedDecisionStepResponse(
-                    decision_id=decision_id,
-                    step="followup",
-                    step_number=next_step,
-                    response="Thank you for that insight.",
-                    followup_questions=[EnhancedFollowUpQuestion(**next_question)],
-                    decision_type=session.get("decision_type"),
-                    session_version=session.get("version", 1)
-                )
-            else:
-                # All questions answered, generate recommendation
-                return await _generate_advanced_recommendation(
-                    decision_id, session, current_answers
-                )
+                try:
+                    # Import classes for type creation
+                    from ai_orchestrator_v2 import SmartClassification, ComplexityLevel, EmotionalIntent
+                    
+                    # Generate the NEXT smart question dynamically
+                    next_questions = await ai_orchestrator.generate_smart_followup_questions(
+                        session_context,
+                        SmartClassification(
+                            complexity=ComplexityLevel(complexity),
+                            intent=EmotionalIntent(intent),
+                            routed_models=smart_classification.get("routed_models", ["gpt4o-mini"]),
+                            cost_estimate=smart_classification.get("cost_estimate", "low")
+                        ),
+                        session_id=decision_id,
+                        max_questions=1  # Only generate the next question
+                    )
+                    
+                    if next_questions and len(next_questions) > 0:
+                        next_question = next_questions[0]
+                        enhanced_question = EnhancedFollowUpQuestion(
+                            question=next_question.question,
+                            nudge=next_question.nudge,
+                            category=next_question.category,
+                            step_number=total_questions_answered + 1
+                        )
+                        
+                        return AdvancedDecisionStepResponse(
+                            decision_id=decision_id,
+                            step="followup",
+                            step_number=total_questions_answered + 1,
+                            response="",
+                            followup_questions=[enhanced_question],
+                            is_complete=False,
+                            decision_type=session.get("decision_type"),
+                            session_version=session.get("version", 1)
+                        )
+                except Exception as e:
+                    logging.warning(f"Dynamic question generation failed: {e}")
+                    # Fall through to recommendation
+            
+            # If we reach here, AI decided we have enough context - proceed to recommendation
+            return await _generate_advanced_recommendation(
+                decision_id, session, current_answers
+            )
                 
         elif request.step == "recommendation" and session:
             # Direct recommendation request
