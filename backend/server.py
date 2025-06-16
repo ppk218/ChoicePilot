@@ -2143,28 +2143,20 @@ async def process_advanced_decision_step(
                 need_more_context = False
             
             if need_more_context:
-                # Generate NEXT dynamic question based on previous answers and context
-                session_context = f"""
-Initial Question: {session.get('initial_question', '')}
-Decision Type: {session.get('decision_type', '')}
-Classification: Complexity={complexity}, Intent={intent}
+                # 🧩 ENHANCED DYNAMIC CONTEXT INJECTION - Properly format user answers
+                last_user_answer = current_answers[-1] if current_answers else ""
+                
+                # Format the context to match the enhanced prompt patterns
+                dynamic_question_context = f"""Initial Question: {session.get('initial_question', '')}
 
 Previous Answers:
 {chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(current_answers)])}
 
-Based on the user's answers so far, what's the most valuable follow-up question to ask next?
-Focus on filling gaps in understanding their priorities, constraints, emotions, or desired outcomes.
-"""
+User's most recent answer: "{last_user_answer}"
+
+Generate a follow-up question that directly references and builds on what the user just shared. Use their exact words when possible and fill the biggest information gap for a comprehensive recommendation."""
                 
                 try:
-                    # Generate the NEXT smart question dynamically
-                    # Use a simplified approach instead of complex class imports
-                    dynamic_question_context = f"""
-Initial Question: {session.get('initial_question', '')}
-Previous Answers: {' | '.join(current_answers)}
-Complexity: {complexity}
-Intent: {intent}
-"""
                     
                     # Generate dynamic followup using the smart engine directly
                     next_questions = await ai_orchestrator.followup_engine.generate_smart_followups(
