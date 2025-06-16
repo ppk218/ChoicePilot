@@ -2129,13 +2129,23 @@ async def process_advanced_decision_step(
                 # Serve the next pre-generated question
                 next_question_data = stored_questions[next_step_number - 1]  # Array is 0-indexed
                 
-                next_question = EnhancedFollowUpQuestion(
-                    question=next_question_data.get("question", ""),
-                    nudge=next_question_data.get("nudge", ""),
-                    category=next_question_data.get("category", "general"),
-                    step_number=next_step_number,
-                    persona=next_question_data.get("persona", "realist")
-                )
+                # Handle both dict and object formats
+                if isinstance(next_question_data, dict):
+                    next_question = EnhancedFollowUpQuestion(
+                        question=next_question_data.get("question", ""),
+                        nudge=next_question_data.get("nudge", ""),
+                        category=next_question_data.get("category", "general"),
+                        step_number=next_step_number,
+                        persona=next_question_data.get("persona", "realist")
+                    )
+                else:
+                    next_question = EnhancedFollowUpQuestion(
+                        question=getattr(next_question_data, "question", ""),
+                        nudge=getattr(next_question_data, "nudge", ""),
+                        category=getattr(next_question_data, "category", "general"),
+                        step_number=next_step_number,
+                        persona=getattr(next_question_data, "persona", "realist")
+                    )
                 
                 # Update step number
                 await db.decision_sessions_advanced.update_one(
