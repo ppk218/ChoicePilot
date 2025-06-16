@@ -285,6 +285,9 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
         decision_type: DecisionType,
         max_questions: int = 3
     ) -> List[FollowUpQuestion]:
+        """
+        Generate intelligent follow-up questions with nudges (legacy method)
+        """
         
         # Select appropriate model for follow-up generation
         models = self.select_models(decision_type)
