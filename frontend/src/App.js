@@ -1446,8 +1446,28 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               <p className="text-foreground leading-relaxed">{item.content.recommendation}</p>
             </div>
 
-            {/* Next Steps */}
-            {item.content.next_steps && item.content.next_steps.length > 0 && (
+            {/* Next Steps with Time Estimates */}
+            {item.content.next_steps_with_time && item.content.next_steps_with_time.length > 0 ? (
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
+                <div className="space-y-3">
+                  {item.content.next_steps_with_time.map((step, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
+                      <span className="text-primary font-bold mt-0.5">{index + 1}.</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-foreground font-medium">{step.step}</span>
+                          <span className="text-xs bg-mint/20 text-mint-700 px-2 py-1 rounded-full">
+                            ⏱️ {step.time_estimate}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : item.content.next_steps && item.content.next_steps.length > 0 && (
               <div>
                 <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
                 <ul className="space-y-2">
