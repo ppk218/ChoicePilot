@@ -148,22 +148,54 @@ CREDIT_COSTS = {
     "scoring_matrix": 2
 }
 
-# LLM Models and routing configuration
+# Enhanced LLM Models with cost-effectiveness routing
 LLM_MODELS = {
-    "claude": {
+    "claude-sonnet": {
         "provider": "anthropic",
         "model": "claude-sonnet-4-20250514",
         "strengths": ["logical reasoning", "structured analysis", "emotional intelligence", "detailed explanations"],
         "best_for": ["career", "financial", "education", "lifestyle"],
+        "cost": "high",
         "pro_only": True
+    },
+    "claude-haiku": {
+        "provider": "anthropic",
+        "model": "claude-haiku-3-20240307",
+        "strengths": ["fast responses", "nuanced understanding", "empathy", "cost-effective"],
+        "best_for": ["emotional decisions", "reassurance", "quick analysis"],
+        "cost": "low",
+        "pro_only": False
     },
     "gpt4o": {
         "provider": "openai", 
         "model": "gpt-4o",
-        "strengths": ["creativity", "real-time interaction", "conversational flow", "quick responses"],
+        "strengths": ["creativity", "real-time interaction", "conversational flow", "detailed reasoning"],
         "best_for": ["consumer", "travel", "entertainment", "general"],
+        "cost": "high",
+        "pro_only": False
+    },
+    "gpt4o-mini": {
+        "provider": "openai", 
+        "model": "gpt-4o-mini",
+        "strengths": ["fast responses", "logical reasoning", "cost-effective", "structured thinking"],
+        "best_for": ["simple decisions", "clarity", "validation"],
+        "cost": "low",
         "pro_only": False
     }
+}
+
+# Decision Classification System
+DECISION_COMPLEXITY = {
+    "LOW": "Simple, factual, or straightforward decisions",
+    "MEDIUM": "Multi-factor or contextual decisions", 
+    "HIGH": "Ambiguous, emotional, or deeply personal decisions"
+}
+
+EMOTIONAL_INTENT = {
+    "CLARITY": "User seeks direction or simplicity",
+    "CONFIDENCE": "User seeks to validate or confirm a choice",
+    "REASSURANCE": "User needs support, safety, or empathy",
+    "EMPOWERMENT": "User wants bold insight or a confidence boost"
 }
 
 # Enhanced Advisor Personas
