@@ -516,10 +516,16 @@ User Responses:
 **ENHANCED OUTPUT FORMAT (respond in JSON):**
 {{
   "final_recommendation": "Emotionally resonant 3-4 sentence recommendation that references specific user quotes and addresses their core emotional needs",
+  "summary": "1-paragraph TL;DR summary that clearly restates the decision in 2 lines for quick reading",
   "next_steps": [
     "Step 1: Specific action using their context (e.g., 'Start your 30-day artist sprint while keeping your current job')",
     "Step 2: Concrete measurement (e.g., 'Track your energy levels daily - are you excited or drained?')", 
     "Step 3: Decision checkpoint (e.g., 'In 30 days, reassess with real data: motivation, time management, financial pressure')"
+  ],
+  "next_steps_with_time": [
+    {{"step": "Specific action using their context", "time_estimate": "2 hours this weekend", "description": "Brief explanation of what this involves"}},
+    {{"step": "Concrete measurement action", "time_estimate": "5 minutes daily", "description": "Track progress and feelings"}},
+    {{"step": "Decision checkpoint", "time_estimate": "1 hour in 30 days", "description": "Final assessment and decision"}}
   ],
   "confidence_score": 75,
   "confidence_tooltip": "High confidence based on emotional alignment analysis and multi-perspective synthesis",
