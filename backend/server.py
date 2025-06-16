@@ -2067,7 +2067,7 @@ async def process_advanced_decision_step(
                 max_questions=3
             )
             
-            # Convert to response format
+            # Convert to response format with persona information
             enhanced_questions = [
                 EnhancedFollowUpQuestion(
                     question=q.question,
