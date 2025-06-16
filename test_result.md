@@ -169,11 +169,8 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Smart Classification and Persona-Based Follow-Up System"
-    - "Smart Classification Frontend Integration"
-  stuck_tasks: 
-    - "Smart Classification and Persona-Based Follow-Up System"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
