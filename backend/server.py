@@ -2337,7 +2337,9 @@ async def _generate_advanced_recommendation(
         
         enhanced_recommendation = EnhancedDecisionRecommendation(
             final_recommendation=recommendation.final_recommendation,
+            summary=recommendation.summary,
             next_steps=recommendation.next_steps,
+            next_steps_with_time=recommendation.next_steps_with_time,
             confidence_score=recommendation.confidence_score,
             confidence_tooltip=recommendation.confidence_tooltip,
             reasoning=recommendation.reasoning,
