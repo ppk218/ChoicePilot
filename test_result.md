@@ -114,7 +114,7 @@ backend:
     implemented: true
     working: false
     file: "ai_orchestrator_v2.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -127,6 +127,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Conducted additional detailed testing of the dynamic follow-up system with specific test cases. The results show that the system is only partially working. Out of 4 test scenarios, only 2 passed successfully (50% success rate). The system correctly handles vague vs. detailed answers - when given a vague answer like 'I'm not sure, maybe' it asks for more specifics, and when given a detailed answer about career change with financial concerns, it asks about financial buffer. The system also correctly identifies information gaps - when given financial information about house buying but no timeline/personal factors, it asks about long-term plans. However, it fails in two key areas: 1) Basic dynamic follow-up test - the system returns the same follow-up question regardless of different answers to the same initial question, and 2) Conflicted answer test - when given a conflicted answer about moving cities (job opportunity vs. family ties), it doesn't specifically address this conflict. The API responses show that while the code structure for dynamic follow-ups exists in ai_orchestrator_v2.py, the implementation is not consistently generating truly context-aware questions based on previous answers."
+      - working: false
+        agent: "testing"
+        comment: "Tested the FIXED DYNAMIC FOLLOW-UP SYSTEM with focus on verifying that questions are now truly dynamic and include persona information. The system is still only partially working. The persona assignment is working correctly - all follow-up questions now include a persona field with appropriate values (realist, visionary, pragmatist, supportive, creative). However, the system still fails in two critical areas: 1) Dynamic Question Generation - The system returns the same follow-up question regardless of different answers to the same initial question. When testing with 'Should I quit my job?' and providing two different answers ('I hate my job and want to start my own business' vs 'I love my job but got a higher salary offer elsewhere'), the system returned the exact same second question. 2) Context Awareness - The system doesn't reference specific details from previous answers. When answering 'I'm torn between career advancement and staying close to family' to a question about moving cities, the follow-up question didn't reference career or family at all. The code in generate_smart_followup_questions() in ai_orchestrator_v2.py appears to have the structure for dynamic question generation, but the implementation is not effectively using the previous answers to generate truly context-aware questions."
 
 frontend:
   - task: "Advanced AI Frontend Integration"
