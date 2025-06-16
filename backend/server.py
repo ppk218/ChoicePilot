@@ -2096,9 +2096,9 @@ async def process_advanced_decision_step(
             return AdvancedDecisionStepResponse(
                 decision_id=decision_id,
                 step="initial",
-                step_number=1,
+                step_number=0,  # Initial step before questions
                 response=response_text,
-                followup_questions=enhanced_questions,
+                followup_questions=enhanced_questions,  # Return ALL 3 questions upfront
                 decision_type=decision_type.value,
                 session_version=1
             )
