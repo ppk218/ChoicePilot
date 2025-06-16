@@ -807,12 +807,16 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
     } catch (error) {
       console.error('Followup error:', error);
-      // Fallback behavior - limit to max 3 questions
-      if (currentFollowupIndex < 2) {
-        // Generate a simple next question locally as fallback
-        setCurrentFollowupIndex(currentFollowupIndex + 1);
-        setCurrentAnswer('');
+      console.log('Backend response error:', error.response?.data);
+      
+      // Better fallback - try to generate recommendation instead of cycling through old questions
+      if (currentFollowupIndex >= 1) {
+        // If we've asked at least 2 questions, generate recommendation
+        setProcessingStep('Generating recommendation with available context...');
+        await generateRecommendation();
       } else {
+        // Only fallback to local increment if this is the very first question
+        setError('Having trouble generating the next question. Let\'s continue with available context.');
         await generateRecommendation();
       }
     } finally {
