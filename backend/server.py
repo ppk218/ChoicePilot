@@ -2155,6 +2155,74 @@ async def process_advanced_decision_step(
                 decision_id, session, current_answers
             )
             
+        elif request.step == "go_deeper" and session:
+            # 🚀 OPTIONAL DEPTH ENHANCEMENT: Generate deeper questions based on all answers
+            current_answers = session.get("followup_answers", [])
+            initial_question = session.get("initial_question", "")
+            smart_classification = session.get("smart_classification", {})
+            
+            # Create context for deeper questions
+            deeper_context = f"""Initial Question: {initial_question}
+
+User's Answers to Previous Questions:
+{chr(10).join([f"Answer {i+1}: {answer}" for i, answer in enumerate(current_answers)])}
+
+Based on their answers, generate 1-2 deeper clarifying or exploratory questions that would help improve the final recommendation. Look for vagueness, conflicts, or areas that need more detail."""
+            
+            try:
+                # Use enhanced model for deeper questions
+                deeper_questions = await ai_orchestrator.followup_engine.generate_smart_followups(
+                    deeper_context,
+                    {
+                        "complexity": "HIGH",  # Force deeper reasoning
+                        "intent": smart_classification.get("intent", "CLARITY")
+                    },
+                    ["claude-sonnet"],  # Use best model for depth
+                    f"{decision_id}_deeper"
+                )
+                
+                if deeper_questions and len(deeper_questions) > 0:
+                    # Take only 1-2 questions for depth
+                    enhanced_deeper_questions = [
+                        EnhancedFollowUpQuestion(
+                            question=q["question"],
+                            nudge=q["nudge"],
+                            category=q["category"],
+                            step_number=len(current_answers) + i + 1,
+                            persona=q["persona"]
+                        ) for i, q in enumerate(deeper_questions[:2])
+                    ]
+                    
+                    # Update session to track deeper questions
+                    await db.decision_sessions_advanced.update_one(
+                        {"id": decision_id},
+                        {
+                            "$set": {
+                                "current_step": "going_deeper",
+                                "deeper_questions": [q.dict() for q in enhanced_deeper_questions],
+                                "last_active": datetime.utcnow()
+                            }
+                        }
+                    )
+                    
+                    return AdvancedDecisionStepResponse(
+                        decision_id=decision_id,
+                        step="deeper",
+                        step_number=len(current_answers) + 1,
+                        response="Let me ask a couple more specific questions to give you an even better recommendation.",
+                        followup_questions=enhanced_deeper_questions,
+                        decision_type=session.get("decision_type"),
+                        session_version=1
+                    )
+                    
+            except Exception as e:
+                logging.warning(f"Deeper question generation failed: {e}")
+                
+            # Fallback to direct recommendation
+            return await _generate_advanced_recommendation(
+                decision_id, session, current_answers
+            )
+            
         elif request.step == "adjust" and session:
             # Adjustment request - create new version
             current_version = session.get("version", 1)
