@@ -608,7 +608,13 @@ User Responses:
             
             return DecisionRecommendation(
                 final_recommendation=parsed.get("final_recommendation", "Consider your options carefully and make the choice that aligns with your priorities."),
+                summary=parsed.get("summary", "Based on your responses, this decision requires careful consideration of your priorities and values."),
                 next_steps=parsed.get("next_steps", ["Review your options", "Gather additional information", "Make your decision"]),
+                next_steps_with_time=parsed.get("next_steps_with_time", [
+                    {"step": "Review your options", "time_estimate": "1 hour", "description": "Carefully evaluate each possibility"},
+                    {"step": "Gather additional information", "time_estimate": "2-3 days", "description": "Research any missing details"},
+                    {"step": "Make your decision", "time_estimate": "30 minutes", "description": "Choose based on your analysis"}
+                ]),
                 confidence_score=min(max(parsed.get("confidence_score", 75), 0), 100),
                 confidence_tooltip=parsed.get("confidence_tooltip", "Based on available information and analysis"),
                 reasoning=parsed.get("reasoning", "Analysis completed using multiple decision frameworks"),
