@@ -143,6 +143,12 @@ const App = () => {
     trackPageView(currentView);
   }, [currentView, trackPageView]);
 
+  // Make auth modal accessible globally
+  useEffect(() => {
+    window.showAuthModal = () => setShowAuthModal(true);
+    return () => delete window.showAuthModal;
+  }, []);
+
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
