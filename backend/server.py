@@ -2737,60 +2737,72 @@ User's problem: {user_message}"""
                 provider = "openai"
                 model_name = LLM_MODELS[primary_model]["model"]
             
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=session_id,
-                system_message=followup_prompt
-            ).with_model(provider, model_name).with_max_tokens(1000)
+            # Try up to 3 times to get a non-generic question for context-aware requests
+            max_retries = 3 if is_context_aware else 1
             
-            user_msg = UserMessage(text=user_message)
-            response = await chat.send_message(user_msg)
-            
-            # Parse JSON response
-            import json
-            followups_data = json.loads(response.strip())
-            
-            # Validate and format questions
-            questions = []
-            for q_data in followups_data.get("questions", []):
-                if len(questions) >= 3:  # Max 3 questions
-                    break
+            for attempt in range(max_retries):
+                chat = LlmChat(
+                    api_key=api_key,
+                    session_id=f"{session_id}_attempt_{attempt}",
+                    system_message=followup_prompt
+                ).with_model(provider, model_name).with_max_tokens(1000)
                 
-                # Extract the generated question
-                generated_question = q_data.get("q", "")
+                user_msg = UserMessage(text=user_message)
+                response = await chat.send_message(user_msg)
                 
-                # 🚨 VALIDATION: Check for prohibited generic questions
-                prohibited_patterns = [
-                    "what emotions are driving this decision",
-                    "what are your priorities", 
-                    "what factors matter most",
-                    "what would success look like",
-                    "what constraints do you have",
-                    "how urgent is this decision",
-                    "what outcome do you hope for"
-                ]
+                # Parse JSON response
+                import json
+                followups_data = json.loads(response.strip())
                 
-                # Convert to lowercase for comparison
-                question_lower = generated_question.lower()
-                is_generic = any(pattern in question_lower for pattern in prohibited_patterns)
+                # Validate and format questions
+                questions = []
+                for q_data in followups_data.get("questions", []):
+                    if len(questions) >= 3:  # Max 3 questions
+                        break
+                    
+                    # Extract the generated question
+                    generated_question = q_data.get("q", "")
+                    
+                    # 🚨 VALIDATION: Check for prohibited generic questions
+                    prohibited_patterns = [
+                        "what emotions are driving this decision",
+                        "what are your priorities", 
+                        "what factors matter most",
+                        "what would success look like",
+                        "what constraints do you have",
+                        "how urgent is this decision",
+                        "what outcome do you hope for"
+                    ]
+                    
+                    # Convert to lowercase for comparison
+                    question_lower = generated_question.lower()
+                    is_generic = any(pattern in question_lower for pattern in prohibited_patterns)
+                    
+                    if is_generic and is_context_aware and attempt < max_retries - 1:
+                        # This is a context-aware request but got a generic question - retry
+                        print(f"Attempt {attempt + 1}: Generic question detected, retrying: {generated_question}")
+                        break  # Break out of the question loop to retry
+                    
+                    persona = q_data.get("persona", "realist").lower()
+                    if persona not in FOLLOWUP_PERSONAS:
+                        persona = "realist"
+                    
+                    questions.append({
+                        "question": generated_question,
+                        "nudge": q_data.get("nudge", ""),
+                        "persona": persona,
+                        "category": classification.get("intent", "CLARITY").lower()
+                    })
                 
-                if is_generic and is_context_aware:
-                    # This is a context-aware request but got a generic question - retry with more specific prompt
-                    print(f"Warning: Generic question detected in context-aware mode: {generated_question}")
-                    # Log the issue but still include the question to avoid breaking the flow
+                # If we got non-generic questions or it's the last attempt, return them
+                if questions and (not is_context_aware or attempt == max_retries - 1 or not is_generic):
+                    return questions
                 
-                persona = q_data.get("persona", "realist").lower()
-                if persona not in FOLLOWUP_PERSONAS:
-                    persona = "realist"
-                
-                questions.append({
-                    "question": generated_question,
-                    "nudge": q_data.get("nudge", ""),
-                    "persona": persona,
-                    "category": classification.get("intent", "CLARITY").lower()
-                })
-            
-            return questions
+                # If no questions or generic detected, continue to next attempt
+                if attempt < max_retries - 1:
+                    print(f"Retrying question generation (attempt {attempt + 2}/{max_retries})")
+                    # Modify the prompt to be more specific for the retry
+                    followup_prompt += f"\n\n**RETRY #{attempt + 2}**: The previous attempt generated a generic question. You MUST generate a unique question that specifically references the user's answer details."
             
         except Exception as e:
             logging.warning(f"Smart followup generation failed: {str(e)}")
