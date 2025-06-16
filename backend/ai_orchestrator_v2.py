@@ -70,29 +70,91 @@ class DecisionRecommendation:
 
 class AIOrchestrator:
     """
-    Advanced AI orchestration system for multi-LLM decision making
+    Enhanced AI orchestration with smart classification, cost-effective routing,
+    and persona-based follow-up generation
     """
     
-    def __init__(self, llm_router=None):
+    def __init__(self, llm_router=None, classifier=None, smart_router=None, followup_engine=None):
         self.llm_router = llm_router
+        self.classifier = classifier
+        self.smart_router = smart_router
+        self.followup_engine = followup_engine
         self.classification_cache = {}
-        self.personas = {
+        
+        # Enhanced personas for follow-up questions
+        self.followup_personas = {
             "realist": {
-                "name": "The Realist",
-                "style": "practical, risk-aware, evidence-based",
-                "prompt_modifier": "Focus on practical constraints, risks, and realistic outcomes."
+                "name": "Realist", "icon": "🧠", "color": "blue",
+                "style": "practical and direct", "focus": "facts and constraints"
             },
             "visionary": {
-                "name": "The Visionary", 
-                "style": "optimistic, opportunity-focused, big-picture",
-                "prompt_modifier": "Focus on potential opportunities, growth possibilities, and long-term vision."
+                "name": "Visionary", "icon": "🚀", "color": "purple", 
+                "style": "inspiring and forward-thinking", "focus": "possibilities and outcomes"
+            },
+            "creative": {
+                "name": "Creative", "icon": "🎨", "color": "pink",
+                "style": "imaginative and lateral", "focus": "alternatives and innovation"
             },
             "pragmatist": {
-                "name": "The Pragmatist",
-                "style": "balanced, solution-oriented, efficient",
-                "prompt_modifier": "Focus on practical solutions, efficiency, and balanced trade-offs."
+                "name": "Pragmatist", "icon": "⚖️", "color": "green",
+                "style": "balanced and systematic", "focus": "trade-offs and priorities"
+            },
+            "supportive": {
+                "name": "Supportive", "icon": "💙", "color": "teal",
+                "style": "empathetic and validating", "focus": "emotions and well-being"
             }
         }
+
+    async def smart_classify_and_route(self, question: str, user_plan: str = "free") -> SmartClassification:
+        """
+        Classify decision using smart classifier and route to optimal models
+        """
+        start_time = datetime.now()
+        
+        try:
+            # Use the smart classifier
+            if self.classifier:
+                classification = await self.classifier.classify_decision(question)
+            else:
+                # Fallback classification
+                classification = {"complexity": "MEDIUM", "intent": "CLARITY"}
+            
+            # Route to optimal models
+            if self.smart_router:
+                routed_models = self.smart_router.route_models(classification, user_plan)
+            else:
+                routed_models = ["gpt4o-mini"]  # Fallback
+            
+            # Estimate cost
+            cost_estimate = self._estimate_cost(routed_models, classification["complexity"])
+            
+            smart_classification = SmartClassification(
+                complexity=ComplexityLevel(classification["complexity"]),
+                intent=EmotionalIntent(classification["intent"]),
+                routed_models=routed_models,
+                cost_estimate=cost_estimate
+            )
+            
+            return smart_classification
+            
+        except Exception as e:
+            logger.error(f"Smart classification failed: {str(e)}")
+            # Return safe fallback
+            return SmartClassification(
+                complexity=ComplexityLevel.MEDIUM,
+                intent=EmotionalIntent.CLARITY,
+                routed_models=["gpt4o-mini"],
+                cost_estimate="low"
+            )
+    
+    def _estimate_cost(self, models: List[str], complexity: str) -> str:
+        """Estimate cost category based on models and complexity"""
+        high_cost_models = ["claude-sonnet", "gpt4o"]
+        
+        if any(model in high_cost_models for model in models):
+            return "high" if complexity == "HIGH" else "medium"
+        else:
+            return "low"
 
     async def classify_question(self, question: str, cache_key: str = None) -> DecisionType:
         """
