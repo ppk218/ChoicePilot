@@ -467,9 +467,9 @@ User Responses:
 3. **Risk Assessment**: Identify and evaluate potential risks
 4. **Creative Alternatives**: Innovative approaches and out-of-the-box solutions
 5. **Persona Perspectives**: Consider views from different advisor types:
-   - Realist: "{self.personas['realist']['prompt_modifier']}"
-   - Visionary: "{self.personas['visionary']['prompt_modifier']}"
-   - Pragmatist: "{self.personas['pragmatist']['prompt_modifier']}"
+   - Realist: "Practical, balanced, objective analysis with measured approach"
+   - Visionary: "Future-oriented, strategic, high-impact thinking"
+   - Pragmatist: "Balanced, systematic, trade-offs and priorities"
 
 **Decision Type Considerations:**
 {self._get_decision_type_guidance(decision_type)}
