@@ -851,10 +851,12 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         const advancedRec = response.data.recommendation;
         recommendation = {
           recommendation: advancedRec.final_recommendation,
+          summary: advancedRec.summary, // New: TL;DR summary
           confidence_score: advancedRec.confidence_score,
           reasoning: advancedRec.reasoning,
           logic_trace: advancedRec.trace.frameworks_used || [],
           next_steps: advancedRec.next_steps || [],
+          next_steps_with_time: advancedRec.next_steps_with_time || [], // New: time estimates
           confidence_tooltip: advancedRec.confidence_tooltip,
           trace: advancedRec.trace
         };
