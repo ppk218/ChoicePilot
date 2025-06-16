@@ -2715,7 +2715,7 @@ Generate exactly 3 questions that will give you the best foundation for an excel
                 api_key=api_key,
                 session_id=session_id,
                 system_message=followup_prompt
-            ).with_model(provider, model_name).with_max_tokens(1500).with_temperature(0.7)
+            ).with_model(provider, model_name).with_max_tokens(1500)
             
             user_msg = UserMessage(text=f"Generate 3 thoughtful follow-up questions for: {user_message}")
             response = await chat.send_message(user_msg)
