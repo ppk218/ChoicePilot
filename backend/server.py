@@ -2759,7 +2759,17 @@ Generate exactly 3 questions that will give you the best foundation for an excel
                     "step_number": len(questions) + 1
                 })
             
-            return questions[:3]  # Return exactly 3 questions
+            # Convert to FollowUpQuestion objects for consistency
+            followup_question_objects = []
+            for i, q in enumerate(questions):
+                followup_question_objects.append(FollowUpQuestion(
+                    question=q.get("question", ""),
+                    nudge=q.get("nudge", ""),
+                    category=q.get("category", "general"),
+                    persona=q.get("persona", "realist")
+                ))
+            
+            return followup_question_objects[:3]  # Return exactly 3 FollowUpQuestion objects
             
         except Exception as e:
             logging.warning(f"AI-led followup generation failed: {str(e)}")
