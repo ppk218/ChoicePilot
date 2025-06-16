@@ -204,12 +204,12 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 6
+  test_sequence: 7
   run_ui: true
 
 test_plan:
-  current_focus: ["Enhanced Context-Aware Dynamic Follow-Up System"]
-  stuck_tasks: ["Enhanced Context-Aware Dynamic Follow-Up System"]
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
