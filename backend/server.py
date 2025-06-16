@@ -2072,12 +2072,15 @@ async def process_advanced_decision_step(
             enhanced_questions = []
             for i, q in enumerate(followup_questions):
                 enhanced_questions.append(EnhancedFollowUpQuestion(
-                    question=q.get("question", ""),
-                    nudge=q.get("nudge", ""),
-                    category=q.get("category", "general"),
+                    question=q.question,
+                    nudge=q.nudge,
+                    category=q.category,
                     step_number=i + 1,
-                    persona=q.get("persona", "realist")
+                    persona=q.persona
                 ))
+            
+            # Store questions as dictionaries for consistent access
+            question_dicts = [q.dict() for q in enhanced_questions]
             
             # Store ALL questions in session upfront (Hybrid AI-Led approach)
             await db.decision_sessions_advanced.update_one(
