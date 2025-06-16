@@ -1,6 +1,6 @@
 """
 Advanced AI Orchestration for GetGingee Decision Engine
-Implements multi-LLM routing, consensus logic, and sophisticated decision frameworks
+Enhanced with Smart Classification, Cost-Effective Routing, and Persona-Based Follow-ups
 """
 
 import json
@@ -12,6 +12,29 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+class DecisionType(Enum):
+    STRUCTURED = "structured"
+    INTUITIVE = "intuitive"
+    MIXED = "mixed"
+
+class ComplexityLevel(Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+class EmotionalIntent(Enum):
+    CLARITY = "CLARITY"
+    CONFIDENCE = "CONFIDENCE"
+    REASSURANCE = "REASSURANCE"
+    EMPOWERMENT = "EMPOWERMENT"
+
+@dataclass
+class SmartClassification:
+    complexity: ComplexityLevel
+    intent: EmotionalIntent
+    routed_models: List[str]
+    cost_estimate: str
 
 class DecisionType(Enum):
     STRUCTURED = "structured"
