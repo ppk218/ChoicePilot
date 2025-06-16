@@ -2511,6 +2511,150 @@ async def get_decision_info(decision_id: str, current_user: dict = Depends(get_c
         logging.error(f"Error getting decision info: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Error retrieving decision information")
 
+class SmartFollowupEngine:
+    """Generates intelligent follow-up questions with persona alignment and nudges"""
+    
+    @staticmethod
+    async def generate_smart_followups(
+        user_message: str, 
+        classification: dict, 
+        models: list,
+        session_id: str
+    ) -> list:
+        """Generate 1-3 smart follow-up questions with persona alignment"""
+        
+        followup_prompt = f"""You are an AI follow-up engine for a decision assistant. The user has submitted a problem and now you must extract key information using 1–3 smart follow-up questions.
+
+Decision Classification:
+- Complexity: {classification.get('complexity', 'MEDIUM')}
+- Intent: {classification.get('intent', 'CLARITY')}
+
+Each question should:
+- Be short and clear (max 15 words)
+- Include a helpful nudge (example of how to answer)
+- Align with a persona tone: Realist, Visionary, Creative, Pragmatist, Supportive
+
+Your goal is to gather exactly the context needed for the AI to make a well-informed recommendation.
+
+Return JSON:
+{{
+  "questions": [
+    {{
+      "q": "How urgent is this decision for you?",
+      "nudge": "e.g., I need to decide this week vs just exploring",
+      "persona": "Realist"
+    }},
+    {{
+      "q": "What outcome do you most hope for?",
+      "nudge": "e.g., peace of mind, growth, clarity",
+      "persona": "Visionary"
+    }}
+  ]
+}}
+
+User's problem: {user_message}"""
+
+        try:
+            # Use the first routed model for follow-up generation
+            primary_model = models[0] if models else "gpt4o-mini"
+            
+            if primary_model.startswith("claude"):
+                api_key = ANTHROPIC_API_KEY
+                provider = "anthropic"
+                model_name = LLM_MODELS[primary_model]["model"]
+            else:
+                api_key = OPENAI_API_KEY
+                provider = "openai"
+                model_name = LLM_MODELS[primary_model]["model"]
+            
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=session_id,
+                system_message=followup_prompt
+            ).with_model(provider, model_name).with_max_tokens(1000)
+            
+            user_msg = UserMessage(text=user_message)
+            response = await chat.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            followups_data = json.loads(response.strip())
+            
+            # Validate and format questions
+            questions = []
+            for q_data in followups_data.get("questions", []):
+                if len(questions) >= 3:  # Max 3 questions
+                    break
+                    
+                persona = q_data.get("persona", "Realist").lower()
+                if persona not in FOLLOWUP_PERSONAS:
+                    persona = "realist"
+                
+                questions.append({
+                    "question": q_data.get("q", ""),
+                    "nudge": q_data.get("nudge", ""),
+                    "persona": persona,
+                    "category": classification.get("intent", "CLARITY").lower()
+                })
+            
+            return questions
+            
+        except Exception as e:
+            logging.warning(f"Smart followup generation failed: {str(e)}")
+            # Fallback to simple questions
+            return SmartFollowupEngine._generate_fallback_questions(classification)
+    
+    @staticmethod
+    def _generate_fallback_questions(classification: dict) -> list:
+        """Generate fallback questions if AI generation fails"""
+        
+        complexity = classification.get("complexity", "MEDIUM")
+        intent = classification.get("intent", "CLARITY")
+        
+        base_questions = []
+        
+        if complexity == "HIGH":
+            base_questions = [
+                {
+                    "question": "What emotions are driving this decision?",
+                    "nudge": "e.g., fear, excitement, uncertainty, hope",
+                    "persona": "supportive",
+                    "category": "emotions"
+                },
+                {
+                    "question": "What would success look like to you?",
+                    "nudge": "e.g., peace of mind, new opportunities, growth",
+                    "persona": "visionary",
+                    "category": "outcomes"
+                }
+            ]
+        elif complexity == "MEDIUM":
+            base_questions = [
+                {
+                    "question": "What factors matter most to you?",
+                    "nudge": "e.g., time, money, relationships, career growth",
+                    "persona": "pragmatist",
+                    "category": "priorities"
+                },
+                {
+                    "question": "What constraints are you working with?",
+                    "nudge": "e.g., budget limits, deadlines, location",
+                    "persona": "realist",
+                    "category": "constraints"
+                }
+            ]
+        else:  # LOW
+            base_questions = [
+                {
+                    "question": "When do you need to decide?",
+                    "nudge": "e.g., this week, next month, just exploring",
+                    "persona": "realist",
+                    "category": "timing"
+                }
+            ]
+        
+        return base_questions[:2]  # Return max 2 fallback questions
+
 def generate_demo_response(message: str, category: str = "general", user_preferences: dict = None, conversation_history: List[dict] = None, advisor_style: str = "realist") -> str:
     """Generate demo responses when both LLMs fail"""
     
