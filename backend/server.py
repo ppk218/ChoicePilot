@@ -2160,7 +2160,7 @@ Focus on filling gaps in understanding their priorities, constraints, emotions, 
                     
                     # Generate the NEXT smart question dynamically
                     next_questions = await ai_orchestrator.generate_smart_followup_questions(
-                        session_context,
+                        session.get('initial_question', ''),
                         SmartClassification(
                             complexity=ComplexityLevel(complexity),
                             intent=EmotionalIntent(intent),
@@ -2168,7 +2168,8 @@ Focus on filling gaps in understanding their priorities, constraints, emotions, 
                             cost_estimate=smart_classification.get("cost_estimate", "low")
                         ),
                         session_id=decision_id,
-                        max_questions=1  # Only generate the next question
+                        max_questions=1,  # Only generate the next question
+                        previous_answers=current_answers  # Pass previous answers for context
                     )
                     
                     if next_questions and len(next_questions) > 0:
