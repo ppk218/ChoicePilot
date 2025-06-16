@@ -453,6 +453,7 @@ class EnhancedFollowUpQuestion(BaseModel):
     nudge: str
     category: str
     step_number: int
+    persona: str = "realist"  # Added persona field with default
 
 class EnhancedDecisionTrace(BaseModel):
     models_used: List[str]
