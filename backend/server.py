@@ -2750,6 +2750,7 @@ Generate exactly 3 questions that will give you the best foundation for an excel
                 if persona not in FOLLOWUP_PERSONAS:
                     persona = "realist"
                 
+                # Store as dictionary for consistent access
                 questions.append({
                     "question": q_data.get("q", ""),
                     "nudge": q_data.get("nudge", ""),
