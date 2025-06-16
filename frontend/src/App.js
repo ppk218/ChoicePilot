@@ -1614,15 +1614,30 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                       </div>
                     )}
 
-                    {/* Personalization Status */}
+                    {/* Personalization Status with CTA */}
                     <div>
                       <h5 className="text-sm font-medium text-foreground mb-1">Personalization</h5>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                      }`}>
-                        {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                        }`}>
+                          {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
+                        </span>
+                        {!isAuthenticated && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="ml-2 text-xs px-3 py-1 h-auto bg-primary/5 border-primary/30 hover:bg-primary/10 transition-colors"
+                            onClick={() => {
+                              // Trigger auth modal - you'll need to add this function
+                              if (window.showAuthModal) window.showAuthModal();
+                            }}
+                          >
+                            👋 Want smarter decisions? Sign up
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Processing Time (Hidden in collapsed tooltip) */}
