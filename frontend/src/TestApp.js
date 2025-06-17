@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ConversationCard from './components/ConversationCard';
-import './App.css';
+import './TestApp.css';
 
 function App() {
   const [showTest, setShowTest] = useState(false);
