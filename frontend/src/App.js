@@ -1281,18 +1281,39 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           </div>
         )}
         
+        {/* Modal Components */}
+        {/* Go Deeper Modal */}
+        {showGoDeeperModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">🔍 Go Deeper</h3>
+                  <button
+                    onClick={() => setShowGoDeeperModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p>Go Deeper modal content will be implemented here.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Floating Upgrade to Pro Button */}
         {currentStep === 'recommendation' && !isAuthenticated && (
           <div className="fixed top-4 right-4 z-50">
-            <Button 
-              className="bg-gradient-to-r from-primary to-mint text-white shadow-lg hover:shadow-xl transition-all duration-300 border-none"
+            <button 
+              className="bg-gradient-to-r from-primary to-mint text-white shadow-lg hover:shadow-xl transition-all duration-300 border-none px-4 py-2 rounded-lg"
               onClick={() => {
                 alert('Upgrade to Pro for unlimited decisions, advanced analytics, and priority support!');
               }}
             >
               <span className="mr-2">✨</span>
               Unlock More Decisions – Go Pro
-            </Button>
+            </button>
           </div>
         )}
       </div>
