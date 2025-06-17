@@ -1145,260 +1145,136 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           </Card>
         )}
 
-        {/* Action Buttons */}
-        {currentStep === 'recommendation' && (
-          <div className="space-y-4 mt-8">
-            {/* Take Action Card */}
-            <Card className="decision-card bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span>🚀</span>
-                  <span>Take Action</span>
-                </CardTitle>
-                <CardDescription>
-                  Export, share, or explore more options for your decision
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Export functionality
-                    console.log('Export decision');
-                  }}
-                  className="flex items-center gap-2 justify-start"
-                >
-                  📄 Export as PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Share functionality
-                    navigator.clipboard.writeText(window.location.href);
-                    alert('Share link copied to clipboard!');
-                  }}
-                  className="flex items-center gap-2 justify-start"
-                >
-                  📤 Share Decision
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Simulate alternatives
-                    setCurrentStep('followup');
-                    setCurrentFollowupIndex(0);
-                    setCurrentAnswer('');
-                  }}
-                  className="flex items-center gap-2 justify-start"
-                >
-                  🔮 Explore Alternatives
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Upgrade prompt
-                    alert('Upgrade to Pro for voice input, unlimited decisions, and advanced features!');
-                  }}
-                  className="flex items-center gap-2 justify-start"
-                >
-                  ⭐ Upgrade to Pro
-                </Button>
-              </CardContent>
-            </Card>
-            
-            {/* Primary Action Buttons */}
-            <div className="flex gap-3">
+        {/* Enhanced Post-Decision Experience */}
+        {currentStep === 'recommendation' && recommendation && (
+          <div className="space-y-6 mt-8">
+            {/* New Minimalist Action Row */}
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  // Save current decision to comparison before adjusting
-                  if (recommendation) {
-                    setPreviousDecisions(prev => [...prev, {
-                      id: Date.now(),
-                      recommendation: recommendation,
-                      answers: conversationHistory.filter(item => item.type === 'user_answer').map(item => item.content),
-                      timestamp: new Date()
-                    }]);
-                  }
-                  // Adjust decision logic
-                  setCurrentStep('followup');
-                  setCurrentFollowupIndex(0);
-                  setCurrentAnswer('');
-                  setRecommendation(null);
-                }}
-                className="flex-1 flex items-center gap-2"
+                onClick={() => setShowGoDeeperModal(true)}
+                className="flex items-center gap-2"
               >
-                🔁 Adjust Decision
+                🔍 Go Deeper
               </Button>
               <Button
-                onClick={() => {
-                  // Save decision and redirect to dashboard
-                  onSaveAndContinue();
-                }}
-                className="flex-1 cta-button flex items-center gap-2"
+                variant="outline"
+                onClick={() => setShowAdjustModal(true)}
+                className="flex items-center gap-2"
               >
-                ✅ Implement This
+                🔧 Adjust
               </Button>
+              {decisionVersions.length > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowVersionCarousel(true)}
+                  className="flex items-center gap-2"
+                >
+                  📊 Compare
+                </Button>
+              )}
             </div>
-            
-            {/* Enhanced Comparison Section */}
-            {previousDecisions.length > 0 && (
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold text-foreground flex items-center gap-2">
-                        <span>🔄</span>
-                        <span>Decision Comparison Available</span>
-                      </h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Compare your current decision with {previousDecisions.length} previous version{previousDecisions.length > 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    <Button
-                      variant={showComparison ? "default" : "outline"}
-                      onClick={() => setShowComparison(!showComparison)}
-                      className="flex items-center gap-2"
-                    >
-                      {showComparison ? '👁️ Viewing Comparison' : '👀 View Comparison'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Privacy Notice */}
-            <div className="text-center text-xs text-muted-foreground">
-              🔒 Your decision summary includes only the AI-generated recommendation. 
-              Private inputs are excluded unless you choose to include them.
-            </div>
-            
-            {/* Decision Comparison Display */}
-            {showComparison && previousDecisions.length > 0 && (
-              <Card className="decision-card bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span>🔄</span>
-                    <span>Decision Comparison</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Compare your current decision with the previous version
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Previous Decision */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-foreground border-b pb-2">Previous Decision</h4>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Confidence Score</div>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-bold ${getConfidenceColor(previousDecisions[previousDecisions.length - 1].recommendation.confidence_score)}`}>
-                            {previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%
-                          </span>
-                          <div className="w-16 bg-muted rounded-full h-2">
-                            <div 
-                              className="confidence-bar h-2 rounded-full"
-                              style={{ width: `${previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Recommendation</div>
-                        <p className="text-sm text-foreground leading-relaxed">
-                          {previousDecisions[previousDecisions.length - 1].recommendation.recommendation}
-                        </p>
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Next Steps</div>
-                        <ul className="text-sm space-y-1">
-                          {previousDecisions[previousDecisions.length - 1].recommendation.next_steps?.map((step, index) => (
-                            <li key={index} className="flex items-start gap-1">
-                              <span className="text-primary">•</span>
-                              <span>{step}</span>
-                            </li>
-                          ))}
-                        </ul>
+
+            {/* Feedback & Take Action Panel */}
+            <Card className="decision-card bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+              <CardContent className="p-6">
+                {/* Feedback Section */}
+                {!feedbackSubmitted && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-4 mb-3">
+                      <span className="text-sm font-medium text-foreground">Was this helpful?</span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={feedbackHelpful === true ? "default" : "outline"}
+                          onClick={() => setFeedbackHelpful(true)}
+                          className="flex items-center gap-1"
+                        >
+                          👍 Yes
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={feedbackHelpful === false ? "default" : "outline"}
+                          onClick={() => setFeedbackHelpful(false)}
+                          className="flex items-center gap-1"
+                        >
+                          👎 No
+                        </Button>
                       </div>
                     </div>
                     
-                    {/* Current Decision */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-foreground border-b pb-2">Current Decision</h4>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Confidence Score</div>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-bold ${getConfidenceColor(recommendation.confidence_score)}`}>
-                            {recommendation.confidence_score}%
-                          </span>
-                          <div className="w-16 bg-muted rounded-full h-2">
-                            <div 
-                              className="confidence-bar h-2 rounded-full"
-                              style={{ width: `${recommendation.confidence_score}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Recommendation</div>
-                        <div 
-                          className="text-sm text-foreground leading-relaxed"
-                          dangerouslySetInnerHTML={{
-                            __html: highlightDifferences(
-                              recommendation.recommendation,
-                              previousDecisions[previousDecisions.length - 1].recommendation.recommendation
-                            )
-                          }}
+                    {feedbackHelpful !== null && (
+                      <div className="space-y-3">
+                        <textarea
+                          placeholder="Tell us more about your experience (optional)"
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          className="w-full p-3 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                          rows={2}
                         />
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            handleFeedback(feedbackHelpful, feedbackText);
+                            setFeedbackSubmitted(true);
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          📝 Submit Feedback
+                        </Button>
                       </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Next Steps</div>
-                        <ul className="text-sm space-y-1">
-                          {recommendation.next_steps?.map((step, index) => (
-                            <li key={index} className="flex items-start gap-1">
-                              <span className="text-primary">•</span>
-                              <span>{step}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  
-                  {/* Comparison Summary */}
-                  <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                    <h5 className="font-medium text-foreground mb-2">Key Changes</h5>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Confidence Change:</span>
-                        <span className={`font-medium ${
-                          recommendation.confidence_score > previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? 
-                          'text-green-600' : 
-                          recommendation.confidence_score < previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ?
-                          'text-red-600' : 'text-muted-foreground'
-                        }`}>
-                          {recommendation.confidence_score > previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? '↗️' : 
-                           recommendation.confidence_score < previousDecisions[previousDecisions.length - 1].recommendation.confidence_score ? '↘️' : '➡️'} 
-                          {recommendation.confidence_score - previousDecisions[previousDecisions.length - 1].recommendation.confidence_score > 0 ? '+' : ''}
-                          {recommendation.confidence_score - previousDecisions[previousDecisions.length - 1].recommendation.confidence_score}%
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Recommendation Changed:</span>
-                        <span className={`font-medium ${
-                          recommendation.recommendation !== previousDecisions[previousDecisions.length - 1].recommendation.recommendation ? 
-                          'text-orange-600' : 'text-green-600'
-                        }`}>
-                          {recommendation.recommendation !== previousDecisions[previousDecisions.length - 1].recommendation.recommendation ? 
-                           '✏️ Yes' : '✅ No change'}
-                        </span>
-                      </div>
-                    </div>
+                )}
+
+                {feedbackSubmitted && (
+                  <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      ✅ Thank you for your feedback! It helps us improve GetGingee.
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+
+                {/* Take Action Buttons */}
+                <div className="grid md:grid-cols-3 gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowUpgradeModal(true);
+                      } else {
+                        setShowExportModal(true);
+                      }
+                    }}
+                    className="flex items-center gap-2 justify-start"
+                  >
+                    📄 Export PDF
+                    {!isAuthenticated && <span className="text-xs text-primary">Pro</span>}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowUpgradeModal(true);
+                      } else {
+                        setShowShareModal(true);
+                      }
+                    }}
+                    className="flex items-center gap-2 justify-start"
+                  >
+                    📤 Share
+                    {!isAuthenticated && <span className="text-xs text-primary">Pro</span>}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="flex items-center gap-2 justify-start"
+                  >
+                    ⭐ Upgrade to Pro
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
