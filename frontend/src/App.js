@@ -549,6 +549,37 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [previousDecisions, setPreviousDecisions] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
   
+  // New Post-Decision UI State
+  const [showFullReasoning, setShowFullReasoning] = useState(false);
+  const [showLogicTrace, setShowLogicTrace] = useState(false);
+  const [showGoDeeperModal, setShowGoDeeperModal] = useState(false);
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showVersionCarousel, setShowVersionCarousel] = useState(false);
+  const [showAIDebateModal, setShowAIDebateModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  
+  // Decision versioning state
+  const [decisionVersions, setDecisionVersions] = useState([]);
+  const [currentVersion, setCurrentVersion] = useState(0);
+  const [favoriteVersion, setFavoriteVersion] = useState(0);
+  
+  // Go Deeper state
+  const [goDeeperContext, setGoDeeperContext] = useState('');
+  const [guidedQuestions, setGuidedQuestions] = useState([]);
+  const [guidedAnswers, setGuidedAnswers] = useState({});
+  
+  // Adjust state
+  const [adjustmentReason, setAdjustmentReason] = useState('');
+  const [selectedPersona, setSelectedPersona] = useState('');
+  
+  // Feedback state
+  const [feedbackHelpful, setFeedbackHelpful] = useState(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
