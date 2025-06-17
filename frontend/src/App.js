@@ -2072,22 +2072,23 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
 
     case 'ai_recommendation':
       return (
-        <Card className="mr-auto max-w-full bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span>🎯</span>
-              <span>Your Decision Recommendation</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Enhanced Confidence Score */}
-            <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Confidence Score</span>
-                <div className="group relative">
-                  <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help hover:bg-muted-foreground/20 transition-colors">
-                    ℹ️
-                  </div>
+        <>
+          <Card className="mr-auto max-w-full bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span>🎯</span>
+                <span>Your Decision Recommendation</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Enhanced Confidence Score */}
+              <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Confidence Score</span>
+                  <div className="group relative">
+                    <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help hover:bg-muted-foreground/20 transition-colors">
+                      ℹ️
+                    </div>
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
                     This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
                   </div>
