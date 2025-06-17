@@ -2188,6 +2188,8 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                 <p className="text-foreground font-medium leading-relaxed">{item.content.summary}</p>
               </div>
             )}
+          </div>
+        )}
 
             {/* Enhanced Logic Trace */}
             {item.content.trace && (
