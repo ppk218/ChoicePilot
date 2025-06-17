@@ -233,8 +233,9 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "New Enhanced Features Implementation"
-  stuck_tasks: []
+    - "Post-Decision UX Enhancements"
+  stuck_tasks: 
+    - "Post-Decision UX Enhancements"
   test_all: false
   test_priority: "high_first"
 
