@@ -112,7 +112,7 @@ backend:
         
   - task: "NEW HYBRID AI-LED FOLLOW-UP SYSTEM"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
     stuck_count: 0
     priority: "high"
@@ -130,6 +130,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Conducted additional testing to verify the new enhanced fields (summary and next_steps_with_time) in the recommendation response. All tests passed successfully with a 100% success rate. The system correctly generates a concise TL;DR summary for each recommendation, providing a quick overview of the decision advice. The next_steps_with_time field is also properly implemented, with each step including a time estimate (e.g., '3 hours this weekend', '2 minutes daily', '2 hours') and a description of what the step involves. These enhanced fields work correctly for both authenticated and anonymous users. The summary is appropriately formatted as a brief paragraph (typically 2-3 sentences), and the time estimates are practical and relevant to the specific steps. This confirms that the enhanced recommendation fields are fully functional and provide valuable additional context to users."
+      - working: false
+        agent: "testing"
+        comment: "Conducted comprehensive testing of the hybrid AI-led follow-up system. The system is partially working as expected. It correctly generates the initial questions and returns the first question to the client. After the first answer is submitted, the system correctly serves the second pre-generated question. However, there's an issue with the third question not being returned in some cases. The system successfully generates recommendations with enhanced fields including summary and next_steps_with_time. The recommendations include references to user answers and provide valuable context. The issue with the third question not being returned needs to be addressed to ensure the complete flow works correctly in all scenarios."
 
 frontend:
   - task: "Advanced AI Frontend Integration"
