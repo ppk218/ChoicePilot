@@ -1,15 +1,33 @@
 Using API URL: https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com/api
 
 ================================================================================
+Running test: Hybrid Follow-up System
+================================================================================
+Testing hybrid AI-led follow-up system...
+Testing hybrid follow-up system - initial step
+First question: What factors matter most to you?
+Nudge: e.g., time, money, relationships, career growth
+Persona: pragmatist
+
+Testing hybrid follow-up system - first followup step
+Second question: What constraints are you working with?
+Nudge: e.g., budget limits, deadlines, location
+Persona: realist
+
+Testing hybrid follow-up system - second followup step
+Error: No followup questions in third response
+❌ Test FAILED: Hybrid Follow-up System
+
+================================================================================
 Running test: Smart Classification System
 ================================================================================
 Testing smart classification and persona-based follow-up system...
 
 Testing Simple question: 'What phone should I buy?'
-Warning: No persona information found in follow-up questions
+Persona found in follow-up question: realist
 Decision type: structured
-First followup question: What is your budget range for the new phone?
-Nudge: e.g., $300-$500 or $700-$1000
+First followup question: What specific features do you need most in a new phone?
+Nudge: For example, is camera quality or battery life more important to you?
 
 Testing followup step
 
@@ -20,10 +38,10 @@ Frameworks used: Fallback Analysis
 Personas consulted: 
 
 Testing Medium complexity question: 'Should I switch careers to data science?'
-Warning: No persona information found in follow-up questions
+Persona found in follow-up question: realist
 Decision type: mixed
-First followup question: What skills do you currently have related to data science?
-Nudge: e.g., programming, statistics, analytical thinking
+First followup question: What specific skills do you currently have that could translate to data science roles?
+Nudge: Think about programming, analysis, or statistics you might already know.
 
 Testing followup step
 
@@ -34,7 +52,7 @@ Frameworks used: Fallback Analysis
 Personas consulted: 
 
 Testing High complexity question: 'Should I leave my marriage?'
-Warning: No persona information found in follow-up questions
+Persona found in follow-up question: supportive
 Decision type: intuitive
 First followup question: What emotions are driving this decision?
 Nudge: e.g., fear, excitement, uncertainty, hope
@@ -53,19 +71,19 @@ Running test: Anonymous Smart Classification
 ================================================================================
 Testing smart classification with anonymous user...
 Testing anonymous advanced decision with medium complexity question
-Anonymous advanced decision created with ID: cba35cd8-d4b2-4ed2-baf4-b1e1a00ba3a6
+Anonymous advanced decision created with ID: 9c902130-4616-4844-bc50-7c9e51266835
 Decision type: mixed
-Warning: No persona information found in follow-up questions
-First followup question: What factors matter most to you?
-Nudge: e.g., time, money, relationships, career growth
+Persona found in follow-up question: realist
+First followup question: What specific skills do you need to acquire for a successful transition to data science?
+Nudge: Consider data analysis, programming, or machine learning skills needed for job openings.
 
 Testing anonymous followup step
 
 Testing anonymous recommendation step
-Successfully received anonymous recommendation with confidence score: 75
+Successfully received anonymous recommendation with confidence score: 82
 Models used: claude, gpt4o-simulated
-Frameworks used: Pros/Cons, Priority Alignment, Risk Assessment, Creative Alternatives, Multi-Persona
-Personas consulted: Realist, Visionary, Pragmatist
+Frameworks used: Emotional Alignment, Risk Mitigation, Gradual Testing, Multi-Persona Synthesis, Skills Transfer Analysis
+Personas consulted: realist, visionary, pragmatist, supportive
 ✅ Test PASSED: Anonymous Smart Classification
 
 ================================================================================
@@ -79,7 +97,7 @@ Testing email validation...
 ✓ Success: Invalid email 'user.domain.com' was rejected with status 422
 ✓ Success: Invalid email 'user@.com' was rejected with status 422
 ✓ Success: Invalid email 'user@domain..com' was rejected with status 422
-✓ Success: Valid email 'valid_675a56c9@example.com' was accepted
+✓ Success: Valid email 'valid_429376d7@example.com' was accepted
 ✅ Test PASSED: Email Validation
 
 ================================================================================
@@ -114,8 +132,8 @@ Running test: Authenticated Decision Flow
 ================================================================================
 Testing authenticated decision flow...
 Testing authenticated decision flow - initial step
-Authenticated decision flow created with ID: 18def995-f43e-4684-8716-a52bb6d86c84
-Followup question: What specific aspects of this job opportunity are most appealing to you compared to your current situation?
+Authenticated decision flow created with ID: 842162c0-2b2c-49f2-967e-0c78ed49d89f
+Followup question: What specific aspects of this job opportunity are most important to you - salary, career growth, work-life balance, or company culture?
 ✅ Test PASSED: Authenticated Decision Flow
 
 ================================================================================
@@ -123,11 +141,11 @@ Running test: Anonymous Decision Flow
 ================================================================================
 Testing anonymous decision flow...
 Testing anonymous decision flow - initial step
-Anonymous decision flow created with ID: d70bcbc8-b603-4470-8370-e9f74bdb4926
-Followup question: What programming languages and development environments will you primarily be using, and do you prefer macOS or Windows/Linux?
+Anonymous decision flow created with ID: 80ea3d0e-ec8f-4afa-a0da-589caedb87bd
+Followup question: What programming languages and development environments will you primarily be using, and do you have any preference for macOS vs Windows/Linux?
 
 Testing anonymous decision flow - followup step
-Second followup question: What programming languages and ML frameworks do you primarily use, and do you prefer macOS or Windows/Linux development environments?
+Second followup question: What programming languages and ML frameworks do you primarily use, and do you prefer macOS or Windows/Linux for development?
 ✅ Test PASSED: Anonymous Decision Flow
 
 ================================================================================
@@ -135,7 +153,7 @@ Running test: Decision Feedback
 ================================================================================
 Testing decision feedback endpoint...
 Creating a decision for feedback testing
-Created decision with ID: 56ce01fc-6f0f-4960-b09d-20413a875376
+Created decision with ID: ae46230a-1430-4588-837c-a90cb9684057
 
 Testing decision feedback - positive
 Positive feedback submitted successfully: Feedback submitted successfully
@@ -151,11 +169,11 @@ Invalid feedback correctly returns 400 Bad Request
 Running test: Core Authentication
 ================================================================================
 Testing core authentication endpoints...
-Successfully registered user: test_330f426e@example.com
-Successfully logged in test user: test_330f426e@example.com
-Successfully logged in user: test_330f426e@example.com
-Successfully retrieved user info: test_330f426e@example.com
-Successfully verified decision ID format: 51cf0177-4ff7-4f40-a159-491b14033601
+Successfully registered user: test_064d5d51@example.com
+Successfully logged in test user: test_064d5d51@example.com
+Successfully logged in user: test_064d5d51@example.com
+Successfully retrieved user info: test_064d5d51@example.com
+Successfully verified decision ID format: 9aa95981-3d9c-44ba-94a5-b0fbda5dcbae
 ✅ Test PASSED: Core Authentication
 
 ================================================================================
@@ -164,19 +182,19 @@ Running test: Decision Types
 Testing different decision types...
 
 Testing career decision type
-Successfully created career decision with ID: f95f95a0-6c11-4d2d-8e7f-0984a4d23c14
-Followup question: What specific aspects of your current marketing role are you finding unfulfilling or motivating you to consider this change?
+Successfully created career decision with ID: 8330946e-2be9-4154-b4cc-cde89d8aea2b
+Followup question: What specific aspects of your current marketing role are making you consider leaving, and what attracts you most about software development?
 
 Testing purchase decision type
-Successfully created purchase decision with ID: c0d63d99-f1f4-4b68-9e44-2b440cd13ad0
-Followup question: What specific tasks are you struggling with on your current laptop, and how old is it?
+Successfully created purchase decision with ID: 32c255cb-e243-4ca7-b25b-8487b2a402a5
+Followup question: What specific tasks or software are you struggling with on your current laptop that's prompting this decision?
 
 Testing relocation decision type
-Successfully created relocation decision with ID: 1ed95b48-52bf-428c-97f5-e3e9869c8e49
-Followup question: What's the salary difference between your current job and the Seattle opportunity, and how does that compare to Seattle's cost of living?
+Successfully created relocation decision with ID: 633763be-9ad9-4aaf-ac37-ef850522d492
+Followup question: What's your current living situation and how important are factors like cost of living, weather, and distance from family to you?
 
 Testing general decision type
-Successfully created general decision with ID: 0e902f27-d254-4e24-96f8-acd3522c2f7d
+Successfully created general decision with ID: 0628b7e8-5856-4d3d-b853-228a3f7b7bbf
 Followup question: What type of music do you most enjoy listening to, and do you have any specific songs or artists that inspire you?
 ✅ Test PASSED: Decision Types
 
@@ -186,17 +204,17 @@ Running test: Advanced Decision Endpoint - Authenticated
 Testing advanced decision endpoint with authenticated user...
 Testing advanced decision - structured question
 Decision type: structured
-Advanced decision created with ID: e7f09f8b-4a26-4c94-8e2e-eddd68e8062b
-First followup question: What specific features are most important to you?
-Nudge: e.g., camera quality, battery life, user interface
+Advanced decision created with ID: de33d352-a90f-4f8f-b2bc-7b9a83fa06f7
+First followup question: What specific features do you rely on most for daily use?
+Nudge: For instance, is a great camera or battery life your priority?
 
 Testing advanced decision - followup step
 
 Testing advanced decision - recommendation step
-Successfully received recommendation with confidence score: 75
+Successfully received recommendation with confidence score: 85
 Models used: claude, gpt4o-simulated
-Frameworks used: Pros/Cons, Priority Alignment, Risk Assessment, Creative Alternatives, Multi-Persona
-Next steps: ['Research current iPhone models and compare features you actually use daily', 'Calculate total cost of ownership including accessories and potential trade-in value', "Test Samsung's latest flagship in-store to quantify what you'd be giving up in customization"]
+Frameworks used: Ecosystem Analysis, Switching Cost Assessment, Feature Prioritization, Multi-Persona Synthesis, Hands-on Testing
+Next steps: ['List all your current Apple devices and services to assess ecosystem lock-in strength', "Visit a store and spend 30 minutes exploring Samsung's customization features you're interested in", 'Compare total cost including accessories, cases, and potential app repurchases if switching']
 
 Testing advanced decision - intuitive question
 Decision type: intuitive
@@ -210,27 +228,28 @@ Running test: Advanced Decision Endpoint - Anonymous
 ================================================================================
 Testing advanced decision endpoint with anonymous user...
 Testing anonymous advanced decision - structured question
-Anonymous advanced decision created with ID: 51e6fd5b-4d71-479d-924a-93ba7938f628
+Anonymous advanced decision created with ID: 059d8a6d-b595-4044-8045-cac072bef8ab
 Decision type: structured
 
 Testing anonymous advanced decision - followup step
 
 Testing anonymous advanced decision - recommendation step
-Successfully received recommendation with confidence score: 70
+Successfully received recommendation with confidence score: 82
 Models used: claude, gpt4o-simulated
-Frameworks used: Fallback Analysis
-Next steps: ['List out your top 3 priorities for this decision', 'Research any additional information you need', 'Set a timeline for making your final choice']
+Frameworks used: Use Case Alignment, Professional ROI Analysis, Workflow Optimization, Long-term Value Assessment
+Next steps: ['Research specific MacBook Pro configurations for your video editing needs (32GB RAM minimum for 4K work)', 'Test both machines hands-on at an Apple Store and Best Buy to feel the keyboard, trackpad, and screen quality differences', 'Set a realistic budget timeline - if money is tight, consider certified refurbished MacBook Pro or waiting for educational discounts']
 ✅ Test PASSED: Advanced Decision Endpoint - Anonymous
 
 ================================================================================
 Test Summary
 ================================================================================
-Total tests: 12
+Total tests: 13
 Passed: 12
-Failed: 0
-Success rate: 100.0%
+Failed: 1
+Success rate: 92.3%
 
 Detailed Results:
+❌ Hybrid Follow-up System: FAILED
 ✅ Smart Classification System: PASSED
 ✅ Anonymous Smart Classification: PASSED
 ✅ Email Validation: PASSED
