@@ -1281,8 +1281,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           </div>
         )}
         
-        {/* Modal Components */}
-        {/* Go Deeper Modal */}
+        {/* Modal Components - Clean JSX Structure */}
         {showGoDeeperModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
@@ -1296,7 +1295,54 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     ✕
                   </button>
                 </div>
-                <p>Go Deeper modal content will be implemented here.</p>
+                
+                {/* Tab Navigation */}
+                <div className="flex gap-1 mb-6 bg-muted rounded-lg p-1">
+                  <button
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${!showGuidedQuestions ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-muted-foreground'}`}
+                    onClick={() => setShowGuidedQuestions(false)}
+                  >
+                    📝 Add My Context
+                  </button>
+                  <button
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${showGuidedQuestions ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-muted-foreground'}`}
+                    onClick={() => setShowGuidedQuestions(true)}
+                  >
+                    🎯 Guide Me with Questions
+                  </button>
+                </div>
+                
+                <div className="min-h-[200px]">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {!showGuidedQuestions 
+                      ? "Share any additional context that might influence your decision..."
+                      : "Answer questions that seem relevant to your situation:"
+                    }
+                  </p>
+                  
+                  <textarea
+                    placeholder={!showGuidedQuestions 
+                      ? "What other factors should the AI consider?"
+                      : "What are your biggest concerns about this decision?"
+                    }
+                    className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[120px]"
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => setShowGoDeeperModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setShowGoDeeperModal(false)}
+                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                  >
+                    💾 Update Recommendation
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1307,9 +1353,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           <div className="fixed top-4 right-4 z-50">
             <button 
               className="bg-gradient-to-r from-primary to-mint text-white shadow-lg hover:shadow-xl transition-all duration-300 border-none px-4 py-2 rounded-lg"
-              onClick={() => {
-                alert('Upgrade to Pro for unlimited decisions, advanced analytics, and priority support!');
-              }}
+              onClick={() => setShowUpgradeModal(true)}
             >
               <span className="mr-2">✨</span>
               Unlock More Decisions – Go Pro
