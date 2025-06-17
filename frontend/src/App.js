@@ -2911,5 +2911,3 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
     </div>
   );
 };
-
-export default App;
