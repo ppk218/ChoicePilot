@@ -2131,6 +2131,10 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   </Button>
                 )}
               </div>
+            </div>
+          </Card>
+        </>
+      );
 
               {/* Expand #1: Full Reasoning + Next Steps */}
               {showFullReasoning && (
