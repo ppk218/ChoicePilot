@@ -55,7 +55,7 @@ def test_cors_preflight_register():
     """Test CORS preflight request for registration endpoint"""
     # Simulate a preflight OPTIONS request
     headers = {
-        "Origin": "https://d9575c30-11e6-4578-82e6-d9ec6b06f4a3.preview.emergentagent.com",
+        "Origin": "https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com",
         "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type, Authorization"
     }
@@ -101,7 +101,7 @@ def test_cors_preflight_login():
     """Test CORS preflight request for login endpoint"""
     # Simulate a preflight OPTIONS request
     headers = {
-        "Origin": "https://d9575c30-11e6-4578-82e6-d9ec6b06f4a3.preview.emergentagent.com",
+        "Origin": "https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com",
         "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers": "Content-Type, Authorization"
     }
@@ -157,7 +157,7 @@ def test_user_registration():
     
     # Add origin header to simulate browser request
     headers = {
-        "Origin": "https://d9575c30-11e6-4578-82e6-d9ec6b06f4a3.preview.emergentagent.com",
+        "Origin": "https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com",
         "Content-Type": "application/json"
     }
     
@@ -210,7 +210,7 @@ def test_user_login():
     
     # Add origin header to simulate browser request
     headers = {
-        "Origin": "https://d9575c30-11e6-4578-82e6-d9ec6b06f4a3.preview.emergentagent.com",
+        "Origin": "https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com",
         "Content-Type": "application/json"
     }
     
