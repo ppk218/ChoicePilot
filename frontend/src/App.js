@@ -1743,6 +1743,8 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
       return null;
   }
 };
+  }
+};
 
 // Enhanced Dashboard Component with Chat Interface
 const Dashboard = ({ onStartDecision }) => {
