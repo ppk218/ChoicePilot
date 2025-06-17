@@ -580,6 +580,9 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [feedbackHelpful, setFeedbackHelpful] = useState(null);
   const [feedbackText, setFeedbackText] = useState('');
   
+  // Additional state for modals
+  const [showGuidedQuestions, setShowGuidedQuestions] = useState(false);
+  
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
