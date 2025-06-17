@@ -1229,8 +1229,12 @@ def test_hybrid_followup_system():
     followup2_data = followup2_response.json()
     
     # Verify that the third question is returned
-    if not followup2_data["followup_questions"] or len(followup2_data["followup_questions"]) != 1:
-        print(f"Error: Expected exactly 1 followup question in third response, got {len(followup2_data['followup_questions'])}")
+    if not followup2_data.get("followup_questions"):
+        print(f"Error: No followup questions in third response")
+        return False
+        
+    if len(followup2_data.get("followup_questions", [])) != 1:
+        print(f"Error: Expected exactly 1 followup question in third response, got {len(followup2_data.get('followup_questions', []))}")
         return False
     
     third_question = followup2_data["followup_questions"][0]
