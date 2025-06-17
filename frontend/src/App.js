@@ -2172,22 +2172,24 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                     </div>
                   )}
 
-            {/* Reasoning */}
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Reasoning</h4>
-              <p className="text-muted-foreground">{item.content.reasoning}</p>
-            </div>
+                  {/* Reasoning */}
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Reasoning</h4>
+                    <p className="text-muted-foreground">{item.content.reasoning}</p>
+                  </div>
 
-            {/* Summary Section */}
-            {item.content.summary && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <span>📋</span>
-                  <span>Decision Summary (TL;DR)</span>
-                </h4>
-                <p className="text-foreground font-medium leading-relaxed">{item.content.summary}</p>
-              </div>
-            )}
+                  {/* Summary Section */}
+                  {item.content.summary && (
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                      <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                        <span>📋</span>
+                        <span>Decision Summary (TL;DR)</span>
+                      </h4>
+                      <p className="text-foreground font-medium leading-relaxed">{item.content.summary}</p>
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         )}
 
