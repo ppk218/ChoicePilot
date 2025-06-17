@@ -1038,6 +1038,40 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-3xl mx-auto">
+        {/* Sticky Summary Header - Only shown when recommendation exists */}
+        {currentStep === 'recommendation' && recommendation && (
+          <div className="sticky top-4 z-40 mb-6">
+            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border rounded-lg p-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-foreground text-lg truncate max-w-md">
+                      Decision: {initialQuestion}
+                    </h3>
+                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
+                      v{currentVersion + 1}{favoriteVersion === currentVersion ? ' ⭐' : ''}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Confidence:</span>
+                    <span className={`font-bold ${getConfidenceColor(recommendation.confidence_score)}`}>
+                      {recommendation.confidence_score}%
+                    </span>
+                    <div className="w-16 bg-muted rounded-full h-2">
+                      <div 
+                        className="confidence-bar h-2 rounded-full"
+                        style={{ width: `${recommendation.confidence_score}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Conversation History */}
         <div className="space-y-6 mb-8">
           {conversationHistory.map((item, index) => (
