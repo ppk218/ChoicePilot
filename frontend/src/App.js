@@ -1427,46 +1427,71 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               </div>
             </div>
 
-            {/* Recommendation */}
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
-              <p className="text-foreground leading-relaxed">{item.content.recommendation}</p>
-            </div>
-
-            {/* Next Steps with Time Estimates */}
-            {item.content.next_steps_with_time && item.content.next_steps_with_time.length > 0 ? (
+            {/* New 2-Line Recommendation Card */}
+            <div className="space-y-4">
+              {/* Brief Recommendation (Always Visible) */}
               <div>
-                <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
-                <div className="space-y-3">
-                  {item.content.next_steps_with_time.map((step, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
-                      <span className="text-primary font-bold mt-0.5">{index + 1}.</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-foreground font-medium">{step.step}</span>
-                          <span className="text-xs bg-mint/20 text-mint-700 px-2 py-1 rounded-full">
-                            ⏱️ {step.time_estimate}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+                <p className="text-foreground leading-relaxed">
+                  {item.content.recommendation.length > 150 
+                    ? item.content.recommendation.substring(0, 150) + '...'
+                    : item.content.recommendation}
+                </p>
+                {item.content.recommendation.length > 150 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullReasoning(!showFullReasoning)}
+                    className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
+                  >
+                    {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
+                  </Button>
+                )}
+              </div>
+
+              {/* Expand #1: Full Reasoning + Next Steps */}
+              {showFullReasoning && (
+                <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                  {/* Full Recommendation */}
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Full Recommendation</h4>
+                    <p className="text-foreground leading-relaxed">{item.content.recommendation}</p>
+                  </div>
+
+                  {/* Next Steps with Time Estimates */}
+                  {item.content.next_steps_with_time && item.content.next_steps_with_time.length > 0 ? (
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
+                      <div className="space-y-3">
+                        {item.content.next_steps_with_time.map((step, index) => (
+                          <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
+                            <span className="text-primary font-bold mt-0.5">{index + 1}.</span>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-foreground font-medium">{step.step}</span>
+                                <span className="text-xs bg-mint/20 text-mint-700 px-2 py-1 rounded-full">
+                                  ⏱️ {step.time_estimate}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{step.description}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : item.content.next_steps && item.content.next_steps.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
-                <ul className="space-y-2">
-                  {item.content.next_steps.map((step, index) => (
-                    <li key={index} className="flex items-start gap-2 text-foreground">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                  ) : item.content.next_steps && item.content.next_steps.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">Next Steps</h4>
+                      <ul className="space-y-2">
+                        {item.content.next_steps.map((step, index) => (
+                          <li key={index} className="flex items-start gap-2 text-foreground">
+                            <span className="text-primary mt-0.5">•</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
             {/* Reasoning */}
             <div>
