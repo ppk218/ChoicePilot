@@ -2857,11 +2857,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
           </button>
         </div>
       </ModalContent>
-    </Modal>
   );
 };
-
-export default App;
 
 export default App;
 
