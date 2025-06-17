@@ -2190,8 +2190,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   )}
                 </div>
               )}
-          </div>
-        )}
+            </div>
 
             {/* Enhanced Logic Trace */}
             {item.content.trace && (
