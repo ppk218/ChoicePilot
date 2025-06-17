@@ -2860,8 +2860,6 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
   );
 };
 
-export default App;
-
 // Side Chat Modal Component (placeholder - will be enhanced)
 const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
   const { isAuthenticated } = useAuth();
