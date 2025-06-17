@@ -2096,17 +2096,17 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                     </div>
                   </div>
                 </div>
-              <div className="flex items-center gap-3">
-                <span className={`font-bold text-lg ${getConfidenceColor ? getConfidenceColor(item.content.confidence_score) : 'text-foreground'}`}>
-                  {item.content.confidence_score}%
-                </span>
-                <div className="w-20 bg-muted rounded-full h-3">
-                  <div 
-                    className="confidence-bar h-3 rounded-full"
-                    style={{ width: `${item.content.confidence_score}%` }}
-                  />
+                <div className="flex items-center gap-3">
+                  <span className={`font-bold text-lg ${getConfidenceColor ? getConfidenceColor(item.content.confidence_score) : 'text-foreground'}`}>
+                    {item.content.confidence_score}%
+                  </span>
+                  <div className="w-20 bg-muted rounded-full h-3">
+                    <div 
+                      className="confidence-bar h-3 rounded-full"
+                      style={{ width: `${item.content.confidence_score}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
               </div>
             </CardContent>
 
