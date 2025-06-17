@@ -211,6 +211,8 @@ const App = () => {
 
 export default App;
 
+export default App;
+
 // App Content Component
 const AppContent = ({ 
   currentView, setCurrentView, showAuthModal, setShowAuthModal, 
