@@ -1401,7 +1401,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Enhanced Confidence Score with Tooltip */}
+            {/* Enhanced Confidence Score */}
             <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
               <div className="flex items-center gap-2">
                 <span className="font-medium">Confidence Score</span>
