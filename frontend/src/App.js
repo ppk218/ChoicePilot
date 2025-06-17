@@ -1501,6 +1501,159 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
           </div>
         )}
         
+        {/* Adjust Decision Modal */}
+        {showAdjustModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
+                  <button
+                    onClick={() => setShowAdjustModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    What would you like to change?
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="edit_answers"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Edit previous answers</div>
+                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="new_persona"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
+                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="change_type"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Change decision approach</div>
+                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      onClick={() => setShowAdjustModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setShowAdjustModal(false)}
+                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                      disabled={!adjustmentReason}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Upgrade to Pro Modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
+                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Export decisions as PDF</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Share decisions with others</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Priority support</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => setShowUpgradeModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
+                    >
+                      Maybe Later
+                    </button>
+                    <button
+                      onClick={() => setShowUpgradeModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
+                    >
+                      Upgrade Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Floating Upgrade to Pro Button */}
         {currentStep === 'recommendation' && !isAuthenticated && (
           <div className="fixed top-4 right-4 z-50">
