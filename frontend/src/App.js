@@ -2091,10 +2091,10 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                     <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help hover:bg-muted-foreground/20 transition-colors">
                       ℹ️
                     </div>
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
-                    This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
+                      This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
+                    </div>
                   </div>
-                </div>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`font-bold text-lg ${getConfidenceColor ? getConfidenceColor(item.content.confidence_score) : 'text-foreground'}`}>
