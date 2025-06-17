@@ -1142,9 +1142,161 @@ def test_anonymous_smart_classification():
     
     return True
 
+def test_hybrid_followup_system():
+    """Test the hybrid AI-led follow-up system"""
+    print("Testing hybrid AI-led follow-up system...")
+    
+    # Register a test user
+    response, user_data = register_test_user()
+    if response.status_code != 200:
+        print(f"Error: Failed to register test user: {response.status_code} - {response.text}")
+        return False
+    
+    token = response.json().get("access_token")
+    headers = get_auth_headers(token)
+    
+    # Test initial step with career-related question
+    initial_payload = {
+        "message": "Should I switch careers to data science?",
+        "step": "initial"
+    }
+    
+    print("Testing hybrid follow-up system - initial step")
+    initial_response = requests.post(f"{API_URL}/decision/advanced", json=initial_payload, headers=headers)
+    
+    if initial_response.status_code != 200:
+        print(f"Error: Hybrid follow-up system initial step returned status code {initial_response.status_code}")
+        print(f"Response: {initial_response.text}")
+        return False
+    
+    initial_data = initial_response.json()
+    decision_id = initial_data["decision_id"]
+    
+    # Verify that only the first question is returned
+    if not initial_data["followup_questions"] or len(initial_data["followup_questions"]) != 1:
+        print(f"Error: Expected exactly 1 followup question in initial response, got {len(initial_data['followup_questions'])}")
+        return False
+    
+    first_question = initial_data["followup_questions"][0]
+    print(f"First question: {first_question['question']}")
+    print(f"Nudge: {first_question['nudge']}")
+    print(f"Persona: {first_question['persona']}")
+    
+    # Test first followup step
+    followup1_payload = {
+        "message": "I currently work in marketing but have been learning Python and statistics in my free time.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 1
+    }
+    
+    print("\nTesting hybrid follow-up system - first followup step")
+    followup1_response = requests.post(f"{API_URL}/decision/advanced", json=followup1_payload, headers=headers)
+    
+    if followup1_response.status_code != 200:
+        print(f"Error: First followup step returned status code {followup1_response.status_code}")
+        print(f"Response: {followup1_response.text}")
+        return False
+    
+    followup1_data = followup1_response.json()
+    
+    # Verify that the second question is returned
+    if not followup1_data["followup_questions"] or len(followup1_data["followup_questions"]) != 1:
+        print(f"Error: Expected exactly 1 followup question in second response, got {len(followup1_data['followup_questions'])}")
+        return False
+    
+    second_question = followup1_data["followup_questions"][0]
+    print(f"Second question: {second_question['question']}")
+    print(f"Nudge: {second_question['nudge']}")
+    print(f"Persona: {second_question['persona']}")
+    
+    # Test second followup step
+    followup2_payload = {
+        "message": "I'm concerned about the salary drop during the transition, but excited about the long-term prospects.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 2
+    }
+    
+    print("\nTesting hybrid follow-up system - second followup step")
+    followup2_response = requests.post(f"{API_URL}/decision/advanced", json=followup2_payload, headers=headers)
+    
+    if followup2_response.status_code != 200:
+        print(f"Error: Second followup step returned status code {followup2_response.status_code}")
+        print(f"Response: {followup2_response.text}")
+        return False
+    
+    followup2_data = followup2_response.json()
+    
+    # Verify that the third question is returned
+    if not followup2_data["followup_questions"] or len(followup2_data["followup_questions"]) != 1:
+        print(f"Error: Expected exactly 1 followup question in third response, got {len(followup2_data['followup_questions'])}")
+        return False
+    
+    third_question = followup2_data["followup_questions"][0]
+    print(f"Third question: {third_question['question']}")
+    print(f"Nudge: {third_question['nudge']}")
+    print(f"Persona: {third_question['persona']}")
+    
+    # Test third followup step (should generate recommendation)
+    followup3_payload = {
+        "message": "I have about 6 months of savings and my current employer might support part-time education.",
+        "step": "followup",
+        "decision_id": decision_id,
+        "step_number": 3
+    }
+    
+    print("\nTesting hybrid follow-up system - third followup step (recommendation)")
+    followup3_response = requests.post(f"{API_URL}/decision/advanced", json=followup3_payload, headers=headers)
+    
+    if followup3_response.status_code != 200:
+        print(f"Error: Third followup step returned status code {followup3_response.status_code}")
+        print(f"Response: {followup3_response.text}")
+        return False
+    
+    followup3_data = followup3_response.json()
+    
+    # Verify that we got a recommendation
+    if not followup3_data.get("is_complete") or not followup3_data.get("recommendation"):
+        print(f"Error: Missing or invalid recommendation after third followup: {followup3_data}")
+        return False
+    
+    recommendation = followup3_data["recommendation"]
+    
+    # Verify that the recommendation includes the new fields
+    if not recommendation.get("summary"):
+        print("Error: Recommendation missing summary field")
+        return False
+    
+    if not recommendation.get("next_steps_with_time") or not isinstance(recommendation["next_steps_with_time"], list):
+        print("Error: Recommendation missing next_steps_with_time field")
+        return False
+    
+    print(f"Summary: {recommendation['summary']}")
+    print(f"Next steps with time: {recommendation['next_steps_with_time']}")
+    
+    # Verify that the recommendation references user answers
+    user_answers = [
+        "marketing", "Python", "statistics", 
+        "salary drop", "transition", "long-term prospects",
+        "6 months", "savings", "employer", "part-time education"
+    ]
+    
+    answer_references_found = 0
+    for term in user_answers:
+        if term.lower() in recommendation["final_recommendation"].lower():
+            answer_references_found += 1
+            print(f"Found reference to user answer: '{term}'")
+    
+    if answer_references_found < 2:
+        print(f"Warning: Recommendation only references {answer_references_found} user answers, expected at least 2")
+    
+    return True
+
 def run_focused_tests():
     """Run the focused tests for the fixed issues"""
     tests = [
+        ("Hybrid Follow-up System", test_hybrid_followup_system),
         ("Smart Classification System", test_smart_classification_system),
         ("Anonymous Smart Classification", test_anonymous_smart_classification),
         ("Email Validation", test_email_validation),
