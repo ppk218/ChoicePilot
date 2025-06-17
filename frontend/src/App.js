@@ -2859,7 +2859,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
           </button>
         </div>
       </ModalContent>
-  );
+  </Modal>
+);
 };
 
 // Side Chat Modal Component (placeholder - will be enhanced)
