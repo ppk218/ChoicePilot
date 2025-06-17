@@ -2397,6 +2397,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
             </div>
           </CardContent>
         </Card>
+        </>
       );
 
     default:
