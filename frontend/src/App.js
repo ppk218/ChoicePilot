@@ -2107,7 +2107,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   />
                 </div>
               </div>
-            </div>
+            </CardContent>
 
             {/* New 2-Line Recommendation Card */}
             <div className="space-y-4">
