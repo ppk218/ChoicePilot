@@ -584,8 +584,6 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   // Additional state for modals
   const [showGuidedQuestions, setShowGuidedQuestions] = useState(false);
   const [loadingGuidedQuestions, setLoadingGuidedQuestions] = useState(false);
-  const [guidedQuestions, setGuidedQuestions] = useState([]);
-  const [loadingGuidedQuestions, setLoadingGuidedQuestions] = useState(false);
   
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
