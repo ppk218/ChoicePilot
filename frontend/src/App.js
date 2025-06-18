@@ -2195,9 +2195,6 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               )}
 
             {/* Enhanced Logic Trace */}
-          </Card>
-        </>
-      );
             {item.content.trace && (
               <div>
                 <details className="group">
