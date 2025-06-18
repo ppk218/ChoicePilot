@@ -1501,481 +1501,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
             </div>
           </div>
         )}
-        
-        {/* Adjust Decision Modal */}
-        {showAdjustModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
-                  <button
-                    onClick={() => setShowAdjustModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    What would you like to change?
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="edit_answers"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Edit previous answers</div>
-                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="new_persona"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
-                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="change_type"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Change decision approach</div>
-                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                      disabled={!adjustmentReason}
-                    >
-                      Continue
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Upgrade to Pro Modal */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
-                  <button
-                    onClick={() => setShowUpgradeModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
-                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Export decisions as PDF</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Share decisions with others</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Priority support</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Maybe Later
-                    </button>
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
-                    >
-                      Upgrade Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Adjust Decision Modal */}
-        {showAdjustModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
-                  <button
-                    onClick={() => setShowAdjustModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    What would you like to change?
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="edit_answers"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Edit previous answers</div>
-                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="new_persona"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
-                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="change_type"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Change decision approach</div>
-                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                      disabled={!adjustmentReason}
-                    >
-                      Continue
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Upgrade to Pro Modal */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
-                  <button
-                    onClick={() => setShowUpgradeModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
-                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Export decisions as PDF</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Share decisions with others</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Priority support</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Maybe Later
-                    </button>
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
-                    >
-                      Upgrade Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Adjust Decision Modal */}
-        {showAdjustModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
-                  <button
-                    onClick={() => setShowAdjustModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    What would you like to change?
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="edit_answers"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Edit previous answers</div>
-                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="new_persona"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
-                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="change_type"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Change decision approach</div>
-                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                      disabled={!adjustmentReason}
-                    >
-                      Continue
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Upgrade to Pro Modal */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
-                  <button
-                    onClick={() => setShowUpgradeModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
-                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Export decisions as PDF</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Share decisions with others</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Priority support</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Maybe Later
-                    </button>
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
-                    >
-                      Upgrade Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Floating Upgrade to Pro Button */}
-        {currentStep === 'recommendation' && !isAuthenticated && (
-          <div className="fixed top-4 right-4 z-50">
-            <button 
-              className="bg-gradient-to-r from-primary to-mint text-white shadow-lg hover:shadow-xl transition-all duration-300 border-none px-4 py-2 rounded-lg"
-              onClick={() => setShowUpgradeModal(true)}
-            >
-              <span className="mr-2">✨</span>
-              Unlock More Decisions – Go Pro
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
+};
 
 // Conversation Card Component
 const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColor }) => {
@@ -2107,30 +1636,30 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   </div>
                 </div>
               </div>
-            </CardContent>
 
-            {/* New 2-Line Recommendation Card */}
-            <div className="space-y-4">
-              {/* Brief Recommendation (Always Visible) */}
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
-                <p className="text-foreground leading-relaxed">
-                  {item.content.recommendation.length > 150 
-                    ? item.content.recommendation.substring(0, 150) + '...'
-                    : item.content.recommendation}
-                </p>
-                {item.content.recommendation.length > 150 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFullReasoning(!showFullReasoning)}
-                    className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
-                  >
-                    {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
-                  </Button>
-                )}
+              {/* New 2-Line Recommendation Card */}
+              <div className="space-y-4">
+                {/* Brief Recommendation (Always Visible) */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+                  <p className="text-foreground leading-relaxed">
+                    {item.content.recommendation.length > 150 
+                      ? item.content.recommendation.substring(0, 150) + '...'
+                      : item.content.recommendation}
+                  </p>
+                  {item.content.recommendation.length > 150 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullReasoning(!showFullReasoning)}
+                      className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
+                    >
+                      {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+
               {/* Expand #1: Full Reasoning + Next Steps */}
               {showFullReasoning && (
                 <div className="space-y-4 pl-4 border-l-2 border-primary/20">
@@ -2194,210 +1723,210 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                 </div>
               )}
 
-            {/* Enhanced Logic Trace */}
-            {item.content.trace && (
-              <div>
-                <details className="group">
-                  <summary className="cursor-pointer font-semibold text-foreground mb-2 flex items-center gap-2 hover:text-primary transition-colors">
-                    <span className="transform group-open:rotate-90 transition-transform">▶</span>
-                    🧠 Logic Trace
-                    <span className="text-xs text-muted-foreground">
-                      (AI Reasoning Process – Click to Expand)
-                    </span>
-                  </summary>
-                  <div className="mt-4 space-y-4 pl-4 border-l-2 border-primary/20">
-                    {/* Models Used */}
-                    <div>
-                      <h5 className="text-sm font-medium text-foreground mb-1">AI Models Used</h5>
-                      <div className="flex gap-2">
-                        {item.content.trace.models_used.map((model, index) => (
-                          <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                            {model === 'claude' ? '🧠 Claude (Analytical)' : 
-                             model === 'gpt4o' ? '🤖 GPT-4o (Creative)' :
-                             model === 'gpt4o-simulated' ? '🤖 GPT-4o (Simulated Creative)' :
-                             model}
-                          </span>
-                        ))}
-                      </div>
-                      {item.content.trace.models_used.includes('gpt4o-simulated') && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          * Creative insights simulated due to API access limitations
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Analysis Frameworks */}
-                    <div>
-                      <h5 className="text-sm font-medium text-foreground mb-1">Analysis Frameworks</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {item.content.trace.frameworks_used.map((framework, index) => (
-                          <span key={index} className="px-2 py-1 bg-mint/20 text-foreground text-xs rounded">
-                            {framework}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* External Knowledge Status */}
-                    <div>
-                      <h5 className="text-sm font-medium text-foreground mb-1">External Knowledge</h5>
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
-                        {item.content.trace.used_web_search ? 
-                          '🔍 External Knowledge Accessed: Web Search' : 
-                          '🧠 AI relied on personal context and internal reasoning to maintain emotional consistency'
-                        }
+              {/* Enhanced Logic Trace */}
+              {item.content.trace && (
+                <div>
+                  <details className="group">
+                    <summary className="cursor-pointer font-semibold text-foreground mb-2 flex items-center gap-2 hover:text-primary transition-colors">
+                      <span className="transform group-open:rotate-90 transition-transform">▶</span>
+                      🧠 Logic Trace
+                      <span className="text-xs text-muted-foreground">
+                        (AI Reasoning Process – Click to Expand)
                       </span>
-                    </div>
-
-                    {/* Enhanced Advisory Perspectives with Persona Voices */}
-                    {item.content.trace.personas_consulted && item.content.trace.personas_consulted.length > 0 && (
+                    </summary>
+                    <div className="mt-4 space-y-4 pl-4 border-l-2 border-primary/20">
+                      {/* Models Used */}
                       <div>
-                        <h5 className="text-sm font-medium text-foreground mb-2">Advisory Perspectives</h5>
-                        
-                        {/* Check if we have detailed persona voices */}
-                        {item.content.trace.classification?.persona_voices ? (
-                          <div className="space-y-3">
-                            {Object.entries(item.content.trace.classification.persona_voices).map(([persona, voice], index) => (
-                              <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
-                                <span className="text-lg mt-0.5">
-                                  {persona === 'realist' ? '🧠' :
-                                   persona === 'visionary' ? '🚀' :
-                                   persona === 'pragmatist' ? '⚖️' :
-                                   persona === 'supportive' ? '💙' :
-                                   persona === 'creative' ? '🎨' : '🎯'}
-                                </span>
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm text-foreground capitalize mb-1">
-                                    {persona}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground italic">
-                                    "{voice}"
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          /* Fallback to simple badges if no detailed voices */
-                          <div className="flex flex-wrap gap-2">
-                            {item.content.trace.personas_consulted.map((persona, index) => (
-                              <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                                {persona === 'Realist' ? '🧠 Realist' : 
-                                 persona === 'Visionary' ? '🚀 Visionary' : 
-                                 persona === 'Pragmatist' ? '⚖️ Pragmatist' :
-                                 persona === 'Supportive' ? '💙 Supportive' :
-                                 persona === 'Creative' ? '🎨 Creative' : 
-                                 `🎯 ${persona}`}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Key Themes */}
-                    {item.content.trace.themes && item.content.trace.themes.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium text-foreground mb-1">Key Insights</h5>
-                        <ul className="space-y-1">
-                          {item.content.trace.themes.map((theme, index) => (
-                            <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <span className="text-primary mt-0.5">•</span>
-                              <span>{theme}</span>
-                            </li>
+                        <h5 className="text-sm font-medium text-foreground mb-1">AI Models Used</h5>
+                        <div className="flex gap-2">
+                          {item.content.trace.models_used.map((model, index) => (
+                            <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                              {model === 'claude' ? '🧠 Claude (Analytical)' : 
+                               model === 'gpt4o' ? '🤖 GPT-4o (Creative)' :
+                               model === 'gpt4o-simulated' ? '🤖 GPT-4o (Simulated Creative)' :
+                               model}
+                            </span>
                           ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Personalization Status with CTA */}
-                    <div>
-                      <h5 className="text-sm font-medium text-foreground mb-1">Personalization</h5>
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                        }`}>
-                          {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
-                        </span>
-                        {!isAuthenticated && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="ml-2 text-xs px-3 py-1 h-auto bg-primary/5 border-primary/30 hover:bg-primary/10 transition-colors"
-                            onClick={() => {
-                              // Trigger auth modal - you'll need to add this function
-                              if (window.showAuthModal) window.showAuthModal();
-                            }}
-                          >
-                            👋 Want smarter decisions? Sign up
-                          </Button>
+                        </div>
+                        {item.content.trace.models_used.includes('gpt4o-simulated') && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            * Creative insights simulated due to API access limitations
+                          </p>
                         )}
                       </div>
-                    </div>
 
-                    {/* Processing Time (Hidden in collapsed tooltip) */}
-                    <div className="group relative inline-block">
-                      <span className="text-xs text-muted-foreground cursor-help">ⓘ Processing details</span>
-                      <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                        Processing time: {item.content.trace.processing_time_ms}ms
+                      {/* Analysis Frameworks */}
+                      <div>
+                        <h5 className="text-sm font-medium text-foreground mb-1">Analysis Frameworks</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {item.content.trace.frameworks_used.map((framework, index) => (
+                            <span key={index} className="px-2 py-1 bg-mint/20 text-foreground text-xs rounded">
+                              {framework}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* External Knowledge Status */}
+                      <div>
+                        <h5 className="text-sm font-medium text-foreground mb-1">External Knowledge</h5>
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded">
+                          {item.content.trace.used_web_search ? 
+                            '🔍 External Knowledge Accessed: Web Search' : 
+                            '🧠 AI relied on personal context and internal reasoning to maintain emotional consistency'
+                          }
+                        </span>
+                      </div>
+
+                      {/* Enhanced Advisory Perspectives with Persona Voices */}
+                      {item.content.trace.personas_consulted && item.content.trace.personas_consulted.length > 0 && (
+                        <div>
+                          <h5 className="text-sm font-medium text-foreground mb-2">Advisory Perspectives</h5>
+                          
+                          {/* Check if we have detailed persona voices */}
+                          {item.content.trace.classification?.persona_voices ? (
+                            <div className="space-y-3">
+                              {Object.entries(item.content.trace.classification.persona_voices).map(([persona, voice], index) => (
+                                <div key={index} className="flex items-start gap-3 p-3 bg-card/30 rounded-lg border-l-4 border-primary/30">
+                                  <span className="text-lg mt-0.5">
+                                    {persona === 'realist' ? '🧠' :
+                                     persona === 'visionary' ? '🚀' :
+                                     persona === 'pragmatist' ? '⚖️' :
+                                     persona === 'supportive' ? '💙' :
+                                     persona === 'creative' ? '🎨' : '🎯'}
+                                  </span>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm text-foreground capitalize mb-1">
+                                      {persona}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground italic">
+                                      "{voice}"
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            /* Fallback to simple badges if no detailed voices */
+                            <div className="flex flex-wrap gap-2">
+                              {item.content.trace.personas_consulted.map((persona, index) => (
+                                <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
+                                  {persona === 'Realist' ? '🧠 Realist' : 
+                                   persona === 'Visionary' ? '🚀 Visionary' : 
+                                   persona === 'Pragmatist' ? '⚖️ Pragmatist' :
+                                   persona === 'Supportive' ? '💙 Supportive' :
+                                   persona === 'Creative' ? '🎨 Creative' : 
+                                   `🎯 ${persona}`}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Key Themes */}
+                      {item.content.trace.themes && item.content.trace.themes.length > 0 && (
+                        <div>
+                          <h5 className="text-sm font-medium text-foreground mb-1">Key Insights</h5>
+                          <ul className="space-y-1">
+                            {item.content.trace.themes.map((theme, index) => (
+                              <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                                <span className="text-primary mt-0.5">•</span>
+                                <span>{theme}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Personalization Status with CTA */}
+                      <div>
+                        <h5 className="text-sm font-medium text-foreground mb-1">Personalization</h5>
+                        <div className="flex items-center justify-between">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          }`}>
+                            {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
+                          </span>
+                          {!isAuthenticated && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="ml-2 text-xs px-3 py-1 h-auto bg-primary/5 border-primary/30 hover:bg-primary/10 transition-colors"
+                              onClick={() => {
+                                // Trigger auth modal - you'll need to add this function
+                                if (window.showAuthModal) window.showAuthModal();
+                              }}
+                            >
+                              👋 Want smarter decisions? Sign up
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Processing Time (Hidden in collapsed tooltip) */}
+                      <div className="group relative inline-block">
+                        <span className="text-xs text-muted-foreground cursor-help">ⓘ Processing details</span>
+                        <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                          Processing time: {item.content.trace.processing_time_ms}ms
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </details>
-              </div>
-            )}
-
-            {/* Feedback Section */}
-            <div className="border-t border-border pt-4">
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-muted-foreground">Was this helpful?</span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleFeedback(true);
-                      setShowFeedback(true);
-                    }}
-                    className="hover:bg-green-50 hover:text-green-600"
-                  >
-                    👍 Yes
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFeedback(true)}
-                    className="hover:bg-red-50 hover:text-red-600"
-                  >
-                    👎 No
-                  </Button>
-                </div>
-              </div>
-
-              {showFeedback && (
-                <div className="space-y-3">
-                  <textarea
-                    placeholder="Tell us how we can improve..."
-                    value={feedbackReason}
-                    onChange={(e) => setFeedbackReason(e.target.value)}
-                    className="chat-input min-h-[80px] resize-none text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      handleFeedback(false, feedbackReason);
-                      setShowFeedback(false);
-                    }}
-                    className="cta-button"
-                  >
-                    Submit Feedback
-                  </Button>
+                  </details>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+
+              {/* Feedback Section */}
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-muted-foreground">Was this helpful?</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleFeedback(true);
+                        setShowFeedback(true);
+                      }}
+                      className="hover:bg-green-50 hover:text-green-600"
+                    >
+                      👍 Yes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowFeedback(true)}
+                      className="hover:bg-red-50 hover:text-red-600"
+                    >
+                      👎 No
+                    </Button>
+                  </div>
+                </div>
+
+                {showFeedback && (
+                  <div className="space-y-3">
+                    <textarea
+                      placeholder="Tell us how we can improve..."
+                      value={feedbackReason}
+                      onChange={(e) => setFeedbackReason(e.target.value)}
+                      className="chat-input min-h-[80px] resize-none text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        handleFeedback(false, feedbackReason);
+                        setShowFeedback(false);
+                      }}
+                      className="cta-button"
+                    >
+                      Submit Feedback
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </>
       );
 
@@ -2443,7 +1972,7 @@ const Dashboard = ({ onStartDecision }) => {
                   placeholder="What decision are you facing today?"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="chat-input resize-none min-h-[100px] border-none bg-transparent text-lg focus:ring-0 focus:outline-none"
+                  className="chat-input resize-none min-h-[80px] border-none bg-transparent text-lg focus:ring-0 focus:outline-none"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -2454,457 +1983,292 @@ const Dashboard = ({ onStartDecision }) => {
                 
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-muted-foreground">
-                    E.g., "Should I take this new job offer?" or "Which investment option is better?"
+                    E.g., "Should I switch careers?" or "Which city should I move to?"
                   </p>
                   <Button
                     onClick={handleStartDecision}
+                    disabled={!question.trim()}
                     className="cta-button px-6 py-2 text-sm"
                   >
-                    Let's Decide
+                    Decide Now
                   </Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
 
-        {/* Quick Stats or Recent Decisions */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="decision-card text-center">
-            <CardContent className="p-6">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {user?.monthly_decisions_used || 0}
+// Auth Modal Component
+const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  
+  const { login, register } = useAuth();
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      let result;
+      
+      if (mode === 'login') {
+        result = await login(email, password);
+      } else {
+        result = await register(name, email, password);
+      }
+      
+      if (result.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          onSuccess();
+        }, 1000);
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Auth error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-card rounded-lg shadow-xl max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-foreground">
+              {mode === 'login' ? 'Welcome Back!' : 'Create Your Account'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               </div>
-              <p className="text-muted-foreground text-sm">Decisions This Month</p>
-            </CardContent>
-          </Card>
+            </div>
+          )}
           
-          <Card className="decision-card text-center">
-            <CardContent className="p-6">
-              <div className="text-3xl font-bold text-mint mb-2">85%</div>
-              <p className="text-muted-foreground text-sm">Avg. Confidence</p>
-            </CardContent>
-          </Card>
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  {mode === 'login' ? 'Login successful!' : 'Account created successfully!'}
+                </p>
+              </div>
+            </div>
+          )}
           
-          <Card className="decision-card text-center">
-            <CardContent className="p-6">
-              <div className="text-3xl font-bold text-secondary-yellow mb-2">2.1</div>
-              <p className="text-muted-foreground text-sm">Avg. Follow-ups</p>
-            </CardContent>
-          </Card>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                  Full Name
+                </label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                  className="w-full"
+                />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
+                Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'register' ? 'Create a secure password' : 'Enter your password'}
+                  required
+                  className="w-full pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {mode === 'register' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Must be at least 8 characters with uppercase, lowercase, number, and symbol.
+                </p>
+              )}
+            </div>
+            
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full cta-button py-2"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>{mode === 'login' ? 'Logging in...' : 'Creating account...'}</span>
+                </div>
+              ) : (
+                <span>{mode === 'login' ? 'Log In' : 'Create Account'}</span>
+              )}
+            </Button>
+          </form>
+          
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
+              <button
+                onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
+                className="ml-1 text-primary hover:underline"
+              >
+                {mode === 'login' ? 'Sign up' : 'Log in'}
+              </button>
+            </p>
+          </div>
+          
+          {mode === 'register' && (
+            <div className="mt-6 p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  By creating an account, you agree to our Terms of Service and Privacy Policy.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// Enhanced Auth Modal Component with Proper Validation
-const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
-  const { login, register } = useAuth();
-
-  // Real-time email validation
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Real-time name validation
-  const validateName = (name) => {
-    const nameRegex = /^[a-zA-Z\s]+$/;
-    return name.trim().length >= 2 && nameRegex.test(name.trim());
-  };
-
-  // Password strength calculation with detailed rules
-  const getPasswordStrength = (pass) => {
-    let strength = 0;
-    let issues = [];
-    
-    if (pass.length >= 8) {
-      strength++;
-    } else {
-      issues.push('At least 8 characters');
-    }
-    
-    if (/[a-z]/.test(pass)) {
-      strength++;
-    } else {
-      issues.push('At least 1 lowercase letter');
-    }
-    
-    if (/[A-Z]/.test(pass)) {
-      strength++;
-    } else {
-      issues.push('At least 1 uppercase letter');
-    }
-    
-    if (/\d/.test(pass)) {
-      strength++;
-    } else {
-      issues.push('At least 1 number');
-    }
-    
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) {
-      strength++;
-    } else {
-      issues.push('At least 1 symbol (!@#$%^&*)');
-    }
-    
-    return { strength, issues };
-  };
-
-  const passwordAnalysis = getPasswordStrength(password);
-  const strengthLabels = ['', 'Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColors = ['', 'bg-red-500', 'bg-red-400', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'];
-
-  // Real-time validation
-  useEffect(() => {
-    const errors = {};
-    
-    if (email && !validateEmail(email)) {
-      errors.email = 'Please enter a valid email address (e.g., user@example.com)';
-    }
-    
-    if (mode === 'register') {
-      if (name && !validateName(name)) {
-        errors.name = 'Name must contain only letters and spaces (minimum 2 characters)';
-      }
-      
-      if (password && passwordAnalysis.issues.length > 0) {
-        errors.password = passwordAnalysis.issues;
-      }
-      
-      if (confirmPassword && password !== confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
-    }
-    
-    setValidationErrors(errors);
-  }, [email, name, password, confirmPassword, mode]);
-
-  // Clear form when modal closes or mode switches
-  useEffect(() => {
-    if (!isOpen) {
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setName('');
-      setError('');
-      setShowPassword(false);
-      setShowConfirmPassword(false);
-      setValidationErrors({});
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    setError('');
-    setConfirmPassword('');
-    setValidationErrors({});
-  }, [mode]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    // Final validation before submission
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
-      return;
-    }
-
-    if (mode === 'register') {
-      if (!name.trim()) {
-        setError('Name is required');
-        setLoading(false);
-        return;
-      }
-      
-      if (!validateName(name)) {
-        setError('Name must contain only letters and spaces (minimum 2 characters)');
-        setLoading(false);
-        return;
-      }
-      
-      if (passwordAnalysis.strength < 5) {
-        setError('Password must meet all requirements');
-        setLoading(false);
-        return;
-      }
-      
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
-      }
-    }
-
-    const result = mode === 'login' 
-      ? await login(email, password)
-      : await register(name.trim(), email, password);
-
-    if (result.success) {
-      onSuccess?.();
-    } else {
-      setError(result.error);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
-      <ModalHeader>
-        <ModalTitle className="text-center">
-          {mode === 'login' ? 'Welcome back' : 'Create your account'}
-        </ModalTitle>
-      </ModalHeader>
-      
-      <ModalContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Your Name *</label>
-              <Input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
-                className={`chat-input ${validationErrors.name ? 'border-red-500' : ''}`}
-                required
-              />
-              {validationErrors.name && (
-                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{validationErrors.name}</span>
-                </div>
-              )}
-              {name && !validationErrors.name && validateName(name) && (
-                <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
-                  <Check className="h-3 w-3" />
-                  <span>Valid name</span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Email *</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@example.com"
-              className={`chat-input ${validationErrors.email ? 'border-red-500' : ''}`}
-              required
-            />
-            {validationErrors.email && (
-              <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
-                <AlertCircle className="h-3 w-3" />
-                <span>{validationErrors.email}</span>
-              </div>
-            )}
-            {email && !validationErrors.email && validateEmail(email) && (
-              <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
-                <Check className="h-3 w-3" />
-                <span>Valid email address</span>
-              </div>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Password *</label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className={`chat-input pr-12 ${validationErrors.password ? 'border-red-500' : ''}`}
-                required
-                minLength={8}
-              />
-              <button
-                type="button"
-                onMouseDown={() => setShowPassword(true)}
-                onMouseUp={() => setShowPassword(false)}
-                onMouseLeave={() => setShowPassword(false)}
-                onTouchStart={() => setShowPassword(true)}
-                onTouchEnd={() => setShowPassword(false)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
-              >
-                {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </button>
-            </div>
-            
-            {/* Password Requirements & Strength */}
-            {mode === 'register' && (
-              <div className="mt-2 space-y-2">
-                {/* Password Requirements */}
-                <div className="text-xs space-y-1">
-                  <div className="text-muted-foreground font-medium">Password Requirements:</div>
-                  {passwordAnalysis.issues.map((issue, index) => (
-                    <div key={index} className="flex items-center gap-1 text-red-500">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>{issue}</span>
-                    </div>
-                  ))}
-                  {passwordAnalysis.issues.length === 0 && password && (
-                    <div className="flex items-center gap-1 text-green-500">
-                      <Check className="h-3 w-3" />
-                      <span>All requirements met</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Password Strength Meter */}
-                {password && (
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-muted-foreground">Password Strength</span>
-                      <span className={`text-xs font-medium ${strengthColors[passwordAnalysis.strength]?.replace('bg-', 'text-')}`}>
-                        {strengthLabels[passwordAnalysis.strength]}
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${strengthColors[passwordAnalysis.strength]}`}
-                        style={{ width: `${(passwordAnalysis.strength / 5) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password *</label>
-              <div className="relative">
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className={`chat-input pr-12 ${validationErrors.confirmPassword ? 'border-red-500' : ''}`}
-                  required
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onMouseDown={() => setShowConfirmPassword(true)}
-                  onMouseUp={() => setShowConfirmPassword(false)}
-                  onMouseLeave={() => setShowConfirmPassword(false)}
-                  onTouchStart={() => setShowConfirmPassword(true)}
-                  onTouchEnd={() => setShowConfirmPassword(false)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors select-none"
-                >
-                  {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-              </div>
-              {validationErrors.confirmPassword && (
-                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{validationErrors.confirmPassword}</span>
-                </div>
-              )}
-              {confirmPassword && password === confirmPassword && (
-                <div className="flex items-center gap-1 mt-1 text-green-500 text-xs">
-                  <Check className="h-3 w-3" />
-                  <span>Passwords match</span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {error && (
-            <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-              {error}
-            </div>
-          )}
-          
-          <Button 
-            type="submit" 
-            disabled={loading || (mode === 'register' && Object.keys(validationErrors).length > 0)} 
-            className="w-full cta-button py-3"
-          >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Please wait...
-              </div>
-            ) : (
-              mode === 'login' ? 'Sign In' : 'Create Account'
-            )}
-          </Button>
-        </form>
-        
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
-            className="text-primary hover:text-primary-hover underline-offset-4 hover:underline transition-colors"
-          >
-            {mode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-          </button>
-        </div>
-      </ModalContent>
-  </Modal>
-);
-};
-
-// Side Chat Modal Component (placeholder - will be enhanced)
+// Side Chat Modal Component
 const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
-  const { isAuthenticated } = useAuth();
+  const [conversations, setConversations] = useState([
+    {
+      id: 1,
+      question: "Should I switch careers to data science?",
+      date: "2 days ago",
+      confidence: 85
+    },
+    {
+      id: 2,
+      question: "Is it worth buying a house in the current market?",
+      date: "1 week ago",
+      confidence: 72
+    },
+    {
+      id: 3,
+      question: "Should I adopt a dog or a cat?",
+      date: "2 weeks ago",
+      confidence: 91
+    }
+  ]);
   
   if (!isOpen) return null;
-
+  
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1" onClick={onClose} />
-      <div className="w-96 bg-card border-l border-border shadow-xl animate-slide-in-right">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Decision History</h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-              <X className="h-5 w-5" />
-            </button>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm" 
+        onClick={onClose}
+      ></div>
+      
+      {/* Side Panel */}
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-card shadow-xl flex flex-col">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Your Decision History</h2>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-auto p-4">
+          <div className="space-y-4">
+            {conversations.length > 0 ? (
+              conversations.map((conversation) => (
+                <div 
+                  key={conversation.id}
+                  className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-medium text-foreground">{conversation.question}</h3>
+                    <span className="text-xs text-muted-foreground">{conversation.date}</span>
+                  </div>
+                  <div className="flex items-center mt-2">
+                    <span className="text-xs text-muted-foreground mr-2">Confidence:</span>
+                    <div className="w-24 bg-muted rounded-full h-1.5">
+                      <div 
+                        className="confidence-bar h-1.5 rounded-full"
+                        style={{ width: `${conversation.confidence}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium ml-2">{conversation.confidence}%</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No decision history yet.</p>
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="p-6 flex-1">
-          {isAuthenticated ? (
-            <div className="text-center py-12">
-              <div className="text-4xl mb-4">🤔</div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No decisions yet</h3>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Start your first decision to see your history here.
-              </p>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-lg font-medium text-foreground mb-2">Sign in to view history</h3>
-              <p className="text-muted-foreground text-sm">
-                Create an account to save and revisit your decisions.
-              </p>
-            </div>
-          )}
-        </div>
-        
-        <div className="p-6 border-t border-border">
+        <div className="p-4 border-t border-border">
           <Button
             onClick={onStartNewDecision}
-            className="w-full cta-button py-3"
+            className="w-full cta-button py-2"
           >
             Start New Decision
           </Button>
@@ -2912,3 +2276,4 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
       </div>
     </div>
   );
+};
