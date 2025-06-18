@@ -2107,33 +2107,29 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   </div>
                 </div>
               </div>
-            </CardContent>
 
-            {/* New 2-Line Recommendation Card */}
-            <div className="space-y-4">
-              {/* Brief Recommendation (Always Visible) */}
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
-                <p className="text-foreground leading-relaxed">
-                  {item.content.recommendation.length > 150 
-                    ? item.content.recommendation.substring(0, 150) + '...'
-                    : item.content.recommendation}
-                </p>
-                {item.content.recommendation.length > 150 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFullReasoning(!showFullReasoning)}
-                    className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
-                  >
-                    {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
-                  </Button>
-                )}
+              {/* New 2-Line Recommendation Card */}
+              <div className="space-y-4">
+                {/* Brief Recommendation (Always Visible) */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+                  <p className="text-foreground leading-relaxed">
+                    {item.content.recommendation.length > 150 
+                      ? item.content.recommendation.substring(0, 150) + '...'
+                      : item.content.recommendation}
+                  </p>
+                  {item.content.recommendation.length > 150 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullReasoning(!showFullReasoning)}
+                      className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
+                    >
+                      {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
-        </>
-      );
 
               {/* Expand #1: Full Reasoning + Next Steps */}
               {showFullReasoning && (
@@ -2197,9 +2193,8 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Enhanced Logic Trace */}
+              {/* Enhanced Logic Trace */}
             {item.content.trace && (
               <div>
                 <details className="group">
