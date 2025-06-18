@@ -615,6 +615,36 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     }
   };
   
+  // Function to load AI-generated guided questions
+  const loadGuidedQuestions = async () => {
+    if (guidedQuestions.length > 0) return; // Already loaded
+    
+    setLoadingGuidedQuestions(true);
+    try {
+      const response = await axios.post(`${API}/api/decision/generate-followup-questions`, {
+        decision_id: decisionId,
+        conversation_history: conversationHistory,
+        recommendation: recommendation
+      });
+      
+      if (response.data.questions) {
+        setGuidedQuestions(response.data.questions.slice(0, 5)); // Limit to 5 questions
+      }
+    } catch (error) {
+      console.error('Error loading guided questions:', error);
+      // Fallback questions if API fails
+      setGuidedQuestions([
+        "What are your biggest concerns about implementing this decision?",
+        "What would success look like for you in this situation?", 
+        "What factors might change your mind about this decision?",
+        "How does this decision align with your long-term goals?",
+        "What support or resources would you need to move forward?"
+      ]);
+    } finally {
+      setLoadingGuidedQuestions(false);
+    }
+  };
+  
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
