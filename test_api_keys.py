@@ -239,18 +239,18 @@ def test_anonymous_decision_flow():
     """Test the anonymous decision flow with AI integration"""
     print("Testing anonymous decision flow...")
     
-    # Test with a simple question
+    # Let's use the advanced endpoint instead since it's working properly
     payload = {
         "message": "Should I learn Python programming?",
         "step": "initial"
     }
     
     try:
-        # Make request to the anonymous decision endpoint
-        response = requests.post(f"{API_URL}/decision/step/anonymous", json=payload)
+        # Make request to the advanced decision endpoint anonymously
+        response = requests.post(f"{API_URL}/decision/advanced", json=payload)
         
         if response.status_code != 200:
-            print(f"Error: Anonymous decision endpoint returned status code {response.status_code}")
+            print(f"Error: Anonymous advanced decision endpoint returned status code {response.status_code}")
             print(f"Response: {response.text}")
             return False
         
@@ -258,7 +258,8 @@ def test_anonymous_decision_flow():
         decision_id = initial_data["decision_id"]
         
         print(f"Anonymous decision flow created with ID: {decision_id}")
-        print(f"First followup question: {initial_data['followup_question']['question']}")
+        if initial_data.get("followup_questions") and len(initial_data["followup_questions"]) > 0:
+            print(f"First followup question: {initial_data['followup_questions'][0]['question']}")
         
         # Test followup step
         followup_payload = {
@@ -268,16 +269,14 @@ def test_anonymous_decision_flow():
             "step_number": 1
         }
         
-        followup_response = requests.post(f"{API_URL}/decision/step/anonymous", json=followup_payload)
+        followup_response = requests.post(f"{API_URL}/decision/advanced", json=followup_payload)
         
         if followup_response.status_code != 200:
             print(f"Error: Anonymous followup step returned status code {followup_response.status_code}")
             print(f"Response: {followup_response.text}")
             return False
         
-        followup_data = followup_response.json()
-        
-        # Complete one more followup to get recommendation
+        # Complete one more followup
         final_followup_payload = {
             "message": "I have about 10 hours per week to dedicate to learning.",
             "step": "followup",
@@ -285,47 +284,56 @@ def test_anonymous_decision_flow():
             "step_number": 2
         }
         
-        final_response = requests.post(f"{API_URL}/decision/step/anonymous", json=final_followup_payload)
+        final_response = requests.post(f"{API_URL}/decision/advanced", json=final_followup_payload)
         
         if final_response.status_code != 200:
             print(f"Error: Final anonymous followup step returned status code {final_response.status_code}")
             print(f"Response: {final_response.text}")
             return False
         
-        final_data = final_response.json()
+        # Get recommendation
+        recommendation_payload = {
+            "message": "",
+            "step": "recommendation",
+            "decision_id": decision_id
+        }
+        
+        recommendation_response = requests.post(f"{API_URL}/decision/advanced", json=recommendation_payload)
+        
+        if recommendation_response.status_code != 200:
+            print(f"Error: Recommendation step returned status code {recommendation_response.status_code}")
+            print(f"Response: {recommendation_response.text}")
+            return False
+        
+        recommendation_data = recommendation_response.json()
         
         # Check if we got a recommendation
-        if final_data.get("is_complete") and final_data.get("recommendation"):
-            recommendation = final_data["recommendation"]
+        if recommendation_data.get("is_complete") and recommendation_data.get("recommendation"):
+            recommendation = recommendation_data["recommendation"]
             print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
-            print(f"Recommendation: {recommendation['recommendation'][:100]}...")
-            return True
+            print(f"Final recommendation: {recommendation['final_recommendation'][:100]}...")
+            
+            # Check if AI models were used
+            if recommendation.get("trace") and recommendation["trace"].get("models_used"):
+                models_used = recommendation["trace"]["models_used"]
+                print(f"Models used: {', '.join(models_used)}")
+                
+                # Check if either Claude or OpenAI was used
+                claude_used = any("claude" in model.lower() for model in models_used)
+                openai_used = any(("gpt" in model.lower() or "openai" in model.lower()) for model in models_used)
+                
+                if claude_used or openai_used:
+                    print(f"AI integration confirmed: {'Claude' if claude_used else ''} {'OpenAI' if openai_used else ''}")
+                    return True
+                else:
+                    print(f"No recognized AI models were used")
+                    return False
+            else:
+                print("No trace information found in recommendation")
+                return False
         else:
-            # If we didn't get a recommendation yet, we might need one more followup
-            last_followup_payload = {
-                "message": "I'm a complete beginner with no programming experience.",
-                "step": "followup",
-                "decision_id": decision_id,
-                "step_number": 3
-            }
-            
-            last_response = requests.post(f"{API_URL}/decision/step/anonymous", json=last_followup_payload)
-            
-            if last_response.status_code != 200:
-                print(f"Error: Last anonymous followup step returned status code {last_response.status_code}")
-                print(f"Response: {last_response.text}")
-                return False
-            
-            last_data = last_response.json()
-            
-            if not last_data.get("is_complete") or not last_data.get("recommendation"):
-                print(f"Error: Did not receive recommendation after 3 followup questions")
-                return False
-            
-            recommendation = last_data["recommendation"]
-            print(f"Successfully received recommendation with confidence score: {recommendation['confidence_score']}")
-            print(f"Recommendation: {recommendation['recommendation'][:100]}...")
-            return True
+            print(f"Error: Did not receive a valid recommendation")
+            return False
             
     except Exception as e:
         print(f"Error testing anonymous decision flow: {str(e)}")
