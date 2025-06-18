@@ -2131,10 +2131,6 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                 )}
               </div>
             </div>
-          </Card>
-        </>
-      );
-
               {/* Expand #1: Full Reasoning + Next Steps */}
               {showFullReasoning && (
                 <div className="space-y-4 pl-4 border-l-2 border-primary/20">
@@ -2197,9 +2193,11 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   )}
                 </div>
               )}
-            </div>
 
             {/* Enhanced Logic Trace */}
+          </Card>
+        </>
+      );
             {item.content.trace && (
               <div>
                 <details className="group">
