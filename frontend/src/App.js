@@ -1273,20 +1273,57 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 </div>
                 
                 <div className="min-h-[200px]">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {!showGuidedQuestions 
-                      ? "Share any additional context that might influence your decision..."
-                      : "Answer questions that seem relevant to your situation:"
-                    }
-                  </p>
-                  
-                  <textarea
-                    placeholder={!showGuidedQuestions 
-                      ? "What other factors should the AI consider?"
-                      : "What are your biggest concerns about this decision?"
-                    }
-                    className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[120px]"
-                  />
+                  {!showGuidedQuestions ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Share any additional context that might influence your decision...
+                      </p>
+                      <textarea
+                        placeholder="What other factors should the AI consider?"
+                        className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[120px]"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Answer questions that seem relevant to your situation:
+                      </p>
+                      
+                      {loadingGuidedQuestions ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <span className="ml-2 text-sm text-muted-foreground">Loading personalized questions...</span>
+                        </div>
+                      ) : guidedQuestions.length > 0 ? (
+                        <div className="space-y-3">
+                          {guidedQuestions.map((question, index) => (
+                            <div key={index} className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                              <div className="flex items-start gap-3">
+                                <span className="text-primary font-medium text-sm">{index + 1}.</span>
+                                <p className="text-sm text-foreground flex-1">{question}</p>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="mt-4">
+                            <textarea
+                              placeholder="Select a question above or write your own response..."
+                              className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[80px]"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-sm text-muted-foreground mb-4">Let's generate some personalized questions for you!</p>
+                          <button
+                            onClick={loadGuidedQuestions}
+                            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 text-sm"
+                          >
+                            🎯 Generate Questions
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
                 
                 <div className="flex justify-end gap-3 mt-6">
