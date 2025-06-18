@@ -2,7 +2,6 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import axios from 'axios';
 import { User, History, Settings, Moon, Sun, Menu, X, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 
-// Import UI components
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
@@ -208,6 +207,8 @@ const App = () => {
     </PostHogProvider>
   );
 };
+
+export default App;
 
 // App Content Component
 const AppContent = ({ 
@@ -2089,44 +2090,45 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                     <div className="w-4 h-4 bg-muted rounded-full flex items-center justify-center text-xs cursor-help hover:bg-muted-foreground/20 transition-colors">
                       ℹ️
                     </div>
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
-                    This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-xs whitespace-nowrap">
+                      This score reflects how clearly and consistently your answers aligned with multiple reasoning frameworks.
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`font-bold text-lg ${getConfidenceColor ? getConfidenceColor(item.content.confidence_score) : 'text-foreground'}`}>
+                    {item.content.confidence_score}%
+                  </span>
+                  <div className="w-20 bg-muted rounded-full h-3">
+                    <div 
+                      className="confidence-bar h-3 rounded-full"
+                      style={{ width: `${item.content.confidence_score}%` }}
+                    />
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className={`font-bold text-lg ${getConfidenceColor ? getConfidenceColor(item.content.confidence_score) : 'text-foreground'}`}>
-                  {item.content.confidence_score}%
-                </span>
-                <div className="w-20 bg-muted rounded-full h-3">
-                  <div 
-                    className="confidence-bar h-3 rounded-full"
-                    style={{ width: `${item.content.confidence_score}%` }}
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* New 2-Line Recommendation Card */}
-            <div className="space-y-4">
-              {/* Brief Recommendation (Always Visible) */}
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
-                <p className="text-foreground leading-relaxed">
-                  {item.content.recommendation.length > 150 
-                    ? item.content.recommendation.substring(0, 150) + '...'
-                    : item.content.recommendation}
-                </p>
-                {item.content.recommendation.length > 150 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFullReasoning(!showFullReasoning)}
-                    className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
-                  >
-                    {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
-                  </Button>
-                )}
+              {/* New 2-Line Recommendation Card */}
+              <div className="space-y-4">
+                {/* Brief Recommendation (Always Visible) */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+                  <p className="text-foreground leading-relaxed">
+                    {item.content.recommendation.length > 150 
+                      ? item.content.recommendation.substring(0, 150) + '...'
+                      : item.content.recommendation}
+                  </p>
+                  {item.content.recommendation.length > 150 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullReasoning(!showFullReasoning)}
+                      className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
+                    >
+                      {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Expand #1: Full Reasoning + Next Steps */}
@@ -2191,9 +2193,8 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Enhanced Logic Trace */}
+              {/* Enhanced Logic Trace */}
             {item.content.trace && (
               <div>
                 <details className="group">
@@ -2397,6 +2398,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
             </div>
           </CardContent>
         </Card>
+        </>
       );
 
     default:
@@ -2856,8 +2858,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSwitchMode, onSuccess }) => {
           </button>
         </div>
       </ModalContent>
-    </Modal>
-  );
+  </Modal>
+);
 };
 
 // Side Chat Modal Component (placeholder - will be enhanced)
@@ -2911,5 +2913,3 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
     </div>
   );
 };
-
-export default App;
