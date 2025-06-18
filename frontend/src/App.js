@@ -2913,3 +2913,4 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
     </div>
   );
 };
+};
