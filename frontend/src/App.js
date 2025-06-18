@@ -1152,19 +1152,19 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Enhanced Post-Decision Experience */}
         {currentStep === 'recommendation' && recommendation && (
           <div className="space-y-6 mt-8">
-            {/* New Minimalist Action Row */}
-            <div className="flex justify-end gap-3">
+            {/* Enhanced Post-Decision Action Row */}
+            <div className="flex justify-center gap-4">
               <Button
                 variant="outline"
                 onClick={() => setShowGoDeeperModal(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 px-8 py-3 text-base font-semibold bg-primary/5 hover:bg-primary/10 border-primary/30 hover:border-primary/50 transition-all duration-200"
               >
                 🔍 Go Deeper
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowAdjustModal(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 px-8 py-3 text-base font-semibold bg-orange-50 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-orange-700 transition-all duration-200"
               >
                 🔧 Adjust
               </Button>
@@ -1172,7 +1172,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 <Button
                   variant="outline"
                   onClick={() => setShowVersionCarousel(true)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-blue-50 hover:bg-blue-100 border-blue-200 hover:border-blue-300 text-blue-700 transition-all duration-200"
                 >
                   📊 Compare
                 </Button>
