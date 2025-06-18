@@ -1510,6 +1510,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColor }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackReason, setFeedbackReason] = useState('');
+  const [showFullReasoning, setShowFullReasoning] = useState(false);
 
   const handleFeedback = async (helpful, reason = '') => {
     try {
