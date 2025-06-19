@@ -1220,7 +1220,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 {/* Tab Navigation */}
                 <div className="flex gap-1 mb-6 bg-muted rounded-lg p-1">
                   <button
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${!showGuidedQuestions ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-muted-foreground'}`}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${!showGuidedQuestions ? 'bg-white dark:bg-slate-800 shadow-sm' : 'text-muted-foreground'}`}
                     onClick={() => setShowGuidedQuestions(false)}
                   >
                     📝 Add My Context
