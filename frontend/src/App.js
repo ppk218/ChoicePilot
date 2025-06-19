@@ -1226,7 +1226,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     📝 Add My Context
                   </button>
                   <button
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${showGuidedQuestions ? 'bg-white dark:bg-gray-800 shadow-sm' : 'text-muted-foreground'}`}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all ${showGuidedQuestions ? 'bg-white dark:bg-slate-800 shadow-sm' : 'text-muted-foreground'}`}
                     onClick={() => setShowGuidedQuestions(true)}
                   >
                     🎯 Guide Me with Questions
