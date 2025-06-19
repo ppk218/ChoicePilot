@@ -1447,11 +1447,76 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => setShowAdjustModal(false)}
+                      onClick={async () => {
+                        if (!adjustmentReason) return;
+                        
+                        try {
+                          let newRecommendation;
+                          
+                          switch (adjustmentReason) {
+                            case 'edit_answers':
+                              // Start new flow allowing user to edit previous answers
+                              setCurrentStep('edit_flow');
+                              setShowAdjustModal(false);
+                              // You would implement edit flow here
+                              alert('Edit flow would start here - allowing you to modify previous answers and regenerate recommendation.');
+                              break;
+                              
+                            case 'new_persona':
+                              // Get recommendation with different advisor persona
+                              const response = await axios.post(`${API}/api/decision/advanced`, {
+                                message: initialQuestion,
+                                step: 'recommendation',
+                                decision_id: decisionId,
+                                force_different_persona: true
+                              });
+                              
+                              if (response.data.recommendation) {
+                                setRecommendation(response.data.recommendation);
+                                const newRecCard = {
+                                  type: 'ai_recommendation',
+                                  content: response.data.recommendation,
+                                  timestamp: new Date(),
+                                  id: Date.now()
+                                };
+                                setConversationHistory(prev => [...prev, newRecCard]);
+                              }
+                              break;
+                              
+                            case 'change_type':
+                              // Switch analysis approach
+                              const approachResponse = await axios.post(`${API}/api/decision/advanced`, {
+                                message: initialQuestion,
+                                step: 'recommendation', 
+                                decision_id: decisionId,
+                                force_different_approach: true
+                              });
+                              
+                              if (approachResponse.data.recommendation) {
+                                setRecommendation(approachResponse.data.recommendation);
+                                const newRecCard = {
+                                  type: 'ai_recommendation',
+                                  content: approachResponse.data.recommendation,
+                                  timestamp: new Date(),
+                                  id: Date.now()
+                                };
+                                setConversationHistory(prev => [...prev, newRecCard]);
+                              }
+                              break;
+                          }
+                          
+                          setShowAdjustModal(false);
+                          setAdjustmentReason('');
+                          
+                        } catch (error) {
+                          console.error('Error adjusting decision:', error);
+                          alert('Failed to adjust decision. Please try again.');
+                        }
+                      }}
                       className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                       disabled={!adjustmentReason}
                     >
-                      Continue
+                      🔄 Apply Changes
                     </button>
                   </div>
                 </div>
