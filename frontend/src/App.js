@@ -1319,10 +1319,55 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => setShowGoDeeperModal(false)}
-                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                    onClick={async () => {
+                      if (!userAnswers.trim()) {
+                        alert('Please provide some additional context or answer a question.');
+                        return;
+                      }
+                      
+                      // Add user's additional context to conversation history
+                      const contextMessage = {
+                        type: 'user_context',
+                        content: userAnswers,
+                        timestamp: new Date(),
+                        id: Date.now()
+                      };
+                      
+                      setConversationHistory(prev => [...prev, contextMessage]);
+                      
+                      // Trigger new recommendation with additional context
+                      try {
+                        const response = await axios.post(`${API}/api/decision/advanced`, {
+                          message: `Additional context: ${userAnswers}`,
+                          step: 'recommendation',
+                          decision_id: decisionId,
+                          include_previous_context: true
+                        });
+                        
+                        if (response.data.recommendation) {
+                          setRecommendation(response.data.recommendation);
+                          // Add updated recommendation to conversation
+                          const updatedRecommendation = {
+                            type: 'ai_recommendation',
+                            content: response.data.recommendation,
+                            timestamp: new Date(),
+                            id: Date.now()
+                          };
+                          setConversationHistory(prev => [...prev, updatedRecommendation]);
+                        }
+                      } catch (error) {
+                        console.error('Error updating recommendation:', error);
+                        alert('Failed to update recommendation. Please try again.');
+                      }
+                      
+                      setShowGoDeeperModal(false);
+                      setUserAnswers('');
+                      setSelectedQuestionIndex(null);
+                    }}
+                    disabled={!userAnswers.trim()}
+                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    💾 Update Recommendation
+                    🔄 Update Recommendation
                   </button>
                 </div>
               </div>
