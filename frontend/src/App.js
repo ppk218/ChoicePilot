@@ -1066,7 +1066,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Sticky Summary Header - Only shown when recommendation exists */}
         {currentStep === 'recommendation' && recommendation && (
           <div className="sticky top-20 z-40 mb-6">
-            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border rounded-lg p-4 shadow-lg">
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-border rounded-lg p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
