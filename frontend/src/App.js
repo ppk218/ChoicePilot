@@ -588,6 +588,26 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
 
+  // Function to load guided questions
+  const loadGuidedQuestions = async () => {
+    setLoadingGuidedQuestions(true);
+    try {
+      // Simulate loading questions (in a real app, this would be an API call)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setGuidedQuestions([
+        "What specific skills from your current role would transfer well to your new career?",
+        "How would this career change impact your work-life balance?",
+        "What's your timeline for making this transition?",
+        "Have you spoken with anyone currently in this field?",
+        "What's your backup plan if this change doesn't work out?"
+      ]);
+    } catch (error) {
+      console.error("Error loading guided questions:", error);
+    } finally {
+      setLoadingGuidedQuestions(false);
+    }
+  };
+
   // Initialize with the initial question
   useEffect(() => {
     if (initialQuestion) {
