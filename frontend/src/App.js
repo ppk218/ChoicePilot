@@ -1201,6 +1201,69 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 </Button>
               )}
             </div>
+
+            {/* Take Action Section */}
+            <Card className="bg-gradient-to-r from-primary/5 to-mint/5 border-primary/20">
+              <CardContent className="p-6">
+                <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <span>🚀</span>
+                  <span>Take Action</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowUpgradeModal(true);
+                      } else {
+                        // Export PDF functionality would go here
+                        alert('Export PDF functionality would be implemented here for Pro users.');
+                      }
+                    }}
+                  >
+                    <span className="text-xl">📄</span>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">Export PDF</div>
+                      <div className="text-xs text-muted-foreground">Save & share decision</div>
+                      {!isAuthenticated && <div className="text-xs text-orange-600">Pro Feature</div>}
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        setShowUpgradeModal(true);
+                      } else {
+                        // Share functionality would go here
+                        alert('Share functionality would be implemented here for Pro users.');
+                      }
+                    }}
+                  >
+                    <span className="text-xl">🔗</span>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">Share Link</div>
+                      <div className="text-xs text-muted-foreground">Get shareable URL</div>
+                      {!isAuthenticated && <div className="text-xs text-orange-600">Pro Feature</div>}
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-3 justify-start h-auto py-4 px-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-800 hover:from-orange-100 hover:to-yellow-100 dark:hover:from-orange-900/30 dark:hover:to-yellow-900/30"
+                    onClick={() => setShowUpgradeModal(true)}
+                  >
+                    <span className="text-xl">⭐</span>
+                    <div className="text-left">
+                      <div className="font-medium text-orange-600 dark:text-orange-400">Upgrade to Pro</div>
+                      <div className="text-xs text-orange-500 dark:text-orange-500">Advanced features</div>
+                    </div>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
         
