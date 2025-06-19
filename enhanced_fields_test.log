@@ -1,0 +1,63 @@
+Using API URL: https://851dd399-9392-40e2-b795-96773954385d.preview.emergentagent.com/api
+
+================================================================================
+Running test: Enhanced Recommendation Fields
+================================================================================
+Testing enhanced recommendation fields...
+Testing advanced decision - complex career question
+Advanced decision created with ID: e5a88f21-05cd-45f4-b6f5-5a150d8b1463
+
+Submitting followup answer 1
+
+Submitting followup answer 2
+
+Submitting followup answer 3
+
+Getting recommendation
+Summary field found: Test your consulting business idea part-time for 3 months while keeping your current job to validate the concept and build confidence. This approach addresses your financial stability concerns while preventing the regret of not trying, using your industry expertise and partner's support as advantages.
+Next steps with time estimates found (3 steps):
+  Step 1: Launch consulting validation outreach to 5 industry contacts - 3 hours this weekend
+    Description: Draft personalized messages to test market interest and book initial conversations
+  Step 2: Daily fulfillment tracking between day job and consulting work - 2 minutes daily
+    Description: Compare energy levels and satisfaction to measure the contrast in fulfillment
+  Step 3: 90-day financial and fulfillment assessment - 2 hours
+    Description: Evaluate consulting income potential, client feedback, and personal satisfaction to make the transition decision
+Enhanced recommendation fields test passed successfully
+✅ Test PASSED: Enhanced Recommendation Fields
+
+================================================================================
+Running test: Anonymous Enhanced Recommendation Fields
+================================================================================
+Testing enhanced recommendation fields for anonymous users...
+Testing anonymous advanced decision - complex financial question
+Anonymous advanced decision created with ID: 6877285a-9414-4cf7-892f-92515b190ea6
+
+Submitting anonymous followup answer 1
+
+Submitting anonymous followup answer 2
+
+Submitting anonymous followup answer 3
+
+Getting anonymous recommendation
+Summary field found: **Decision: Buy a house within the next 12-18 months.** Your 8 years of saving, solid down payment, 5+ year commitment to the area, and family planning timeline all point toward homeownership. The 30% payment increase is an investment in your future family's stability and wealth building.
+Next steps with time estimates found (3 steps):
+  Step 1: Get pre-approved for a mortgage to understand your exact buying power - 3-4 hours over 2 weeks
+    Description: Meet with 2-3 lenders, compare rates, and get official pre-approval letters
+  Step 2: Tour 10-15 houses in your target price range - 4-6 hours over 3 weekends
+    Description: Get realistic about what $350k-$400k buys in your area and refine your must-haves
+  Step 3: Create a detailed cost comparison including all homeownership expenses - 2 hours this weekend
+    Description: Factor in taxes, insurance, maintenance, utilities, and tax benefits for true monthly cost
+Anonymous enhanced recommendation fields test passed successfully
+✅ Test PASSED: Anonymous Enhanced Recommendation Fields
+
+================================================================================
+Test Summary
+================================================================================
+Total tests: 2
+Passed: 2
+Failed: 0
+Success rate: 100.0%
+
+Detailed Results:
+✅ Enhanced Recommendation Fields: PASSED
+✅ Anonymous Enhanced Recommendation Fields: PASSED
