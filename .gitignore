@@ -5,6 +5,8 @@ dist
 node_modules/
 /.pnp
 .pnp.js
+.yarn/
+.yarnrc.yml
 .yarn/install-state.gz
 .vscode
 # testing
