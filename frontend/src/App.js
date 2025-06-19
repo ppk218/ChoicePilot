@@ -1248,8 +1248,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     </>
                   ) : (
                     <>
+                      {/* Context Section */}
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
+                        <h4 className="text-sm font-semibold text-foreground mb-2">📋 Your Original Question</h4>
+                        <p className="text-sm text-muted-foreground">"{initialQuestion}"</p>
+                      </div>
+                      
                       <p className="text-sm text-muted-foreground mb-4">
-                        Answer questions that seem relevant to your situation:
+                        Let's explore deeper aspects of your decision with personalized questions:
                       </p>
                       
                       {loadingGuidedQuestions ? (
@@ -1260,7 +1266,18 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       ) : guidedQuestions.length > 0 ? (
                         <div className="space-y-3">
                           {guidedQuestions.map((question, index) => (
-                            <div key={index} className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                            <div 
+                              key={index} 
+                              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                                selectedQuestionIndex === index 
+                                  ? 'border-primary bg-primary/10' 
+                                  : 'border-border hover:bg-muted/50'
+                              }`}
+                              onClick={() => {
+                                setSelectedQuestionIndex(index);
+                                setUserAnswers(question);
+                              }}
+                            >
                               <div className="flex items-start gap-3">
                                 <span className="text-primary font-medium text-sm">{index + 1}.</span>
                                 <p className="text-sm text-foreground flex-1">{question}</p>
@@ -1268,9 +1285,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                             </div>
                           ))}
                           <div className="mt-4">
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                              Your Response:
+                            </label>
                             <textarea
-                              placeholder="Select a question above or write your own response..."
-                              className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[80px]"
+                              value={userAnswers}
+                              onChange={(e) => setUserAnswers(e.target.value)}
+                              placeholder="Click a question above or write your own response..."
+                              className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[100px]"
                             />
                           </div>
                         </div>
