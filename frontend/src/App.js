@@ -1179,6 +1179,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 </Button>
               )}
             </div>
+          </div>
         )}
         
         {/* Modal Components - Clean JSX Structure */}
