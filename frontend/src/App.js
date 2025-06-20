@@ -7,6 +7,7 @@ import { Input } from './components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
 import { Modal, ModalContent, ModalHeader, ModalTitle } from './components/ui/Modal';
 import { SideModal } from './components/ui/SideModal';
+import DecisionVersionDrawer from './components/DecisionVersionDrawer';
 import { Switch } from './components/ui/Switch';
 import { Progress } from './components/ui/Progress';
 
@@ -369,6 +370,12 @@ const AppContent = ({
           setCurrentView('flow');
         }}
       />
+      <DecisionVersionDrawer
+        isOpen={showVersionDrawer}
+        onClose={() => setShowVersionDrawer(false)}
+        decisionId={decisionId}
+        onSelect={handleVersionSelect}
+      />
     </>
   );
 };
@@ -559,6 +566,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showVersionCarousel, setShowVersionCarousel] = useState(false);
+  const [showVersionDrawer, setShowVersionDrawer] = useState(false);
   const [showAIDebateModal, setShowAIDebateModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -1101,6 +1109,18 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     }
   };
 
+  const handleVersionSelect = (version) => {
+    if (!version || !version.recommendation) return;
+    setDecisionVersions(prev => {
+      const updated = [...prev];
+      updated[version.version - 1] = version.recommendation;
+      return updated;
+    });
+    setRecommendation(version.recommendation);
+    setCurrentVersion(version.version - 1);
+    setActiveSummaryIndex(version.version - 1);
+  };
+
   const currentQuestion = followupQuestions[currentFollowupIndex];
 
   // Utility function for confidence color coding
@@ -1277,6 +1297,15 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                   className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-blue-50 hover:bg-blue-100 border-blue-200 hover:border-blue-300 text-blue-700 transition-all duration-200"
                 >
                   📊 Compare
+                </Button>
+              )}
+              {decisionVersions.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowVersionDrawer(true)}
+                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-muted hover:bg-muted/50 border-border transition-all duration-200"
+                >
+                  🕑 Versions
                 </Button>
               )}
             </div>
