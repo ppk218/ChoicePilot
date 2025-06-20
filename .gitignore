@@ -38,7 +38,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *pyc*
-#*.env
+# Ignore env files
+.env
 .ac
 agenthub/agents/youtube/db
 *credentials.json*
