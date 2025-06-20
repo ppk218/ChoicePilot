@@ -401,8 +401,9 @@ const LandingPage = ({ onStartDecision }) => {
           {/* Hero Section */}
           <div className="mb-16">
             <h1 className="hero-headline mb-6">
-              From confusion to clarity — in{' '}
-              <span className="hero-gradient">just a few steps</span>
+              From confusion to clarity
+              <br />
+              <span className="hero-gradient">in just a few steps</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
