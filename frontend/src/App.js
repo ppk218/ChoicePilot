@@ -567,6 +567,54 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [decisionVersions, setDecisionVersions] = useState([]);
   const [currentVersion, setCurrentVersion] = useState(0);
   const [favoriteVersion, setFavoriteVersion] = useState(0);
+  const [activeSummaryIndex, setActiveSummaryIndex] = useState(0);
+
+  const DecisionSummaryCarousel = ({ summaries, activeIndex, setActiveIndex }) => {
+    if (!summaries.length) return null;
+
+    const prev = () => setActiveIndex(i => Math.max(0, i - 1));
+    const next = () => setActiveIndex(i => Math.min(summaries.length - 1, i + 1));
+
+    const current = summaries[activeIndex];
+
+    return (
+      <div className="my-6">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={prev}
+            disabled={activeIndex === 0}
+            className="p-2 text-2xl disabled:opacity-50"
+          >
+            ‹
+          </button>
+          <div className="flex-1">
+            <ConversationCard
+              item={{ type: 'ai_recommendation', content: current, version: activeIndex + 1 }}
+              onFeedback={handleFeedback}
+              isAuthenticated={isAuthenticated}
+              getConfidenceColor={getConfidenceColor}
+            />
+          </div>
+          <button
+            onClick={next}
+            disabled={activeIndex === summaries.length - 1}
+            className="p-2 text-2xl disabled:opacity-50"
+          >
+            ›
+          </button>
+        </div>
+        <div className="flex justify-center mt-2">
+          {summaries.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveIndex(idx)}
+              className={`w-2 h-2 rounded-full mx-1 ${idx === activeIndex ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
   
   // Go Deeper state
   const [goDeeperContext, setGoDeeperContext] = useState('');
@@ -805,10 +853,15 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         
         setRecommendation(recommendation);
         setCurrentStep('recommendation');
-        
+
+        const versionNumber = decisionVersions.length + 1;
+        setDecisionVersions(prev => [...prev, recommendation]);
+        setActiveSummaryIndex(versionNumber - 1);
+
         // Add recommendation to conversation
         setConversationHistory(prev => [...prev, {
           type: 'ai_recommendation',
+          version: versionNumber,
           content: recommendation,
           timestamp: new Date()
         }]);
@@ -905,10 +958,15 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
       setRecommendation(recommendation);
       setCurrentStep('recommendation');
-      
+
+      const versionNumber = decisionVersions.length + 1;
+      setDecisionVersions(prev => [...prev, recommendation]);
+      setActiveSummaryIndex(versionNumber - 1);
+
       // Add recommendation to conversation
       setConversationHistory(prev => [...prev, {
         type: 'ai_recommendation',
+        version: versionNumber,
         content: recommendation,
         timestamp: new Date()
       }]);
@@ -926,8 +984,13 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setRecommendation(recommendation);
       setCurrentStep('recommendation');
       
+      const versionNumber = decisionVersions.length + 1;
+      setDecisionVersions(prev => [...prev, recommendation]);
+      setActiveSummaryIndex(versionNumber - 1);
+
       setConversationHistory(prev => [...prev, {
         type: 'ai_recommendation',
+        version: versionNumber,
         content: recommendation,
         timestamp: new Date()
       }]);
@@ -1078,15 +1141,31 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
 
         {/* Conversation History */}
         <div className="space-y-6 mb-8">
-          {conversationHistory.map((item, index) => (
-            <ConversationCard key={index} item={item} onFeedback={handleFeedback} isAuthenticated={isAuthenticated} getConfidenceColor={getConfidenceColor} />
-          ))}
-          
+          {conversationHistory
+            .filter(item => item.type !== 'ai_recommendation')
+            .map((item, index) => (
+              <ConversationCard
+                key={index}
+                item={item}
+                onFeedback={handleFeedback}
+                isAuthenticated={isAuthenticated}
+                getConfidenceColor={getConfidenceColor}
+              />
+            ))}
+
           {/* Show thinking animation when loading */}
           {loading && processingStep && (
             <ThinkingAnimation message={processingStep} />
           )}
         </div>
+
+        {decisionVersions.length > 0 && (
+          <DecisionSummaryCarousel
+            summaries={decisionVersions}
+            activeIndex={activeSummaryIndex}
+            setActiveIndex={setActiveSummaryIndex}
+          />
+        )}
 
         {/* Current Input with Enhanced Persona Display */}
         {currentStep === 'followup' && currentQuestion && !loading && (

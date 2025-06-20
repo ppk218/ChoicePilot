@@ -105,6 +105,11 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               <CardTitle className="flex items-center gap-2">
                 <span>🎯</span>
                 <span>Your Decision Recommendation</span>
+                {item.version && (
+                  <span className="ml-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    v{item.version}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
