@@ -68,3 +68,11 @@ __pycache__/
 
 # Android SDK
 android-sdk/
+# log and backup files
+*.log
+*.bak
+*.old
+*.orig
+*~
+*_backup.*
+*.original.*
