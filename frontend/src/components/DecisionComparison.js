@@ -30,12 +30,16 @@ const DecisionComparison = ({ decisions, onClose }) => {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await axios.post(`${API}/decisions/compare`, selectedDecisions);
       setComparisonData(response.data);
     } catch (error) {
       console.error('Error comparing decisions:', error);
-      setError(error.response?.data?.detail || 'Failed to compare decisions');
+      if (error.response && (error.response.status === 403 || error.response.status === 402)) {
+        if (window.showUpgradeModal) window.showUpgradeModal();
+      } else {
+        setError(error.response?.data?.detail || 'Failed to compare decisions');
+      }
     } finally {
       setLoading(false);
     }

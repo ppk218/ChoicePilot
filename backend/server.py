@@ -117,13 +117,19 @@ SUBSCRIPTION_PLANS = {
         "name": "Free Plan",
         "price": 0,
         "monthly_decisions": 3,
+        "monthly_sessions": 3,
+        "monthly_comparisons": 5,
+        "monthly_debates": 5,
         "features": ["3 decision sessions per month", "Basic AI guidance", "Core decision flow"],
         "restrictions": ["Limited sessions", "No advanced features"]
     },
     "pro": {
-        "name": "Pro Plan", 
+        "name": "Pro Plan",
         "price": 7.00,  # Updated from 12.00 to 7.00
         "monthly_decisions": -1,  # Unlimited
+        "monthly_sessions": -1,
+        "monthly_comparisons": -1,
+        "monthly_debates": -1,
         "features": [
             "Unlimited decision sessions", "Advanced AI analysis", "Decision history & export",
             "Priority support", "Advanced reasoning insights"
@@ -299,6 +305,9 @@ class User(BaseModel):
     plan: Literal["free", "pro"] = "free"
     credits: int = 0
     monthly_decisions_used: int = 0
+    monthly_sessions_used: int = 0
+    monthly_comparisons_used: int = 0
+    monthly_debates_used: int = 0
     subscription_expires: Optional[datetime] = None
     email_verified: bool = False
     email_verified_at: Optional[datetime] = None
@@ -485,6 +494,10 @@ class AdvancedDecisionStepResponse(BaseModel):
     decision_type: Optional[str] = None
     session_version: int = 1
 
+
+class DebateRequest(BaseModel):
+    topic: str
+
 # Decision categories
 DECISION_CATEGORIES = {
     "general": "General decision making and advice",
@@ -624,8 +637,57 @@ async def check_usage_and_permissions(user: dict, use_voice: bool = False, advis
     
     if errors:
         return {"allowed": False, "errors": errors, "credit_cost": credit_cost}
-    
+
     return {"allowed": True, "errors": [], "credit_cost": credit_cost}
+
+
+async def check_and_increment_usage(user: dict, action: str) -> bool:
+    """Check monthly usage limits for a specific action and increment if allowed"""
+    now = datetime.utcnow()
+    last_reset = user.get("last_reset", now)
+    if isinstance(last_reset, str):
+        last_reset = datetime.fromisoformat(last_reset.replace('Z', '+00:00'))
+
+    # Reset counts on new month
+    if last_reset.month != now.month or last_reset.year != now.year:
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {
+                "monthly_decisions_used": 0,
+                "monthly_sessions_used": 0,
+                "monthly_comparisons_used": 0,
+                "monthly_debates_used": 0,
+                "last_reset": now
+            }}
+        )
+        user["monthly_decisions_used"] = 0
+        user["monthly_sessions_used"] = 0
+        user["monthly_comparisons_used"] = 0
+        user["monthly_debates_used"] = 0
+
+    plan = user.get("plan", "free")
+
+    field_map = {
+        "session": "monthly_sessions_used",
+        "comparison": "monthly_comparisons_used",
+        "debate": "monthly_debates_used",
+    }
+    limit_map = {
+        "session": SUBSCRIPTION_PLANS[plan].get("monthly_sessions", -1),
+        "comparison": SUBSCRIPTION_PLANS[plan].get("monthly_comparisons", -1),
+        "debate": SUBSCRIPTION_PLANS[plan].get("monthly_debates", -1),
+    }
+
+    field = field_map[action]
+    used = user.get(field, 0)
+    limit = limit_map[action]
+
+    if limit != -1 and used >= limit:
+        return False
+
+    await db.users.update_one({"id": user["id"]}, {"$inc": {field: 1}})
+    user[field] = used + 1
+    return True
 
 # Enhanced authentication endpoints with security
 @api_router.post("/auth/register")
@@ -684,6 +746,9 @@ async def register_user(user_data: UserRegistration):
             plan="free",
             credits=0,
             monthly_decisions_used=0,
+            monthly_sessions_used=0,
+            monthly_comparisons_used=0,
+            monthly_debates_used=0,
             email_verified=True  # Temporarily set to True to bypass email issues
         )
         
@@ -871,6 +936,9 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         "plan": current_user["plan"],
         "credits": current_user["credits"],
         "monthly_decisions_used": current_user.get("monthly_decisions_used", 0),
+        "monthly_sessions_used": current_user.get("monthly_sessions_used", 0),
+        "monthly_comparisons_used": current_user.get("monthly_comparisons_used", 0),
+        "monthly_debates_used": current_user.get("monthly_debates_used", 0),
         "subscription_expires": current_user.get("subscription_expires"),
         "email_verified": current_user.get("email_verified", True),  # Default to True as per the fix
         "created_at": current_user["created_at"]
@@ -1229,14 +1297,17 @@ async def chat_with_assistant(request: DecisionRequest, current_user: dict = Dep
         
         credit_cost = permission_check["credit_cost"]
         decision_id = request.decision_id or str(uuid.uuid4())
-        
+
         # Get or create decision session
         existing_session = await db.decision_sessions.find_one({"decision_id": decision_id, "user_id": current_user["id"]})
         if not existing_session:
+            allowed = await check_and_increment_usage(current_user, "session")
+            if not allowed:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "Session limit reached. Upgrade to Pro for more sessions.")
             title = generate_decision_title(request.message, request.category)
             session_obj = DecisionSession(
                 decision_id=decision_id,
-                user_id=current_user["id"], 
+                user_id=current_user["id"],
                 title=title,
                 category=request.category or "general",
                 user_preferences=request.preferences or {},
@@ -1362,6 +1433,9 @@ async def export_user_data(current_user: dict = Depends(get_current_user)):
             },
             "usage_data": {
                 "monthly_decisions_used": current_user.get("monthly_decisions_used", 0),
+                "monthly_sessions_used": current_user.get("monthly_sessions_used", 0),
+                "monthly_comparisons_used": current_user.get("monthly_comparisons_used", 0),
+                "monthly_debates_used": current_user.get("monthly_debates_used", 0),
                 "credits": current_user.get("credits", 0),
                 "subscription_expires": current_user.get("subscription_expires")
             }
@@ -2022,11 +2096,15 @@ async def process_advanced_decision_step(
         
         # Get or create decision session
         session = await db.decision_sessions_advanced.find_one({"id": decision_id})
-        
+
         if not session and request.step == "initial":
+            if current_user:
+                allowed = await check_and_increment_usage(current_user, "session")
+                if not allowed:
+                    raise HTTPException(status.HTTP_403_FORBIDDEN, "Session limit reached. Upgrade to Pro for more sessions.")
             # Use smart classification and routing
             smart_classification = await ai_orchestrator.smart_classify_and_route(
-                request.message, 
+                request.message,
                 current_user.get("plan", "free") if current_user else "free"
             )
             
@@ -2430,6 +2508,10 @@ async def compare_decision_versions(
     Compare two versions of a decision
     """
     try:
+        if current_user:
+            allowed = await check_and_increment_usage(current_user, "comparison")
+            if not allowed:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "Comparison limit reached. Upgrade to Pro to continue.")
         version1 = request.get("version1")
         version2 = request.get("version2")
         
@@ -3394,6 +3476,9 @@ async def compare_decisions(
 ):
     """Compare multiple decision sessions"""
     try:
+        allowed = await check_and_increment_usage(current_user, "comparison")
+        if not allowed:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Comparison limit reached. Upgrade to Pro to continue.")
         if len(decision_ids) < 2:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "At least 2 decisions required for comparison")
         
@@ -3404,12 +3489,22 @@ async def compare_decisions(
             decision_ids=decision_ids,
             user_id=current_user["id"]
         )
-        
+
         return comparison_data
         
     except Exception as e:
         logging.error(f"Error comparing decisions: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to compare decisions: {str(e)}")
+
+
+@api_router.post("/debate")
+async def start_debate(request: DebateRequest, current_user: dict = Depends(get_current_user)):
+    """Placeholder AI debate endpoint"""
+    allowed = await check_and_increment_usage(current_user, "debate")
+    if not allowed:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Debate limit reached. Upgrade to Pro to continue.")
+    topic = security_service.sanitize_input(request.topic)
+    return {"message": f"Debate results for '{topic}' coming soon."}
 
 @api_router.get("/decisions/{decision_id}/shares")
 async def get_decision_shares(decision_id: str, current_user: dict = Depends(get_current_user)):

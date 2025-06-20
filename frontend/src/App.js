@@ -148,6 +148,12 @@ const App = () => {
     return () => delete window.showAuthModal;
   }, []);
 
+  // Make upgrade modal accessible globally
+  useEffect(() => {
+    window.showUpgradeModal = () => setShowUpgradeModal(true);
+    return () => delete window.showUpgradeModal;
+  }, []);
+
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -720,6 +726,12 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
     } catch (error) {
       console.error('Decision error:', error);
+      if (error.response && (error.response.status === 403 || error.response.status === 402)) {
+        if (window.showUpgradeModal) window.showUpgradeModal();
+        setLoading(false);
+        setProcessingStep('');
+        return;
+      }
       setError('We\'re having trouble analyzing your decision. Using our fallback system...');
       // Fallback to local questions on API error
       await generateFallbackFollowups(question);
@@ -926,6 +938,13 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
     } catch (error) {
       console.error('Followup error:', error);
+      if (error.response && (error.response.status === 403 || error.response.status === 402)) {
+        if (window.showUpgradeModal) window.showUpgradeModal();
+        setLoading(false);
+        setProcessingStep('');
+        setQuestionSubmitted(false);
+        return;
+      }
       console.log('Backend response error:', error.response?.data);
       
       // Better fallback - try to generate recommendation instead of cycling through old questions
@@ -998,6 +1017,12 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       
     } catch (error) {
       console.error('Recommendation error:', error);
+      if (error.response && (error.response.status === 403 || error.response.status === 402)) {
+        if (window.showUpgradeModal) window.showUpgradeModal();
+        setLoading(false);
+        setProcessingStep('');
+        return;
+      }
       // Fallback to intelligent local recommendation
       const allAnswers = conversationHistory
         .filter(item => item.type === 'user_answer')
