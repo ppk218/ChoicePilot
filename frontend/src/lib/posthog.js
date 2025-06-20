@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect } from 'react';
 import posthog from 'posthog-js';
 
 // PostHog configuration
-const POSTHOG_API_KEY = 'phc_Ocu3kFXMxUjFSmRlDH1Fj2QOK32GS5CU0bBbMwdlHn2';
-const POSTHOG_HOST = 'https://us.i.posthog.com';
+const POSTHOG_API_KEY = process.env.REACT_APP_POSTHOG_KEY;
+const POSTHOG_HOST = process.env.REACT_APP_POSTHOG_HOST;
 
 // Initialize PostHog
 if (typeof window !== 'undefined') {
