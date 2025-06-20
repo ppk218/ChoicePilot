@@ -435,7 +435,7 @@ const LandingPage = ({ onStartDecision }) => {
                   
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-muted-foreground">
-                      E.g., "Should I switch careers?" or "Which city should I move to?"
+                      E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                     </p>
                     <Button
                       onClick={handleStartDecision}
@@ -2284,7 +2284,7 @@ const Dashboard = ({ onStartDecision }) => {
                 
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-muted-foreground">
-                    E.g., "Should I switch careers?" or "Which city should I move to?"
+                    E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                   </p>
                   <Button
                     onClick={handleStartDecision}
@@ -2494,19 +2494,19 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
   const [conversations, setConversations] = useState([
     {
       id: 1,
-      question: "Should I switch careers to data science?",
+      question: "Should we expand to the European market next year?",
       date: "2 days ago",
       confidence: 85
     },
     {
       id: 2,
-      question: "Is it worth buying a house in the current market?",
+      question: "Is investing in electric company vehicles worthwhile?",
       date: "1 week ago",
       confidence: 72
     },
     {
       id: 3,
-      question: "Should I adopt a dog or a cat?",
+      question: "Which CRM software best fits our growing startup?",
       date: "2 weeks ago",
       confidence: 91
     }

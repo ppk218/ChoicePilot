@@ -429,7 +429,7 @@ const LandingPage = ({ onStartDecision }) => {
                   
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-muted-foreground">
-                      E.g., "Should I switch careers?" or "Which city should I move to?"
+                      E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                     </p>
                     <Button
                       onClick={handleStartDecision}
