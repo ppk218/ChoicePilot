@@ -635,7 +635,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [userAnswers, setUserAnswers] = useState('');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(null);
   
-  const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
+  const {
+    trackDecisionStarted,
+    trackDecisionCompleted,
+    trackFollowupAnswered,
+    trackAdjustClicked,
+    trackUpgradeTriggered,
+    trackFeedbackSubmitted,
+  } = usePostHog();
   const { isAuthenticated } = useAuth();
 
   // Function to load guided questions
@@ -1096,6 +1103,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         helpful,
         feedback_text: reason
       });
+      trackFeedbackSubmitted(helpful, decisionId);
     } catch (error) {
       console.error('Feedback error:', error);
     }
@@ -1265,7 +1273,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowAdjustModal(true)}
+                onClick={() => {
+                  trackAdjustClicked(decisionId);
+                  setShowAdjustModal(true);
+                }}
                 className="flex items-center gap-2 px-8 py-3 text-base font-semibold bg-orange-50 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-orange-700 transition-all duration-200"
               >
                 🔧 Adjust
@@ -1294,6 +1305,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       if (!isAuthenticated) {
+                        trackUpgradeTriggered();
                         setShowUpgradeModal(true);
                       } else {
                         // Export PDF functionality would go here
@@ -1314,6 +1326,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       if (!isAuthenticated) {
+                        trackUpgradeTriggered();
                         setShowUpgradeModal(true);
                       } else {
                         // Share functionality would go here
@@ -1332,7 +1345,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                   <Button
                     variant="outline"
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-800 hover:from-orange-100 hover:to-yellow-100 dark:hover:from-orange-900/30 dark:hover:to-yellow-900/30"
-                    onClick={() => setShowUpgradeModal(true)}
+                    onClick={() => {
+                      trackUpgradeTriggered();
+                      setShowUpgradeModal(true);
+                    }}
                   >
                     <span className="text-xl">⭐</span>
                     <div className="text-left">
