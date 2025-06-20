@@ -577,6 +577,30 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [favoriteVersion, setFavoriteVersion] = useState(0);
   const [activeSummaryIndex, setActiveSummaryIndex] = useState(0);
 
+  // Load last viewed version from local storage when decision/session changes
+  useEffect(() => {
+    if (decisionId) {
+      const stored = localStorage.getItem(`decision_${decisionId}_last_version`);
+      if (stored !== null) {
+        const idx = parseInt(stored, 10);
+        if (!isNaN(idx) && idx < decisionVersions.length) {
+          setActiveSummaryIndex(idx);
+        }
+      }
+    }
+  }, [decisionId, decisionVersions.length]);
+
+  // Persist last viewed version whenever it changes
+  useEffect(() => {
+    if (decisionId) {
+      localStorage.setItem(
+        `decision_${decisionId}_last_version`,
+        String(activeSummaryIndex)
+      );
+      localStorage.setItem('lastDecisionId', decisionId);
+    }
+  }, [activeSummaryIndex, decisionId]);
+
   const DecisionSummaryCarousel = ({ summaries, activeIndex, setActiveIndex }) => {
     if (!summaries.length) return null;
 
