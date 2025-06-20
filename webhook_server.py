@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(title="Webhook Test Server")
 
-# Webhook secret
-WEBHOOK_SECRET = "9aKvjEw7z892XhGM4ajh0mAH"  # Without the 'whsec_' prefix
+# Webhook secret loaded from environment
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+if not WEBHOOK_SECRET:
+    raise RuntimeError("WEBHOOK_SECRET environment variable not set")
 
 @app.post("/api/webhooks/dodo")
 async def handle_dodo_webhook(request: Request):
