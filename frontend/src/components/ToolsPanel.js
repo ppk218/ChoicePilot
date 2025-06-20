@@ -151,7 +151,7 @@ const ToolsPanel = ({
   if (activeTab === 'compare') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-card rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
           <DecisionComparison 
             decisions={decisions} 
             onClose={() => setActiveTab('summary')}
@@ -164,7 +164,7 @@ const ToolsPanel = ({
   if (activeTab === 'share') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-card rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
           <DecisionSharing 
             decisionId={currentDecisionId}
             decisionTitle={currentDecisionTitle}
@@ -178,7 +178,7 @@ const ToolsPanel = ({
   if (activeTab === 'randomizer') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-card rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
           <DecisionRandomizer onClose={() => setActiveTab('summary')} />
         </div>
       </div>
@@ -194,10 +194,10 @@ const ToolsPanel = ({
       ></div>
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-96 bg-card shadow-2xl z-50 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Decision Tools</h2>
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Decision Tools</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-xl font-bold"
@@ -213,7 +213,7 @@ const ToolsPanel = ({
         )}
 
         {/* Tabs */}
-        <div className="flex flex-wrap border-b border-gray-200 p-2 gap-1">
+        <div className="flex flex-wrap border-b border-border p-2 gap-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -243,7 +243,7 @@ const ToolsPanel = ({
 
               {currentDecisionId && (
                 <div className="space-y-3">
-                  <div className="border-t border-gray-200 pt-4">
+                  <div className="border-t border-border pt-4">
                     <h4 className="font-medium text-gray-900 mb-2">Export Options</h4>
                     
                     <button
@@ -267,7 +267,7 @@ const ToolsPanel = ({
                     )}
                   </div>
 
-                  <div className="border-t border-gray-200 pt-4">
+                  <div className="border-t border-border pt-4">
                     <h4 className="font-medium text-gray-900 mb-2">Quick Actions</h4>
                     <div className="space-y-2">
                       <button

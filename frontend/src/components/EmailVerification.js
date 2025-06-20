@@ -77,7 +77,7 @@ const EmailVerification = ({ user, onVerificationComplete, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+      <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -85,10 +85,10 @@ const EmailVerification = ({ user, onVerificationComplete, onClose }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Email</h2>
-          <p className="text-gray-600">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Verify Your Email</h2>
+          <p className="text-muted-foreground">
             We've sent a verification code to<br />
-            <span className="font-medium text-gray-900">{user.email}</span>
+            <span className="font-medium text-foreground">{user.email}</span>
           </p>
         </div>
 
@@ -157,9 +157,9 @@ const EmailVerification = ({ user, onVerificationComplete, onClose }) => {
         </form>
 
         {/* Resend Code */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 pt-4 border-t border-border">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-muted-foreground mb-3">
               Didn't receive the code?
             </p>
             <button

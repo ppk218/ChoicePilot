@@ -26,7 +26,7 @@ const PaymentError = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+      <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4 text-center">
         {/* Error Icon */}
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,8 +35,8 @@ const PaymentError = ({ onClose }) => {
         </div>
 
         {/* Error Message */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h2>
-        <p className="text-gray-600 mb-6">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Payment Failed</h2>
+        <p className="text-muted-foreground mb-6">
           We encountered an issue processing your payment. Don't worry, no charges have been made to your account.
         </p>
 
@@ -90,16 +90,16 @@ const PaymentError = ({ onClose }) => {
           
           <button
             onClick={() => window.history.back()}
-            className="w-full bg-gray-100 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium"
+            className="w-full bg-muted text-foreground py-3 px-6 rounded-lg hover:bg-muted/80 transition-colors duration-200 font-medium"
           >
             Go Back
           </button>
         </div>
 
         {/* Support Section */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <h4 className="font-semibold text-gray-900 mb-2">Need Help?</h4>
-          <p className="text-sm text-gray-600 mb-3">
+        <div className="mt-6 pt-4 border-t border-border">
+          <h4 className="font-semibold text-foreground mb-2">Need Help?</h4>
+          <p className="text-sm text-muted-foreground mb-3">
             If you continue to experience issues, please contact our support team.
           </p>
           <div className="space-y-2">

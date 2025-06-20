@@ -43,7 +43,7 @@ const PaymentSuccess = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+      <div className="bg-card rounded-xl p-8 max-w-md w-full mx-4 text-center">
         {/* Success Icon */}
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,34 +52,34 @@ const PaymentSuccess = ({ onClose }) => {
         </div>
 
         {/* Success Message */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
-        <p className="text-gray-600 mb-6">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Payment Successful!</h2>
+        <p className="text-muted-foreground mb-6">
           Your payment has been processed successfully. Your account will be updated shortly.
         </p>
 
         {/* Payment Details */}
         {details.paymentId && (
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="font-semibold text-gray-900 mb-3">Payment Details</h3>
+          <div className="bg-muted/50 rounded-lg p-4 mb-6 text-left">
+            <h3 className="font-semibold text-foreground mb-3">Payment Details</h3>
             <div className="space-y-2 text-sm">
               {details.productName && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Product:</span>
+                  <span className="text-muted-foreground">Product:</span>
                   <span className="font-medium">{details.productName}</span>
                 </div>
               )}
               {details.amount && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Amount:</span>
+                  <span className="text-muted-foreground">Amount:</span>
                   <span className="font-medium">${details.amount}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-600">Payment ID:</span>
+                <span className="text-muted-foreground">Payment ID:</span>
                 <span className="font-mono text-xs">{details.paymentId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Status:</span>
+                <span className="text-muted-foreground">Status:</span>
                 <span className="text-green-600 font-medium">✓ Completed</span>
               </div>
             </div>
@@ -106,14 +106,14 @@ const PaymentSuccess = ({ onClose }) => {
             Continue to ChoicePilot
           </button>
           
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Redirecting automatically in {countdown} seconds...
           </p>
         </div>
 
         {/* Support Link */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
+        <div className="mt-6 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground">
             Need help? Contact{' '}
             <a href="mailto:support@choicepilot.ai" className="text-blue-600 hover:text-blue-800">
               support@choicepilot.ai
