@@ -877,8 +877,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         setRecommendation(recommendation);
         setCurrentStep('recommendation');
 
-        const versionNumber = decisionVersions.length + 1;
-        setDecisionVersions(prev => [...prev, recommendation]);
+        const versionNumber = data.session_version || decisionVersions.length + 1;
+        setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
         setActiveSummaryIndex(versionNumber - 1);
 
         // Add recommendation to conversation
@@ -982,8 +982,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setRecommendation(recommendation);
       setCurrentStep('recommendation');
 
-      const versionNumber = decisionVersions.length + 1;
-      setDecisionVersions(prev => [...prev, recommendation]);
+      const versionNumber = response.data.session_version || decisionVersions.length + 1;
+      setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
       setActiveSummaryIndex(versionNumber - 1);
 
       // Add recommendation to conversation
@@ -1008,7 +1008,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setCurrentStep('recommendation');
       
       const versionNumber = decisionVersions.length + 1;
-      setDecisionVersions(prev => [...prev, recommendation]);
+      setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
       setActiveSummaryIndex(versionNumber - 1);
 
       setConversationHistory(prev => [...prev, {
@@ -1488,14 +1488,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                         
                         if (response.data.recommendation) {
                           setRecommendation(response.data.recommendation);
-                          // Add updated recommendation to conversation
+                          const versionNumber = response.data.session_version || decisionVersions.length + 1;
                           const updatedRecommendation = {
                             type: 'ai_recommendation',
+                            version: versionNumber,
                             content: response.data.recommendation,
                             timestamp: new Date(),
                             id: Date.now()
                           };
                           setConversationHistory(prev => [...prev, updatedRecommendation]);
+                          setDecisionVersions(prev => [...prev, { ...response.data.recommendation, version: versionNumber }]);
+                          setActiveSummaryIndex(versionNumber - 1);
                         }
                       } catch (error) {
                         console.error('Error updating recommendation:', error);
@@ -1615,13 +1618,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                               
                               if (response.data.recommendation) {
                                 setRecommendation(response.data.recommendation);
+                                const versionNumber = response.data.session_version || decisionVersions.length + 1;
                                 const newRecCard = {
                                   type: 'ai_recommendation',
+                                  version: versionNumber,
                                   content: response.data.recommendation,
                                   timestamp: new Date(),
                                   id: Date.now()
                                 };
                                 setConversationHistory(prev => [...prev, newRecCard]);
+                                setDecisionVersions(prev => [...prev, { ...response.data.recommendation, version: versionNumber }]);
+                                setActiveSummaryIndex(versionNumber - 1);
                               }
                               break;
                               
@@ -1636,13 +1643,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                               
                               if (approachResponse.data.recommendation) {
                                 setRecommendation(approachResponse.data.recommendation);
+                                const versionNumber = approachResponse.data.session_version || decisionVersions.length + 1;
                                 const newRecCard = {
                                   type: 'ai_recommendation',
+                                  version: versionNumber,
                                   content: approachResponse.data.recommendation,
                                   timestamp: new Date(),
                                   id: Date.now()
                                 };
                                 setConversationHistory(prev => [...prev, newRecCard]);
+                                setDecisionVersions(prev => [...prev, { ...approachResponse.data.recommendation, version: versionNumber }]);
+                                setActiveSummaryIndex(versionNumber - 1);
                               }
                               break;
                           }
@@ -1842,6 +1853,11 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               <CardTitle className="flex items-center gap-2">
                 <span>🎯</span>
                 <span>Your Decision Recommendation</span>
+                {item.version && (
+                  <span className="ml-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    v{item.version}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
