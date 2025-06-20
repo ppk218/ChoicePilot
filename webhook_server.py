@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Webhook Test Server")
 
 # Webhook secret
-WEBHOOK_SECRET = "9aKvjEw7z892XhGM4ajh0mAH"  # Without the 'whsec_' prefix
+WEBHOOK_SECRET = os.getenv("DODO_WEBHOOK_SECRET", "")  # Without the 'whsec_' prefix
 
 @app.post("/api/webhooks/dodo")
 async def handle_dodo_webhook(request: Request):

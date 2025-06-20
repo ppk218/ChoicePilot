@@ -32,6 +32,10 @@ yarn-error.log*
 # local env files
 # .env*.local
 *token.json*
+# Ignore environment files
+.env
+backend/.env
+frontend/.env
 # vercel
 .vercel
 
