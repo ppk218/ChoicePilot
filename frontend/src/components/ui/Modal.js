@@ -2,19 +2,19 @@ import React from "react";
 import { cn } from "../../lib/utils";
 import { X } from "lucide-react";
 
-const Modal = ({ isOpen, onClose, children, className }) => {
+const Modal = ({ isOpen, onClose, children, className, loading = false }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
-      <div 
+      <div
         className={cn(
           "relative bg-card border border-border rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-auto",
           className
@@ -27,7 +27,13 @@ const Modal = ({ isOpen, onClose, children, className }) => {
         >
           <X className="h-4 w-4" />
         </button>
-        
+
+        {loading && (
+          <div className="absolute inset-0 bg-background/70 flex items-center justify-center rounded-lg">
+            <div className="w-6 h-6 border-2 border-muted border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
         {children}
       </div>
     </div>
