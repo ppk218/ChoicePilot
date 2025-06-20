@@ -16,6 +16,18 @@ import { usePostHog, PostHogProvider } from './lib/posthog';
 // API configuration
 const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+// Advisor options for fresh follow-ups
+const ADVISOR_OPTIONS = [
+  { key: 'sunny', name: 'Sunny', icon: '☀️', avatar: '✨' },
+  { key: 'grounded', name: 'Grounded', icon: '⚖️', avatar: '📏' },
+  { key: 'spice', name: 'Spice', icon: '🌶️', avatar: '🛡️' },
+  { key: 'twist', name: 'Twist', icon: '🌪️', avatar: '💡' },
+  { key: 'stat', name: 'Stat', icon: '📈', avatar: '🔢' },
+  { key: 'vibe', name: 'Vibe', icon: '✨', avatar: '💫' },
+  { key: 'sky', name: 'Sky', icon: '🌌', avatar: '🔮' },
+  { key: 'hug', name: 'Hug', icon: '🤗', avatar: '💙' }
+];
+
 // Auth Context
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -576,6 +588,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   // Adjust state
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [selectedPersona, setSelectedPersona] = useState('');
+  const [showEditAnswersModal, setShowEditAnswersModal] = useState(false);
+  const [editedAnswers, setEditedAnswers] = useState([]);
+  const [showPersonaModal, setShowPersonaModal] = useState(false);
+  const [selectedAdvisors, setSelectedAdvisors] = useState([]);
   
   // Feedback state
   const [feedbackHelpful, setFeedbackHelpful] = useState(null);
@@ -1039,6 +1055,71 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     }).join(' ');
   };
 
+  const handleAdjustContinue = () => {
+    setShowAdjustModal(false);
+    if (adjustmentReason === 'edit_answers') {
+      const pairs = [];
+      for (let i = conversationHistory.length - 1; i >= 0 && pairs.length < 3; i--) {
+        if (conversationHistory[i].type === 'user_answer') {
+          const qItem = conversationHistory[i - 1];
+          pairs.unshift({
+            question: qItem?.content || '',
+            answer: conversationHistory[i].content,
+            historyIndex: i
+          });
+          i--; // skip question
+        }
+      }
+      setEditedAnswers(pairs);
+      setShowEditAnswersModal(true);
+    } else if (adjustmentReason === 'new_persona') {
+      setSelectedAdvisors([]);
+      setShowPersonaModal(true);
+    }
+    setAdjustmentReason('');
+  };
+
+  const handleSaveEditedAnswers = () => {
+    setConversationHistory(prev => {
+      const updated = [...prev];
+      editedAnswers.forEach(item => {
+        if (updated[item.historyIndex]) {
+          updated[item.historyIndex].content = item.answer;
+        }
+      });
+      return updated;
+    });
+    setShowEditAnswersModal(false);
+    generateRecommendation();
+  };
+
+  const toggleAdvisor = (key) => {
+    setSelectedAdvisors(prev =>
+      prev.includes(key) ? prev.filter(a => a !== key) : [...prev, key]
+    );
+  };
+
+  const handlePersonaConfirm = () => {
+    const selected = selectedAdvisors.slice(0, 3);
+    const questions = selected.map((key, idx) => {
+      const persona = ADVISOR_OPTIONS.find(a => a.key === key);
+      return {
+        question: `${persona.name} has a question about your situation`,
+        step_number: idx + 1,
+        context: '',
+        category: 'general',
+        persona: key,
+        nudge: ''
+      };
+    });
+    setFollowupQuestions(questions);
+    setCurrentFollowupIndex(0);
+    setCurrentAnswer('');
+    setRecommendation(null);
+    setShowPersonaModal(false);
+    setCurrentStep('followup');
+  };
+
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-3xl mx-auto">
@@ -1421,7 +1502,216 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       Cancel
                     </button>
                     <button
+                      onClick={handleAdjustContinue}
+                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                      disabled={!adjustmentReason}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEditAnswersModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full">
+              <div className="p-6 space-y-4">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Edit Previous Answers</h3>
+                {editedAnswers.map((pair, idx) => (
+                  <div key={idx} className="mb-4">
+                    <p className="text-sm font-medium mb-2">{pair.question}</p>
+                    <textarea
+                      className="w-full p-3 border border-border rounded-lg"
+                      value={pair.answer}
+                      onChange={(e) => setEditedAnswers(prev => {
+                        const arr = [...prev];
+                        arr[idx].answer = e.target.value;
+                        return arr;
+                      })}
+                    />
+                  </div>
+                ))}
+                <div className="flex justify-end gap-3">
+                  <button onClick={() => setShowEditAnswersModal(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50">Cancel</button>
+                  <button onClick={handleSaveEditedAnswers} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showPersonaModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full">
+              <div className="p-6 space-y-4">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Choose Advisors</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {ADVISOR_OPTIONS.map(opt => (
+                    <label key={opt.key} className="flex items-center gap-2 border border-border rounded-lg p-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedAdvisors.includes(opt.key)}
+                        onChange={() => toggleAdvisor(opt.key)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span>{opt.icon}</span>
+                      <span className="font-medium">{opt.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button onClick={() => setShowPersonaModal(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50">Cancel</button>
+                  <button onClick={handlePersonaConfirm} disabled={selectedAdvisors.length < 3} className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">Continue</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade to Pro Modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
+                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Export decisions as PDF</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Share decisions with others</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
+                      <span className="text-sm text-foreground">Priority support</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => setShowUpgradeModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
+                    >
+                      Maybe Later
+                    </button>
+                    <button
+                      onClick={() => setShowUpgradeModal(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
+                    >
+                      Upgrade Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Adjust Decision Modal */}
+        {showAdjustModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
+                  <button
+                    onClick={() => setShowAdjustModal(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    What would you like to change?
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="edit_answers"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Edit previous answers</div>
+                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="new_persona"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
+                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <input
+                        type="radio"
+                        name="adjustmentReason"
+                        value="change_type"
+                        onChange={(e) => setAdjustmentReason(e.target.value)}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <div className="font-medium text-foreground">Change decision approach</div>
+                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
                       onClick={() => setShowAdjustModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAdjustContinue}
                       className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                       disabled={!adjustmentReason}
                     >
@@ -1574,7 +1864,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => setShowAdjustModal(false)}
+                      onClick={handleAdjustContinue}
                       className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                       disabled={!adjustmentReason}
                     >
@@ -1727,160 +2017,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                      disabled={!adjustmentReason}
-                    >
-                      Continue
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Upgrade to Pro Modal */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
-                  <button
-                    onClick={() => setShowUpgradeModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-2">$7/month</div>
-                    <p className="text-sm text-muted-foreground">Unlock the full potential of GetGingee</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Unlimited decision sessions</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Advanced AI analysis & comparison</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Export decisions as PDF</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Share decisions with others</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">AI Debate Mode (Claude vs GPT-4o)</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs">✓</div>
-                      <span className="text-sm text-foreground">Priority support</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Maybe Later
-                    </button>
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-primary to-mint text-white rounded-lg hover:opacity-90"
-                    >
-                      Upgrade Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Adjust Decision Modal */}
-        {showAdjustModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
-                  <button
-                    onClick={() => setShowAdjustModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    What would you like to change?
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="edit_answers"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Edit previous answers</div>
-                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="new_persona"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
-                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="change_type"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Change decision approach</div>
-                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
+                      onClick={handleAdjustContinue}
                       className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                       disabled={!adjustmentReason}
                     >
