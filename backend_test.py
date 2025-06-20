@@ -1733,13 +1733,18 @@ def run_github_update_tests():
     tests = [
         ("Core Decision Flow - Authenticated", test_authenticated_decision_flow),
         ("Core Decision Flow - Anonymous", test_anonymous_decision_flow),
+        ("Decision Feedback", test_decision_feedback),
+        ("Core Authentication", test_auth_endpoints),
+        ("Decision Types", test_decision_types),
         ("Advanced Decision Endpoint - Authenticated", test_advanced_decision_endpoint_authenticated),
         ("Advanced Decision Endpoint - Anonymous", test_advanced_decision_endpoint_anonymous),
-        ("Export Service", test_export_service),
-        ("Payment Service", test_payment_service),
-        ("Version Management", test_version_management),
+        ("Smart Classification System", test_smart_classification_system),
+        ("Hybrid Follow-up System", test_hybrid_followup_system),
         ("API Key Integration", test_api_key_integration),
-        ("System Health", test_system_health)
+        ("System Health", test_system_health),
+        ("Email Validation", test_email_validation),
+        ("Name Validation", test_name_validation),
+        ("Password Requirements", test_password_requirements)
     ]
     
     for test_name, test_func in tests:
