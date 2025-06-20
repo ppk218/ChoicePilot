@@ -3,7 +3,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 
 // Fixed ConversationCard Component
-const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColor }) => {
+const ConversationCard = ({ item, index, onFeedback, isAuthenticated, getConfidenceColor }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackReason, setFeedbackReason] = useState('');
   const [showFullReasoning, setShowFullReasoning] = useState(false);
@@ -11,7 +11,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
   const handleFeedback = async (helpful, reason = '') => {
     try {
       if (onFeedback) {
-        onFeedback(helpful, reason);
+        onFeedback(helpful, reason, index);
       }
     } catch (error) {
       console.error('Feedback error:', error);

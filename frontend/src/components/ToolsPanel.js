@@ -7,14 +7,15 @@ import DecisionRandomizer from './DecisionRandomizer';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const ToolsPanel = ({ 
-  isOpen, 
-  onClose, 
-  currentDecisionId, 
+const ToolsPanel = ({
+  isOpen,
+  onClose,
+  currentDecisionId,
   currentDecisionTitle,
   messages,
   subscriptionInfo,
-  advisorStyle 
+  advisorStyle,
+  favoriteVersion
 }) => {
   const [activeTab, setActiveTab] = useState('summary');
   const [decisions, setDecisions] = useState([]);
@@ -56,15 +57,9 @@ const ToolsPanel = ({
       setExportingPdf(true);
       setError('');
 
-      const response = await axios.post(
-        `${API}/decisions/${currentDecisionId}/export-pdf`,
-        {},
-        {
-          responseType: 'blob',
-          headers: {
-            'Accept': 'application/pdf'
-          }
-        }
+      const response = await axios.get(
+        `${API}/decision/${currentDecisionId}/export?format=pdf&version=${favoriteVersion}`,
+        { responseType: 'blob' }
       );
 
       // Create download link

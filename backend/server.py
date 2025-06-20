@@ -2055,6 +2055,7 @@ async def process_advanced_decision_step(
                 "followup_answers": [],
                 "followup_questions": [],
                 "versions": [],
+                "favorite_version": 1,
                 "created_at": datetime.utcnow(),
                 "last_active": datetime.utcnow(),
                 "enable_personalization": request.enable_personalization
@@ -2427,14 +2428,14 @@ async def compare_decision_versions(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """
-    Compare two versions of a decision
+    Compare multiple versions of a decision
     """
     try:
-        version1 = request.get("version1")
-        version2 = request.get("version2")
-        
-        if not version1 or not version2:
-            raise HTTPException(status_code=400, detail="Both version numbers required")
+        versions_requested = request.get("versions")
+        if not versions_requested or not isinstance(versions_requested, list) or len(versions_requested) < 2:
+            raise HTTPException(status_code=400, detail="At least two versions must be provided")
+        if len(versions_requested) > 3:
+            raise HTTPException(status_code=400, detail="Maximum of three versions allowed")
         
         session = await db.decision_sessions_advanced.find_one({"id": decision_id})
         if not session:
@@ -2454,38 +2455,23 @@ async def compare_decision_versions(
         }
         
         all_versions = {v["version"]: v for v in versions + [current_version]}
-        
-        if version1 not in all_versions or version2 not in all_versions:
-            raise HTTPException(status_code=404, detail="Version not found")
-        
-        v1_data = all_versions[version1]
-        v2_data = all_versions[version2]
-        
-        # Generate comparison analysis
-        comparison = {
-            "decision_id": decision_id,
-            "version1": {
-                "version": version1,
-                "recommendation": v1_data.get("recommendation", {}).get("final_recommendation", ""),
-                "confidence": v1_data.get("recommendation", {}).get("confidence_score", 0),
-                "next_steps": v1_data.get("recommendation", {}).get("next_steps", []),
-                "created_at": v1_data.get("created_at")
-            },
-            "version2": {
-                "version": version2,
-                "recommendation": v2_data.get("recommendation", {}).get("final_recommendation", ""),
-                "confidence": v2_data.get("recommendation", {}).get("confidence_score", 0),
-                "next_steps": v2_data.get("recommendation", {}).get("next_steps", []),
-                "created_at": v2_data.get("created_at")
-            },
-            "differences": {
-                "confidence_change": v2_data.get("recommendation", {}).get("confidence_score", 0) - v1_data.get("recommendation", {}).get("confidence_score", 0),
-                "recommendation_changed": v1_data.get("recommendation", {}).get("final_recommendation", "") != v2_data.get("recommendation", {}).get("final_recommendation", ""),
-                "steps_changed": v1_data.get("recommendation", {}).get("next_steps", []) != v2_data.get("recommendation", {}).get("next_steps", [])
+
+        for v in versions_requested:
+            if v not in all_versions:
+                raise HTTPException(status_code=404, detail="Version not found")
+
+        comparisons = []
+        base = all_versions[versions_requested[0]]
+        for v in versions_requested[1:]:
+            data = all_versions[v]
+            comp = {
+                "version_a": base.get("version"),
+                "version_b": data.get("version"),
+                "confidence_change": data.get("recommendation", {}).get("confidence_score", 0) - base.get("recommendation", {}).get("confidence_score", 0),
+                "recommendation_changed": base.get("recommendation", {}).get("final_recommendation", "") != data.get("recommendation", {}).get("final_recommendation", ""),
             }
-        }
-        
-        return comparison
+            comparisons.append(comp)
+        return {"decision_id": decision_id, "comparisons": comparisons}
         
     except HTTPException:
         raise
@@ -2493,12 +2479,31 @@ async def compare_decision_versions(
         logger.error(f"Version comparison error: {str(e)}")
         raise HTTPException(status_code=500, detail="Error comparing decision versions")
 
+@api_router.post("/decision/{decision_id}/favorite-version")
+async def set_favorite_version(decision_id: str, request: dict, current_user: dict = Depends(get_current_user_optional)):
+    """Set the favorite version for a decision."""
+    version = request.get("version")
+    if not isinstance(version, int):
+        raise HTTPException(status_code=400, detail="version is required")
+
+    session = await db.decision_sessions_advanced.find_one({"id": decision_id})
+    if not session:
+        raise HTTPException(status_code=404, detail="Decision session not found")
+
+    user_id = current_user.get("id") if current_user else None
+    if session.get("user_id") and session.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    await db.decision_sessions_advanced.update_one({"id": decision_id}, {"$set": {"favorite_version": version}})
+    return {"favorite_version": version}
+
 # Export Decision Endpoint
 @api_router.get("/decision/{decision_id}/export")
 async def export_decision(
     decision_id: str,
     format: str = "json",
     include_trace: bool = False,
+    version: int | None = None,
     current_user: dict = Depends(get_current_user_optional)
 ):
     """
@@ -2514,7 +2519,16 @@ async def export_decision(
         if session.get("user_id") and session.get("user_id") != user_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        recommendation = session.get("recommendation", {})
+        if version is None:
+            version = session.get("favorite_version", session.get("version", 1))
+
+        versions = {v["version"]: v for v in session.get("versions", [])}
+        if version == session.get("version", 1):
+            rec = session.get("recommendation", {})
+        else:
+            rec = versions.get(version, {}).get("recommendation", {})
+
+        recommendation = rec
         
         export_data = {
             "decision_id": decision_id,
@@ -2559,6 +2573,7 @@ async def submit_decision_feedback(decision_id: str, request: dict):
         # Store feedback in database
         feedback_doc = {
             "decision_id": decision_id,
+            "card_index": request.get("card_index"),
             "helpful": helpful,
             "feedback_text": feedback_text,
             "timestamp": datetime.utcnow()

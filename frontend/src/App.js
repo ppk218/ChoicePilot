@@ -7,6 +7,7 @@ import { Input } from './components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
 import { Modal, ModalContent, ModalHeader, ModalTitle } from './components/ui/Modal';
 import { SideModal } from './components/ui/SideModal';
+import VersionCompareModal from "./components/VersionCompareModal";
 import { Switch } from './components/ui/Switch';
 import { Progress } from './components/ui/Progress';
 
@@ -559,6 +560,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showVersionCarousel, setShowVersionCarousel] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [showAIDebateModal, setShowAIDebateModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -1004,14 +1006,24 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     };
   };
 
-  const handleFeedback = async (helpful, reason = '') => {
+  const handleFeedback = async (helpful, reason = '', cardIndex = null) => {
     try {
       await axios.post(`${API}/api/decision/feedback/${decisionId}`, {
         helpful,
-        feedback_text: reason
+        feedback_text: reason,
+        card_index: cardIndex
       });
     } catch (error) {
       console.error('Feedback error:', error);
+    }
+  };
+
+  const handleFavoriteVersion = async (version) => {
+    setFavoriteVersion(version);
+    try {
+      await axios.post(`${API}/api/decision/${decisionId}/favorite-version`, { version });
+    } catch (err) {
+      console.error('Favorite version error', err);
     }
   };
 
@@ -1052,7 +1064,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     <h3 className="font-semibold text-foreground text-lg truncate max-w-md">
                       Decision: {initialQuestion}
                     </h3>
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
+                    <span
+                      className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium cursor-pointer"
+                      onClick={() => handleFavoriteVersion(currentVersion)}
+                    >
                       v{currentVersion + 1}{favoriteVersion === currentVersion ? ' ⭐' : ''}
                     </span>
                   </div>
@@ -1079,7 +1094,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Conversation History */}
         <div className="space-y-6 mb-8">
           {conversationHistory.map((item, index) => (
-            <ConversationCard key={index} item={item} onFeedback={handleFeedback} isAuthenticated={isAuthenticated} getConfidenceColor={getConfidenceColor} />
+            <ConversationCard
+              key={index}
+              item={item}
+              index={index}
+              onFeedback={(h, r) => handleFeedback(h, r, index)}
+              isAuthenticated={isAuthenticated}
+              getConfidenceColor={getConfidenceColor}
+            />
           ))}
           
           {/* Show thinking animation when loading */}
@@ -1168,10 +1190,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               >
                 🔧 Adjust
               </Button>
-              {decisionVersions.length > 1 && (
+              {isAuthenticated && decisionVersions.length > 1 && (
                 <Button
                   variant="outline"
-                  onClick={() => setShowVersionCarousel(true)}
+                  onClick={() => setShowCompareModal(true)}
                   className="flex items-center gap-2"
                 >
                   📊 Compare
@@ -2914,6 +2936,11 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
             Start New Decision
           </Button>
         </div>
+        {showCompareModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <VersionCompareModal decisionId={decisionId} onClose={() => setShowCompareModal(false)} />
+          </div>
+        )}
       </div>
     </div>
   );
