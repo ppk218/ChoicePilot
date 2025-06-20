@@ -9,6 +9,7 @@ import { Modal, ModalContent, ModalHeader, ModalTitle } from './components/ui/Mo
 import { SideModal } from './components/ui/SideModal';
 import { Switch } from './components/ui/Switch';
 import { Progress } from './components/ui/Progress';
+import AdjustWizard from './components/AdjustWizard';
 
 // PostHog Analytics
 import { usePostHog, PostHogProvider } from './lib/posthog';
@@ -1516,157 +1517,43 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
             </div>
           </div>
         )}
-        
-        {/* Adjust Decision Modal */}
+
         {showAdjustModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
-                  <button
-                    onClick={() => setShowAdjustModal(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    What would you like to change?
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="edit_answers"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Edit previous answers</div>
-                        <div className="text-xs text-muted-foreground">Modify your responses to follow-up questions</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="new_persona"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Ask fresh questions with new advisor</div>
-                        <div className="text-xs text-muted-foreground">Get different perspective from another advisor</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
-                      <input
-                        type="radio"
-                        name="adjustmentReason"
-                        value="change_type"
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                        className="w-4 h-4 text-primary"
-                      />
-                      <div>
-                        <div className="font-medium text-foreground">Change decision approach</div>
-                        <div className="text-xs text-muted-foreground">Switch between structured/intuitive analysis</div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      onClick={() => setShowAdjustModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (!adjustmentReason) return;
-                        
-                        try {
-                          let newRecommendation;
-                          
-                          switch (adjustmentReason) {
-                            case 'edit_answers':
-                              // Start new flow allowing user to edit previous answers
-                              setCurrentStep('edit_flow');
-                              setShowAdjustModal(false);
-                              // You would implement edit flow here
-                              alert('Edit flow would start here - allowing you to modify previous answers and regenerate recommendation.');
-                              break;
-                              
-                            case 'new_persona':
-                              // Get recommendation with different advisor persona
-                              const response = await axios.post(`${API}/api/decision/advanced`, {
-                                message: initialQuestion,
-                                step: 'recommendation',
-                                decision_id: decisionId,
-                                force_different_persona: true
-                              });
-                              
-                              if (response.data.recommendation) {
-                                setRecommendation(response.data.recommendation);
-                                const newRecCard = {
-                                  type: 'ai_recommendation',
-                                  content: response.data.recommendation,
-                                  timestamp: new Date(),
-                                  id: Date.now()
-                                };
-                                setConversationHistory(prev => [...prev, newRecCard]);
-                              }
-                              break;
-                              
-                            case 'change_type':
-                              // Switch analysis approach
-                              const approachResponse = await axios.post(`${API}/api/decision/advanced`, {
-                                message: initialQuestion,
-                                step: 'recommendation', 
-                                decision_id: decisionId,
-                                force_different_approach: true
-                              });
-                              
-                              if (approachResponse.data.recommendation) {
-                                setRecommendation(approachResponse.data.recommendation);
-                                const newRecCard = {
-                                  type: 'ai_recommendation',
-                                  content: approachResponse.data.recommendation,
-                                  timestamp: new Date(),
-                                  id: Date.now()
-                                };
-                                setConversationHistory(prev => [...prev, newRecCard]);
-                              }
-                              break;
-                          }
-                          
-                          setShowAdjustModal(false);
-                          setAdjustmentReason('');
-                          
-                        } catch (error) {
-                          console.error('Error adjusting decision:', error);
-                          alert('Failed to adjust decision. Please try again.');
-                        }
-                      }}
-                      className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                      disabled={!adjustmentReason}
-                    >
-                      🔄 Apply Changes
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AdjustWizard
+            isOpen={showAdjustModal}
+            onClose={() => setShowAdjustModal(false)}
+            onApply={async ({ adjustmentType, advisor, reuseQuestions }) => {
+              try {
+                if (adjustmentType === 'edit_answers') {
+                  setCurrentStep('edit_flow');
+                  return;
+                }
+
+                const resp = await axios.post(`${API}/api/decision/advanced`, {
+                  step: 'adjust',
+                  decision_id: decisionId,
+                  adjustment_context: initialQuestion,
+                  adjustment_type: adjustmentType,
+                  new_persona: advisor,
+                  reuse_questions: reuseQuestions
+                });
+
+                if (resp.data.followup_questions && !resp.data.is_complete) {
+                  setFollowupQuestions(resp.data.followup_questions);
+                  setCurrentStep('followup');
+                }
+
+                if (resp.data.recommendation) {
+                  setRecommendation(resp.data.recommendation);
+                  setConversationHistory(prev => [...prev, { type: 'ai_recommendation', content: resp.data.recommendation, timestamp: new Date() }]);
+                }
+              } catch (e) {
+                console.error('Adjust error', e);
+              }
+            }}
+          />
         )}
-        
+
         {/* Upgrade to Pro Modal */}
         {showUpgradeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

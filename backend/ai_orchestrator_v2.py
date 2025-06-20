@@ -435,7 +435,9 @@ Make questions specific to their situation and include practical nudges."""
         followup_answers: List[str],
         decision_type: DecisionType,
         user_profile: Dict = None,
-        enable_personalization: bool = False
+        enable_personalization: bool = False,
+        advisor_style: str = "realist",
+        adjustment_context: str = None,
     ) -> DecisionRecommendation:
         """
         Synthesize final decision using multi-framework approach
@@ -453,9 +455,15 @@ Decision Type: {decision_type.value}
 User Responses:
 {chr(10).join([f"{i+1}. {answer}" for i, answer in enumerate(followup_answers)])}
 """
-        
+
         if enable_personalization and user_profile:
             context += f"\nUser Profile Context: {user_profile.get('preferences', 'No specific preferences')}"
+
+        if adjustment_context:
+            context += f"\nAdjustment Request: {adjustment_context}"
+
+        if advisor_style:
+            context += f"\nAdvisor Persona: {advisor_style}"
 
         # Generate decision using appropriate models
         if len(models) == 1:

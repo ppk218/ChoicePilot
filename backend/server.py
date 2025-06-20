@@ -391,6 +391,9 @@ class DecisionStepRequest(BaseModel):
     decision_id: Optional[str] = None
     step: Literal["initial", "followup", "adjust"] = "initial"
     step_number: Optional[int] = None
+    adjustment_type: Optional[str] = None
+    new_persona: Optional[str] = None
+    reuse_questions: Optional[bool] = True
 
 class DecisionFollowUpQuestion(BaseModel):
     question: str
@@ -447,6 +450,9 @@ class AdvancedDecisionStepRequest(BaseModel):
     decision_id: Optional[str] = None
     enable_personalization: bool = False
     adjustment_context: Optional[str] = None
+    adjustment_type: Optional[str] = None
+    new_persona: Optional[str] = None
+    reuse_questions: Optional[bool] = True
 
 class EnhancedFollowUpQuestion(BaseModel):
     question: str
@@ -2249,8 +2255,10 @@ Based on their answers, generate 1-2 deeper clarifying or exploratory questions 
             # Adjustment request - create new version
             current_version = session.get("version", 1)
             new_version = current_version + 1
-            
-            # Store current version in history
+
+            advisor_style = request.new_persona or session.get("advisor_style", "realist")
+
+            # Store current version
             await db.decision_sessions_advanced.update_one(
                 {"id": decision_id},
                 {
@@ -2265,15 +2273,69 @@ Based on their answers, generate 1-2 deeper clarifying or exploratory questions 
                     "$set": {
                         "version": new_version,
                         "adjustment_context": request.adjustment_context,
+                        "advisor_style": advisor_style,
                         "last_active": datetime.utcnow()
                     }
                 }
             )
-            
-            # Regenerate with adjustment context
+
+            # If user wants new questions, regenerate and restart flow
+            if request.reuse_questions is False:
+                classification = session.get("smart_classification", {})
+                if isinstance(classification, dict):
+                    classification = SmartClassification(**classification)
+                try:
+                    followup_questions = await ai_orchestrator.generate_smart_followup_questions(
+                        session["initial_question"],
+                        classification,
+                        session_id=decision_id,
+                        max_questions=3
+                    )
+
+                    enhanced = [
+                        EnhancedFollowUpQuestion(
+                            question=q.question,
+                            nudge=q.nudge,
+                            category=q.category,
+                            step_number=i + 1,
+                            persona=q.persona,
+                        )
+                        for i, q in enumerate(followup_questions)
+                    ]
+
+                    await db.decision_sessions_advanced.update_one(
+                        {"id": decision_id},
+                        {
+                            "$set": {
+                                "followup_answers": [],
+                                "followup_questions": [q.dict() for q in enhanced],
+                                "step_number": 1,
+                                "total_questions": len(enhanced),
+                                "current_step": "followup",
+                            }
+                        },
+                    )
+
+                    return AdvancedDecisionStepResponse(
+                        decision_id=decision_id,
+                        step="followup",
+                        step_number=1,
+                        response="Let's revisit this decision with new questions.",
+                        followup_questions=[enhanced[0]] if enhanced else [],
+                        is_complete=False,
+                        decision_type=session.get("decision_type"),
+                        session_version=new_version,
+                    )
+                except Exception as e:
+                    logging.error(f"Error regenerating questions: {e}")
+
+            # Otherwise reuse existing answers and regenerate recommendation
             return await _generate_advanced_recommendation(
-                decision_id, session, session.get("followup_answers", []),
-                adjustment_context=request.adjustment_context
+                decision_id,
+                {**session, "advisor_style": advisor_style},
+                session.get("followup_answers", []),
+                adjustment_context=request.adjustment_context,
+                advisor_style=advisor_style,
             )
             
         else:
@@ -2295,7 +2357,8 @@ async def _generate_advanced_recommendation(
     decision_id: str,
     session: dict,
     followup_answers: List[str],
-    adjustment_context: str = None
+    adjustment_context: str = None,
+    advisor_style: str = "realist"
 ) -> AdvancedDecisionStepResponse:
     """
     Generate advanced recommendation using AI orchestrator
@@ -2304,6 +2367,7 @@ async def _generate_advanced_recommendation(
         decision_type = DecisionType(session.get("decision_type", "mixed"))
         initial_question = session.get("initial_question", "")
         enable_personalization = session.get("enable_personalization", False)
+        advisor_style = advisor_style or session.get("advisor_style", "realist")
         
         # Get user profile if personalization enabled
         user_profile = None
@@ -2321,7 +2385,9 @@ async def _generate_advanced_recommendation(
             followup_answers=followup_answers,
             decision_type=decision_type,
             user_profile=user_profile,
-            enable_personalization=enable_personalization
+            enable_personalization=enable_personalization,
+            advisor_style=advisor_style,
+            adjustment_context=adjustment_context,
         )
         
         # Convert to response format
@@ -3689,8 +3755,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Import AI Orchestrator after logger is defined
 try:
     from ai_orchestrator_v2 import (
-        create_ai_orchestrator, DecisionType, FollowUpQuestion, 
-        DecisionRecommendation, DecisionTrace
+        create_ai_orchestrator, DecisionType, FollowUpQuestion,
+        DecisionRecommendation, DecisionTrace, SmartClassification
     )
     AI_ORCHESTRATOR_AVAILABLE = True
     logger.info("AI Orchestrator loaded successfully")
