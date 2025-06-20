@@ -636,7 +636,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(null);
   
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // Function to load guided questions
   const loadGuidedQuestions = async () => {
@@ -1119,10 +1119,26 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     
     return words1.map((word, index) => {
       const isDifferent = words2[index] !== word;
-      return isDifferent ? 
-        `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${word}</mark>` : 
+      return isDifferent ?
+        `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${word}</mark>` :
         word;
     }).join(' ');
+  };
+
+  const runAIDebate = async () => {
+    if (!initialQuestion) {
+      alert('No question to debate.');
+      return;
+    }
+    try {
+      const response = await axios.post(`${API}/api/ai-debate`, {
+        prompt: initialQuestion
+      });
+      alert(response.data.summary || 'Debate completed.');
+    } catch (error) {
+      console.error('AI debate error:', error);
+      alert(error.response?.data?.detail || 'Failed to run AI debate');
+    }
   };
 
   return (
@@ -1308,7 +1324,28 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                       {!isAuthenticated && <div className="text-xs text-orange-600">Pro Feature</div>}
                     </div>
                   </Button>
-                  
+
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => {
+                      if (!isAuthenticated || user?.plan !== 'pro') {
+                        setShowUpgradeModal(true);
+                      } else {
+                        runAIDebate();
+                      }
+                    }}
+                  >
+                    <span className="text-xl">🤖</span>
+                    <div className="text-left">
+                      <div className="font-medium text-foreground">Run AI Debate</div>
+                      <div className="text-xs text-muted-foreground">Claude vs GPT-4o</div>
+                      {(!isAuthenticated || user?.plan !== 'pro') && (
+                        <div className="text-xs text-orange-600">Pro Feature</div>
+                      )}
+                    </div>
+                  </Button>
+
                   <Button
                     variant="outline"
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"

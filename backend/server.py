@@ -485,6 +485,15 @@ class AdvancedDecisionStepResponse(BaseModel):
     decision_type: Optional[str] = None
     session_version: int = 1
 
+# AI Debate Models
+class AIDebateRequest(BaseModel):
+    prompt: str
+
+class AIDebateResponse(BaseModel):
+    claude_response: str
+    gpt4o_response: str
+    summary: Optional[str] = None
+
 # Decision categories
 DECISION_CATEGORIES = {
     "general": "General decision making and advice",
@@ -3410,6 +3419,41 @@ async def compare_decisions(
     except Exception as e:
         logging.error(f"Error comparing decisions: {str(e)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Failed to compare decisions: {str(e)}")
+
+# AI Debate Endpoint
+@api_router.post("/ai-debate", response_model=AIDebateResponse)
+async def run_ai_debate(request: AIDebateRequest, current_user: dict = Depends(get_current_user)):
+    """Orchestrate a Claude vs GPT-4o debate"""
+    if current_user.get("plan") != "pro":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "AI debate requires Pro subscription")
+
+    try:
+        claude_resp, _ = await LLMRouter.get_llm_response(
+            request.prompt,
+            "claude",
+            str(uuid.uuid4()),
+            "You are Claude debating the user's topic",
+            []
+        )
+        gpt_resp, _ = await LLMRouter.get_llm_response(
+            request.prompt,
+            "gpt4o",
+            str(uuid.uuid4()),
+            "You are GPT-4o debating the user's topic",
+            []
+        )
+    except Exception as e:
+        logger.error(f"AI debate error: {e}")
+        claude_resp = generate_demo_response(request.prompt)
+        gpt_resp = generate_demo_response(request.prompt)
+
+    summary = f"Claude: {claude_resp[:60]}... GPT-4o: {gpt_resp[:60]}..."
+
+    return AIDebateResponse(
+        claude_response=claude_resp,
+        gpt4o_response=gpt_resp,
+        summary=summary
+    )
 
 @api_router.get("/decisions/{decision_id}/shares")
 async def get_decision_shares(decision_id: str, current_user: dict = Depends(get_current_user)):
