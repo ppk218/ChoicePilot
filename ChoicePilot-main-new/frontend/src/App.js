@@ -7,6 +7,7 @@ import { Input } from './components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
 import { Modal, ModalContent, ModalHeader, ModalTitle } from './components/ui/Modal';
 import { SideModal } from './components/ui/SideModal';
+import DecisionVersionDrawer from './components/DecisionVersionDrawer';
 import { Switch } from './components/ui/Switch';
 import { Progress } from './components/ui/Progress';
 
@@ -369,6 +370,12 @@ const AppContent = ({
           setCurrentView('flow');
         }}
       />
+      <DecisionVersionDrawer
+        isOpen={showVersionDrawer}
+        onClose={() => setShowVersionDrawer(false)}
+        decisionId={decisionId}
+        onSelect={handleVersionSelect}
+      />
     </>
   );
 };
@@ -394,16 +401,13 @@ const LandingPage = ({ onStartDecision }) => {
           {/* Hero Section */}
           <div className="mb-16">
             <h1 className="hero-headline mb-6">
-              From confusion to clarity — in{' '}
-              <span className="hero-gradient">just a few steps</span>
+              From confusion to clarity
+              <br />
+              <span className="hero-gradient">in just a few steps</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
               Overwhelmed by choices? GetGingee helps you make thoughtful, confident decisions.
-            </p>
-            
-            <p className="text-sm text-muted-foreground mb-12">
-              We'll ask up to 3 quick questions to personalize your answer.
             </p>
           </div>
 
@@ -428,7 +432,7 @@ const LandingPage = ({ onStartDecision }) => {
                   
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-muted-foreground">
-                      E.g., "Should I switch careers?" or "Which city should I move to?"
+                      E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                     </p>
                     <Button
                       onClick={handleStartDecision}
@@ -559,6 +563,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showVersionCarousel, setShowVersionCarousel] = useState(false);
+  const [showVersionDrawer, setShowVersionDrawer] = useState(false);
   const [showAIDebateModal, setShowAIDebateModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -568,6 +573,30 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [currentVersion, setCurrentVersion] = useState(0);
   const [favoriteVersion, setFavoriteVersion] = useState(0);
   const [activeSummaryIndex, setActiveSummaryIndex] = useState(0);
+
+  // Load last viewed version from local storage when decision/session changes
+  useEffect(() => {
+    if (decisionId) {
+      const stored = localStorage.getItem(`decision_${decisionId}_last_version`);
+      if (stored !== null) {
+        const idx = parseInt(stored, 10);
+        if (!isNaN(idx) && idx < decisionVersions.length) {
+          setActiveSummaryIndex(idx);
+        }
+      }
+    }
+  }, [decisionId, decisionVersions.length]);
+
+  // Persist last viewed version whenever it changes
+  useEffect(() => {
+    if (decisionId) {
+      localStorage.setItem(
+        `decision_${decisionId}_last_version`,
+        String(activeSummaryIndex)
+      );
+      localStorage.setItem('lastDecisionId', decisionId);
+    }
+  }, [activeSummaryIndex, decisionId]);
 
   const DecisionSummaryCarousel = ({ summaries, activeIndex, setActiveIndex }) => {
     if (!summaries.length) return null;
@@ -635,7 +664,14 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [userAnswers, setUserAnswers] = useState('');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(null);
   
-  const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
+  const {
+    trackDecisionStarted,
+    trackDecisionCompleted,
+    trackFollowupAnswered,
+    trackAdjustClicked,
+    trackUpgradeTriggered,
+    trackFeedbackSubmitted,
+  } = usePostHog();
   const { isAuthenticated } = useAuth();
 
   // Function to load guided questions
@@ -877,8 +913,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         setRecommendation(recommendation);
         setCurrentStep('recommendation');
 
-        const versionNumber = decisionVersions.length + 1;
-        setDecisionVersions(prev => [...prev, recommendation]);
+        const versionNumber = data.session_version || decisionVersions.length + 1;
+        setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
         setActiveSummaryIndex(versionNumber - 1);
 
         // Add recommendation to conversation
@@ -982,8 +1018,8 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setRecommendation(recommendation);
       setCurrentStep('recommendation');
 
-      const versionNumber = decisionVersions.length + 1;
-      setDecisionVersions(prev => [...prev, recommendation]);
+      const versionNumber = response.data.session_version || decisionVersions.length + 1;
+      setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
       setActiveSummaryIndex(versionNumber - 1);
 
       // Add recommendation to conversation
@@ -1008,7 +1044,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
       setCurrentStep('recommendation');
       
       const versionNumber = decisionVersions.length + 1;
-      setDecisionVersions(prev => [...prev, recommendation]);
+      setDecisionVersions(prev => [...prev, { ...recommendation, version: versionNumber }]);
       setActiveSummaryIndex(versionNumber - 1);
 
       setConversationHistory(prev => [...prev, {
@@ -1096,9 +1132,22 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         helpful,
         feedback_text: reason
       });
+      trackFeedbackSubmitted(helpful, decisionId);
     } catch (error) {
       console.error('Feedback error:', error);
     }
+  };
+
+  const handleVersionSelect = (version) => {
+    if (!version || !version.recommendation) return;
+    setDecisionVersions(prev => {
+      const updated = [...prev];
+      updated[version.version - 1] = version.recommendation;
+      return updated;
+    });
+    setRecommendation(version.recommendation);
+    setCurrentVersion(version.version - 1);
+    setActiveSummaryIndex(version.version - 1);
   };
 
   const currentQuestion = followupQuestions[currentFollowupIndex];
@@ -1265,7 +1314,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowAdjustModal(true)}
+                onClick={() => {
+                  trackAdjustClicked(decisionId);
+                  setShowAdjustModal(true);
+                }}
                 className="flex items-center gap-2 px-8 py-3 text-base font-semibold bg-orange-50 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-orange-700 transition-all duration-200"
               >
                 🔧 Adjust
@@ -1277,6 +1329,15 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                   className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-blue-50 hover:bg-blue-100 border-blue-200 hover:border-blue-300 text-blue-700 transition-all duration-200"
                 >
                   📊 Compare
+                </Button>
+              )}
+              {decisionVersions.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowVersionDrawer(true)}
+                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold bg-muted hover:bg-muted/50 border-border transition-all duration-200"
+                >
+                  🕑 Versions
                 </Button>
               )}
             </div>
@@ -1294,6 +1355,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       if (!isAuthenticated) {
+                        trackUpgradeTriggered();
                         setShowUpgradeModal(true);
                       } else {
                         // Export PDF functionality would go here
@@ -1314,6 +1376,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
                       if (!isAuthenticated) {
+                        trackUpgradeTriggered();
                         setShowUpgradeModal(true);
                       } else {
                         // Share functionality would go here
@@ -1332,7 +1395,10 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                   <Button
                     variant="outline"
                     className="flex items-center gap-3 justify-start h-auto py-4 px-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-800 hover:from-orange-100 hover:to-yellow-100 dark:hover:from-orange-900/30 dark:hover:to-yellow-900/30"
-                    onClick={() => setShowUpgradeModal(true)}
+                    onClick={() => {
+                      trackUpgradeTriggered();
+                      setShowUpgradeModal(true);
+                    }}
                   >
                     <span className="text-xl">⭐</span>
                     <div className="text-left">
@@ -1488,14 +1554,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                         
                         if (response.data.recommendation) {
                           setRecommendation(response.data.recommendation);
-                          // Add updated recommendation to conversation
+                          const versionNumber = response.data.session_version || decisionVersions.length + 1;
                           const updatedRecommendation = {
                             type: 'ai_recommendation',
+                            version: versionNumber,
                             content: response.data.recommendation,
                             timestamp: new Date(),
                             id: Date.now()
                           };
                           setConversationHistory(prev => [...prev, updatedRecommendation]);
+                          setDecisionVersions(prev => [...prev, { ...response.data.recommendation, version: versionNumber }]);
+                          setActiveSummaryIndex(versionNumber - 1);
                         }
                       } catch (error) {
                         console.error('Error updating recommendation:', error);
@@ -1615,13 +1684,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                               
                               if (response.data.recommendation) {
                                 setRecommendation(response.data.recommendation);
+                                const versionNumber = response.data.session_version || decisionVersions.length + 1;
                                 const newRecCard = {
                                   type: 'ai_recommendation',
+                                  version: versionNumber,
                                   content: response.data.recommendation,
                                   timestamp: new Date(),
                                   id: Date.now()
                                 };
                                 setConversationHistory(prev => [...prev, newRecCard]);
+                                setDecisionVersions(prev => [...prev, { ...response.data.recommendation, version: versionNumber }]);
+                                setActiveSummaryIndex(versionNumber - 1);
                               }
                               break;
                               
@@ -1636,13 +1709,17 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                               
                               if (approachResponse.data.recommendation) {
                                 setRecommendation(approachResponse.data.recommendation);
+                                const versionNumber = approachResponse.data.session_version || decisionVersions.length + 1;
                                 const newRecCard = {
                                   type: 'ai_recommendation',
+                                  version: versionNumber,
                                   content: approachResponse.data.recommendation,
                                   timestamp: new Date(),
                                   id: Date.now()
                                 };
                                 setConversationHistory(prev => [...prev, newRecCard]);
+                                setDecisionVersions(prev => [...prev, { ...approachResponse.data.recommendation, version: versionNumber }]);
+                                setActiveSummaryIndex(versionNumber - 1);
                               }
                               break;
                           }
@@ -1842,6 +1919,11 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
               <CardTitle className="flex items-center gap-2">
                 <span>🎯</span>
                 <span>Your Decision Recommendation</span>
+                {item.version && (
+                  <span className="ml-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    v{item.version}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -2199,7 +2281,7 @@ const Dashboard = ({ onStartDecision }) => {
                 
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-muted-foreground">
-                    E.g., "Should I switch careers?" or "Which city should I move to?"
+                    E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                   </p>
                   <Button
                     onClick={handleStartDecision}
@@ -2409,19 +2491,19 @@ const SideChatModal = ({ isOpen, onClose, onStartNewDecision }) => {
   const [conversations, setConversations] = useState([
     {
       id: 1,
-      question: "Should I switch careers to data science?",
+      question: "Should we expand to the European market next year?",
       date: "2 days ago",
       confidence: 85
     },
     {
       id: 2,
-      question: "Is it worth buying a house in the current market?",
+      question: "Is investing in electric company vehicles worthwhile?",
       date: "1 week ago",
       confidence: 72
     },
     {
       id: 3,
-      question: "Should I adopt a dog or a cat?",
+      question: "Which CRM software best fits our growing startup?",
       date: "2 weeks ago",
       confidence: 91
     }

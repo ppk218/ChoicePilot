@@ -12,144 +12,175 @@ import asyncio
 
 logger = logging.getLogger(__name__)
 
+
 class EmailService:
     """Comprehensive email service for ChoicePilot"""
-    
+
     def __init__(self):
         self.smtp_server = os.environ.get("SMTP_SERVER", "smtp.titan.email")
         self.smtp_port = int(os.environ.get("SMTP_PORT", "465"))
         self.smtp_username = os.environ.get("SMTP_USERNAME", "")
         self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
         self.from_email = os.environ.get("FROM_EMAIL", "hello@getgingee.com")
-        
+
         # Validate configuration
         if not all([self.smtp_username, self.smtp_password]):
             logger.warning("SMTP credentials not fully configured")
-    
-    async def send_verification_email(self, to_email: str, verification_code: str, user_name: str = None):
-        """Send email verification code"""
+
+    async def send_verification_email(
+        self,
+        to_email: str,
+        verification_link: str,
+        verification_code: str | None = None,
+        user_name: str = None,
+    ):
+        """Send email verification email with link and optional code"""
         try:
             subject = "Welcome to ChoicePilot - Verify Your Account"
-            
+
             # Create beautiful HTML email
             html_content = self._create_verification_email_template(
-                verification_code, 
-                user_name or to_email.split('@')[0]
+                verification_link,
+                user_name or to_email.split("@")[0],
+                verification_code,
             )
-            
+
             await self._send_email(to_email, subject, html_content)
             logger.info(f"Verification email sent successfully to {to_email}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send verification email to {to_email}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email"
+                detail="Failed to send verification email",
             )
-    
+
     async def send_password_reset_email(self, to_email: str, reset_token: str):
         """Send password reset email"""
         try:
             subject = "ChoicePilot - Password Reset Request"
-            
+
             reset_url = f"{os.environ.get('FRONTEND_URL')}/reset-password?token={reset_token}&email={to_email}"
-            
-            html_content = self._create_password_reset_email_template(reset_url, to_email)
-            
+
+            html_content = self._create_password_reset_email_template(
+                reset_url, to_email
+            )
+
             await self._send_email(to_email, subject, html_content)
             logger.info(f"Password reset email sent successfully to {to_email}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send password reset email to {to_email}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send password reset email"
+                detail="Failed to send password reset email",
             )
-    
+
     async def send_welcome_email(self, to_email: str, user_name: str = None):
         """Send welcome email after successful verification"""
         try:
             subject = "🎉 Welcome to ChoicePilot - Your AI Decision Assistant!"
-            
-            html_content = self._create_welcome_email_template(user_name or to_email.split('@')[0])
-            
+
+            html_content = self._create_welcome_email_template(
+                user_name or to_email.split("@")[0]
+            )
+
             await self._send_email(to_email, subject, html_content)
             logger.info(f"Welcome email sent successfully to {to_email}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send welcome email to {to_email}: {str(e)}")
             # Don't raise exception for welcome emails - they're not critical
-    
-    async def send_security_alert(self, to_email: str, event_type: str, details: str, ip_address: str = None):
+
+    async def send_security_alert(
+        self, to_email: str, event_type: str, details: str, ip_address: str = None
+    ):
         """Send security alert email"""
         try:
             subject = f"🔒 ChoicePilot Security Alert: {event_type}"
-            
-            html_content = self._create_security_alert_template(event_type, details, ip_address)
-            
+
+            html_content = self._create_security_alert_template(
+                event_type, details, ip_address
+            )
+
             await self._send_email(to_email, subject, html_content)
             logger.info(f"Security alert sent successfully to {to_email}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send security alert to {to_email}: {str(e)}")
             # Don't raise exception for security alerts - they shouldn't break the flow
-    
-    async def send_billing_notification(self, to_email: str, notification_type: str, details: dict):
+
+    async def send_billing_notification(
+        self, to_email: str, notification_type: str, details: dict
+    ):
         """Send billing-related notifications"""
         try:
             subjects = {
                 "payment_success": "✅ Payment Confirmed - ChoicePilot",
-                "payment_failed": "❌ Payment Failed - ChoicePilot", 
+                "payment_failed": "❌ Payment Failed - ChoicePilot",
                 "subscription_created": "🎉 Pro Subscription Activated - ChoicePilot",
                 "subscription_cancelled": "📋 Subscription Cancelled - ChoicePilot",
                 "credits_low": "⚠️ Credits Running Low - ChoicePilot",
-                "plan_expired": "📅 Subscription Expired - ChoicePilot"
+                "plan_expired": "📅 Subscription Expired - ChoicePilot",
             }
-            
-            subject = subjects.get(notification_type, f"ChoicePilot - {notification_type}")
-            
-            html_content = self._create_billing_notification_template(notification_type, details)
-            
+
+            subject = subjects.get(
+                notification_type, f"ChoicePilot - {notification_type}"
+            )
+
+            html_content = self._create_billing_notification_template(
+                notification_type, details
+            )
+
             await self._send_email(to_email, subject, html_content)
-            logger.info(f"Billing notification ({notification_type}) sent successfully to {to_email}")
-            
+            logger.info(
+                f"Billing notification ({notification_type}) sent successfully to {to_email}"
+            )
+
         except Exception as e:
             logger.error(f"Failed to send billing notification to {to_email}: {str(e)}")
             # Don't raise exception for billing notifications
-    
+
     async def _send_email(self, to_email: str, subject: str, html_content: str):
         """Send email using SMTP with SSL"""
         if not self.smtp_username or not self.smtp_password:
             logger.warning("SMTP credentials not configured, skipping email")
             return
-        
+
         try:
             # Create message
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
             msg["From"] = f"ChoicePilot <{self.from_email}>"
             msg["To"] = to_email
-            
+
             # Add HTML part
             html_part = MIMEText(html_content, "html", "utf-8")
             msg.attach(html_part)
-            
+
             # Create SSL context
             context = ssl.create_default_context()
-            
+
             # Send email using SSL (port 465)
-            with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, context=context) as server:
+            with smtplib.SMTP_SSL(
+                self.smtp_server, self.smtp_port, context=context
+            ) as server:
                 server.login(self.smtp_username, self.smtp_password)
                 server.send_message(msg)
-            
+
             logger.info(f"Email sent successfully to {to_email}")
-            
+
         except Exception as e:
             logger.error(f"SMTP error sending email to {to_email}: {str(e)}")
             raise
-    
-    def _create_verification_email_template(self, verification_code: str, user_name: str) -> str:
-        """Create beautiful verification email template"""
+
+    def _create_verification_email_template(
+        self,
+        verification_link: str,
+        user_name: str,
+        verification_code: str | None = None,
+    ) -> str:
+        """Create verification email template with optional code and link"""
         return f"""
         <!DOCTYPE html>
         <html>
@@ -171,12 +202,13 @@ class EmailService:
                 </p>
                 
                 <div style="background: white; padding: 25px; border-radius: 12px; border-left: 4px solid #F15A29; margin: 25px 0;">
-                    <p style="margin: 0 0 15px 0; font-weight: 600; color: #2C2C2E;">Your verification code:</p>
-                    <div style="font-size: 32px; font-weight: bold; color: #F15A29; text-align: center; letter-spacing: 8px; font-family: 'Courier New', monospace; background: #FFF8F0; padding: 15px; border-radius: 8px; border: 2px dashed #F15A29;">
-                        {verification_code}
+                    <p style="margin: 0 0 15px 0; font-weight: 600; color: #2C2C2E;">Confirm your account:</p>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <a href="{verification_link}" style="display: inline-block; background: linear-gradient(135deg, #F15A29 0%, #FF7A4D 100%); color: #FFF8F0; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">Verify Email</a>
                     </div>
+                    {f'<div style="font-size: 32px; font-weight: bold; color: #F15A29; text-align: center; letter-spacing: 8px; font-family: "Courier New", monospace; background: #FFF8F0; padding: 15px; border-radius: 8px; border: 2px dashed #F15A29;">{verification_code}</div>' if verification_code else ''}
                     <p style="margin: 15px 0 0 0; font-size: 14px; color: #2C2C2E;">
-                        This code will expire in 24 hours. Enter it in getgingee to activate your account and start making confident choices!
+                        This link will expire in 24 hours. Click the button above to activate your account.
                     </p>
                 </div>
                 
@@ -217,7 +249,7 @@ class EmailService:
         </body>
         </html>
         """
-    
+
     def _create_password_reset_email_template(self, reset_url: str, email: str) -> str:
         """Create password reset email template"""
         return f"""
@@ -266,7 +298,7 @@ class EmailService:
         </body>
         </html>
         """
-    
+
     def _create_welcome_email_template(self, user_name: str) -> str:
         """Create welcome email template"""
         return f"""
@@ -334,8 +366,10 @@ class EmailService:
         </body>
         </html>
         """
-    
-    def _create_security_alert_template(self, event_type: str, details: str, ip_address: str = None) -> str:
+
+    def _create_security_alert_template(
+        self, event_type: str, details: str, ip_address: str = None
+    ) -> str:
         """Create security alert email template"""
         return f"""
         <!DOCTYPE html>
@@ -379,8 +413,10 @@ class EmailService:
         </body>
         </html>
         """
-    
-    def _create_billing_notification_template(self, notification_type: str, details: dict) -> str:
+
+    def _create_billing_notification_template(
+        self, notification_type: str, details: dict
+    ) -> str:
         """Create billing notification email template"""
         # This would be a comprehensive billing template
         # For now, returning a simple template
@@ -414,116 +450,169 @@ class EmailService:
         </html>
         """
 
+
 # Email verification service
 class EmailVerificationService:
     """Service for managing email verification"""
-    
+
     def __init__(self, db, email_service):
         self.db = db
         self.email_service = email_service
-    
+
     async def send_verification_email(self, user_email: str) -> dict:
-        """Send email verification code"""
+        """Send email verification token and code"""
         try:
             # Generate verification code
             verification_code = secrets.token_hex(3).upper()  # 6-char hex code
-            
+            verification_token = secrets.token_urlsafe(32)
+
             # Store verification code with expiry
             verification_doc = {
                 "email": user_email,
                 "code": verification_code,
+                "token": verification_token,
                 "created_at": datetime.utcnow(),
                 "expires_at": datetime.utcnow() + timedelta(hours=24),
                 "attempts": 0,
-                "is_used": False
+                "is_used": False,
             }
-            
+
             await self.db.email_verifications.insert_one(verification_doc)
-            
+
+            # Build verification link
+            verification_link = f"{os.environ.get('FRONTEND_URL')}/verify-email?token={verification_token}&email={user_email}"
+
             # Send email
-            await self.email_service.send_verification_email(user_email, verification_code)
-            
+            await self.email_service.send_verification_email(
+                user_email, verification_link, verification_code
+            )
+
             return {
                 "message": "Verification email sent successfully",
-                "expires_in": "24 hours"
+                "expires_in": "24 hours",
             }
-            
+
         except Exception as e:
             logger.error(f"Error sending verification email: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email"
+                detail="Failed to send verification email",
             )
-    
+
     async def verify_email(self, email: str, code: str) -> dict:
         """Verify email with code"""
         try:
             # Find verification record
-            verification = await self.db.email_verifications.find_one({
-                "email": email,
-                "code": code.upper(),
-                "is_used": False
-            })
-            
+            verification = await self.db.email_verifications.find_one(
+                {"email": email, "code": code.upper(), "is_used": False}
+            )
+
             if not verification:
                 # Increment attempt count if record exists
                 await self.db.email_verifications.update_one(
-                    {"email": email, "is_used": False},
-                    {"$inc": {"attempts": 1}}
+                    {"email": email, "is_used": False}, {"$inc": {"attempts": 1}}
                 )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid or expired verification code"
+                    detail="Invalid or expired verification code",
                 )
-            
+
             # Check expiry
             if verification["expires_at"] < datetime.utcnow():
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Verification code has expired"
+                    detail="Verification code has expired",
                 )
-            
+
             # Check attempts
             if verification["attempts"] >= 5:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Too many failed attempts. Request a new code."
+                    detail="Too many failed attempts. Request a new code.",
                 )
-            
+
             # Mark as used
             await self.db.email_verifications.update_one(
                 {"_id": verification["_id"]},
-                {"$set": {"is_used": True, "verified_at": datetime.utcnow()}}
+                {"$set": {"is_used": True, "verified_at": datetime.utcnow()}},
             )
-            
+
             # Update user as verified
             result = await self.db.users.update_one(
                 {"email": email},
                 {
                     "$set": {
                         "email_verified": True,
-                        "email_verified_at": datetime.utcnow()
+                        "email_verified_at": datetime.utcnow(),
                     }
-                }
+                },
             )
-            
+
             if result.modified_count > 0:
                 # Send welcome email
                 try:
                     await self.email_service.send_welcome_email(email)
                 except Exception as e:
                     logger.warning(f"Failed to send welcome email: {str(e)}")
-            
+
             return {
                 "message": "Email verified successfully",
-                "verified_at": datetime.utcnow().isoformat()
+                "verified_at": datetime.utcnow().isoformat(),
             }
-            
+
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Error verifying email: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Email verification failed"
+                detail="Email verification failed",
+            )
+
+    async def verify_email_token(self, token: str) -> dict:
+        """Verify email using a token from a confirmation link"""
+        try:
+            verification = await self.db.email_verifications.find_one(
+                {"token": token, "is_used": False}
+            )
+            if not verification:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token"
+                )
+
+            if verification["expires_at"] < datetime.utcnow():
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, "Verification token has expired"
+                )
+
+            await self.db.email_verifications.update_one(
+                {"_id": verification["_id"]},
+                {"$set": {"is_used": True, "verified_at": datetime.utcnow()}},
+            )
+
+            await self.db.users.update_one(
+                {"email": verification["email"]},
+                {
+                    "$set": {
+                        "email_verified": True,
+                        "email_verified_at": datetime.utcnow(),
+                    }
+                },
+            )
+
+            try:
+                await self.email_service.send_welcome_email(verification["email"])
+            except Exception as e:
+                logger.warning(f"Failed to send welcome email: {str(e)}")
+
+            return {
+                "message": "Email verified successfully",
+                "verified_at": datetime.utcnow().isoformat(),
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error verifying email token: {str(e)}")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR, "Email verification failed"
             )

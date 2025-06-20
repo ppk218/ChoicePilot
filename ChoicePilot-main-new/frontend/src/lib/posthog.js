@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect } from 'react';
 import posthog from 'posthog-js';
 
 // PostHog configuration
-const POSTHOG_API_KEY = 'phc_Ocu3kFXMxUjFSmRlDH1Fj2QOK32GS5CU0bBbMwdlHn2';
+const POSTHOG_API_KEY = process.env.REACT_APP_POSTHOG_KEY || '';
 const POSTHOG_HOST = 'https://us.i.posthog.com';
 
 // Initialize PostHog
@@ -103,6 +103,14 @@ export const usePostHog = () => {
     }
   };
 
+  const trackUpgradeTriggered = () => {
+    if (posthogInstance) {
+      posthogInstance.capture('upgrade_triggered', {
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
   const identifyUser = (userId, traits) => {
     if (posthogInstance) {
       posthogInstance.identify(userId, traits);
@@ -117,6 +125,7 @@ export const usePostHog = () => {
     trackFeedbackSubmitted,
     trackActionTaken,
     trackAdjustClicked,
+    trackUpgradeTriggered,
     identifyUser,
     posthog: posthogInstance,
   };

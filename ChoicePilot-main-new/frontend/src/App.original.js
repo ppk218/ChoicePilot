@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import axios from 'axios';
 import { User, History, Settings, Moon, Sun, Menu, X, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 
+import ConversationCard from './components/ConversationCard';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
@@ -428,7 +429,7 @@ const LandingPage = ({ onStartDecision }) => {
                   
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-muted-foreground">
-                      E.g., "Should I switch careers?" or "Which city should I move to?"
+                      E.g., "Should we expand to a European market?" or "Which CRM system best fits our needs?"
                     </p>
                     <Button
                       onClick={handleStartDecision}
@@ -2107,29 +2108,33 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   </div>
                 </div>
               </div>
+            </CardContent>
 
-              {/* New 2-Line Recommendation Card */}
-              <div className="space-y-4">
-                {/* Brief Recommendation (Always Visible) */}
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
-                  <p className="text-foreground leading-relaxed">
-                    {item.content.recommendation.length > 150 
-                      ? item.content.recommendation.substring(0, 150) + '...'
-                      : item.content.recommendation}
-                  </p>
-                  {item.content.recommendation.length > 150 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowFullReasoning(!showFullReasoning)}
-                      className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
-                    >
-                      {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
-                    </Button>
-                  )}
-                </div>
+            {/* New 2-Line Recommendation Card */}
+            <div className="space-y-4">
+              {/* Brief Recommendation (Always Visible) */}
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">Recommendation</h4>
+                <p className="text-foreground leading-relaxed">
+                  {item.content.recommendation.length > 150 
+                    ? item.content.recommendation.substring(0, 150) + '...'
+                    : item.content.recommendation}
+                </p>
+                {item.content.recommendation.length > 150 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullReasoning(!showFullReasoning)}
+                    className="mt-2 p-0 h-auto font-normal text-primary hover:text-primary/80"
+                  >
+                    {showFullReasoning ? '▼ Show less' : '▶ Expand for full reasoning + steps'}
+                  </Button>
+                )}
               </div>
+            </div>
+          </Card>
+        </>
+      );
 
               {/* Expand #1: Full Reasoning + Next Steps */}
               {showFullReasoning && (
@@ -2193,8 +2198,9 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                   )}
                 </div>
               )}
+            </div>
 
-              {/* Enhanced Logic Trace */}
+            {/* Enhanced Logic Trace */}
             {item.content.trace && (
               <div>
                 <details className="group">
