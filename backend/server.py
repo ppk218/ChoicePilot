@@ -1892,6 +1892,16 @@ Return only the question, nothing else."""
             context=context
         )
 
+# Helper to build session context string
+def build_session_context(initial_question: str, answers: List[str], adjustment_context: str | None = None) -> str:
+    """Assemble a context string for storing in the session"""
+    context = f"Decision Question: {initial_question}"
+    if answers:
+        context += f"\nUser Responses: {', '.join(answers)}"
+    if adjustment_context:
+        context += f"\nAdjustment Request: {adjustment_context}"
+    return context
+
 async def generate_final_recommendation(initial_question: str, answers: List[str], category: str = "general", adjustment_context: str = None) -> DecisionRecommendation:
     """Generate final recommendation using AI"""
     
@@ -2055,6 +2065,8 @@ async def process_advanced_decision_step(
                 "followup_answers": [],
                 "followup_questions": [],
                 "versions": [],
+                "version": 1,
+                "context": build_session_context(request.message, []),
                 "created_at": datetime.utcnow(),
                 "last_active": datetime.utcnow(),
                 "enable_personalization": request.enable_personalization
@@ -2116,13 +2128,20 @@ async def process_advanced_decision_step(
             stored_questions = session.get("followup_questions", [])
             current_step_number = session.get("step_number", 1)
             total_questions = session.get("total_questions", 3)
-            
+
             # Store the follow-up answer
             await db.decision_sessions_advanced.update_one(
                 {"id": decision_id},
                 {
                     "$push": {"followup_answers": request.message},
-                    "$set": {"last_active": datetime.utcnow()}
+                    "$set": {
+                        "last_active": datetime.utcnow(),
+                        "context": build_session_context(
+                            session.get("initial_question", ""),
+                            session.get("followup_answers", []) + [request.message],
+                            session.get("adjustment_context")
+                        )
+                    }
                 }
             )
             
@@ -2259,6 +2278,7 @@ Based on their answers, generate 1-2 deeper clarifying or exploratory questions 
                             "version": current_version,
                             "answers": session.get("followup_answers", []),
                             "recommendation": session.get("recommendation"),
+                            "context": session.get("context"),
                             "created_at": datetime.utcnow()
                         }
                     },
@@ -2345,7 +2365,14 @@ async def _generate_advanced_recommendation(
             reasoning=recommendation.reasoning,
             trace=enhanced_trace
         )
-        
+
+        # Update session context with all collected answers
+        new_context = build_session_context(
+            initial_question,
+            followup_answers,
+            adjustment_context
+        )
+
         # Store recommendation in session
         await db.decision_sessions_advanced.update_one(
             {"id": decision_id},
@@ -2354,7 +2381,8 @@ async def _generate_advanced_recommendation(
                     "recommendation": enhanced_recommendation.dict(),
                     "current_step": "complete",
                     "completed_at": datetime.utcnow(),
-                    "last_active": datetime.utcnow()
+                    "last_active": datetime.utcnow(),
+                    "context": new_context
                 }
             }
         )
