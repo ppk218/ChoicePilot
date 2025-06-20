@@ -15,7 +15,7 @@ const ConfirmationModal = ({
   loading = false 
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md" loading={loading}>
       <ModalHeader>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-secondary-coral/10 rounded-full">
@@ -127,7 +127,7 @@ const PrivacySettingsModal = ({ isOpen, onClose, user }) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
+      <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl" loading={loading}>
         <ModalHeader>
           <ModalTitle>Privacy & Data Settings</ModalTitle>
           <p className="text-muted-foreground mt-2">
