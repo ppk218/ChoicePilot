@@ -401,10 +401,6 @@ const LandingPage = ({ onStartDecision }) => {
             <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
               Overwhelmed by choices? GetGingee helps you make thoughtful, confident decisions.
             </p>
-            
-            <p className="text-sm text-muted-foreground mb-12">
-              We'll ask up to 3 quick questions to personalize your answer.
-            </p>
           </div>
 
           {/* Chat-Style Input */}
