@@ -219,6 +219,13 @@ const AppContent = ({
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [showVersionDrawer, setShowVersionDrawer] = useState(false);
+  const [decisionId, setDecisionId] = useState(null);
+  
+  const handleVersionSelect = (version) => {
+    // This is a placeholder function
+    console.log("Version selected:", version);
+  };
 
   return (
     <>
