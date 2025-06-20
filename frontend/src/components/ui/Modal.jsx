@@ -5,7 +5,7 @@ export const Modal = ({ isOpen, onClose, className, children }) => {
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className={`bg-white rounded-lg shadow-xl max-w-md w-full ${className}`}>
+      <div className={`bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full ${className}`}>
         {children}
       </div>
     </div>

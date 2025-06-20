@@ -342,7 +342,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                         <div className="flex items-center justify-between">
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                            'bg-gray-100 text-gray-800 dark:bg-[#1C1C1E] dark:text-gray-200'
                           }`}>
                             {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
                           </span>

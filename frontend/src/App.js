@@ -222,7 +222,7 @@ const AppContent = ({
   return (
     <>
       {/* Header Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 dark:bg-[#1C1C1E]/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -1045,7 +1045,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Sticky Summary Header - Only shown when recommendation exists */}
         {currentStep === 'recommendation' && recommendation && (
           <div className="sticky top-4 z-40 mb-6">
-            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-border rounded-lg p-4 shadow-lg">
+            <div className="bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-md border border-border rounded-lg p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
@@ -1285,7 +1285,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Modal Components - Clean JSX Structure */}
         {showGoDeeperModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">🔍 Go Deeper</h3>
@@ -1352,7 +1352,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Adjust Decision Modal */}
         {showAdjustModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
@@ -1437,7 +1437,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Upgrade to Pro Modal */}
         {showUpgradeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
@@ -1505,7 +1505,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Adjust Decision Modal */}
         {showAdjustModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
@@ -1590,7 +1590,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Upgrade to Pro Modal */}
         {showUpgradeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
@@ -1658,7 +1658,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Adjust Decision Modal */}
         {showAdjustModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
@@ -1743,7 +1743,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Upgrade to Pro Modal */}
         {showUpgradeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
@@ -1811,7 +1811,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Adjust Decision Modal */}
         {showAdjustModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">🔧 Adjust Decision</h3>
@@ -1896,7 +1896,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
         {/* Upgrade to Pro Modal */}
         {showUpgradeModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-foreground">⭐ Upgrade to Pro</h3>
@@ -2321,7 +2321,7 @@ const ConversationCard = ({ item, onFeedback, isAuthenticated, getConfidenceColo
                       <div className="flex items-center justify-between">
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           isAuthenticated ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          'bg-gray-100 text-gray-800 dark:bg-[#1C1C1E] dark:text-gray-200'
                         }`}>
                           {isAuthenticated ? '✅ Using your profile preferences' : '❌ Anonymous session (no personalization)'}
                         </span>

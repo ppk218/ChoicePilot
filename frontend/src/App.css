@@ -20,6 +20,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html.dark body {
+  background-color: #1C1C1E;
+  color: #F5F5F5;
+}
+
+html.dark .text-muted-foreground {
+  color: #B0B0B0;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
