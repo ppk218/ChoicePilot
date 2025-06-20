@@ -13,21 +13,25 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+
 class DecisionType(Enum):
     STRUCTURED = "structured"
     INTUITIVE = "intuitive"
     MIXED = "mixed"
+
 
 class ComplexityLevel(Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
 
+
 class EmotionalIntent(Enum):
     CLARITY = "CLARITY"
     CONFIDENCE = "CONFIDENCE"
     REASSURANCE = "REASSURANCE"
     EMPOWERMENT = "EMPOWERMENT"
+
 
 @dataclass
 class SmartClassification:
@@ -36,10 +40,12 @@ class SmartClassification:
     routed_models: List[str]
     cost_estimate: str
 
+
 class DecisionType(Enum):
     STRUCTURED = "structured"
     INTUITIVE = "intuitive"
     MIXED = "mixed"
+
 
 @dataclass
 class FollowUpQuestion:
@@ -47,6 +53,7 @@ class FollowUpQuestion:
     nudge: str
     category: str
     persona: str  # Added persona field
+
 
 @dataclass
 class DecisionTrace:
@@ -59,6 +66,7 @@ class DecisionTrace:
     processing_time_ms: int
     classification: dict  # Added classification data
 
+
 @dataclass
 class DecisionRecommendation:
     final_recommendation: str
@@ -70,49 +78,69 @@ class DecisionRecommendation:
     reasoning: str
     trace: DecisionTrace
 
+
 class AIOrchestrator:
     """
     Enhanced AI orchestration with smart classification, cost-effective routing,
     and persona-based follow-up generation
     """
-    
-    def __init__(self, llm_router=None, classifier=None, smart_router=None, followup_engine=None):
+
+    def __init__(
+        self, llm_router=None, classifier=None, smart_router=None, followup_engine=None
+    ):
         self.llm_router = llm_router
         self.classifier = classifier
         self.smart_router = smart_router
         self.followup_engine = followup_engine
         self.classification_cache = {}
-        
+
         # Enhanced personas for follow-up questions
         self.followup_personas = {
             "realist": {
-                "name": "Realist", "icon": "🧠", "color": "blue",
-                "style": "practical and direct", "focus": "facts and constraints"
+                "name": "Realist",
+                "icon": "🧠",
+                "color": "blue",
+                "style": "practical and direct",
+                "focus": "facts and constraints",
             },
             "visionary": {
-                "name": "Visionary", "icon": "🚀", "color": "purple", 
-                "style": "inspiring and forward-thinking", "focus": "possibilities and outcomes"
+                "name": "Visionary",
+                "icon": "🚀",
+                "color": "purple",
+                "style": "inspiring and forward-thinking",
+                "focus": "possibilities and outcomes",
             },
             "creative": {
-                "name": "Creative", "icon": "🎨", "color": "pink",
-                "style": "imaginative and lateral", "focus": "alternatives and innovation"
+                "name": "Creative",
+                "icon": "🎨",
+                "color": "pink",
+                "style": "imaginative and lateral",
+                "focus": "alternatives and innovation",
             },
             "pragmatist": {
-                "name": "Pragmatist", "icon": "⚖️", "color": "green",
-                "style": "balanced and systematic", "focus": "trade-offs and priorities"
+                "name": "Pragmatist",
+                "icon": "⚖️",
+                "color": "green",
+                "style": "balanced and systematic",
+                "focus": "trade-offs and priorities",
             },
             "supportive": {
-                "name": "Supportive", "icon": "💙", "color": "teal",
-                "style": "empathetic and validating", "focus": "emotions and well-being"
-            }
+                "name": "Supportive",
+                "icon": "💙",
+                "color": "teal",
+                "style": "empathetic and validating",
+                "focus": "emotions and well-being",
+            },
         }
 
-    async def smart_classify_and_route(self, question: str, user_plan: str = "free") -> SmartClassification:
+    async def smart_classify_and_route(
+        self, question: str, user_plan: str = "free"
+    ) -> SmartClassification:
         """
         Classify decision using smart classifier and route to optimal models
         """
         start_time = datetime.now()
-        
+
         try:
             # Use the smart classifier
             if self.classifier:
@@ -120,25 +148,29 @@ class AIOrchestrator:
             else:
                 # Fallback classification
                 classification = {"complexity": "MEDIUM", "intent": "CLARITY"}
-            
+
             # Route to optimal models
             if self.smart_router:
-                routed_models = self.smart_router.route_models(classification, user_plan)
+                routed_models = self.smart_router.route_models(
+                    classification, user_plan
+                )
             else:
                 routed_models = ["gpt4o-mini"]  # Fallback
-            
+
             # Estimate cost
-            cost_estimate = self._estimate_cost(routed_models, classification["complexity"])
-            
+            cost_estimate = self._estimate_cost(
+                routed_models, classification["complexity"]
+            )
+
             smart_classification = SmartClassification(
                 complexity=ComplexityLevel(classification["complexity"]),
                 intent=EmotionalIntent(classification["intent"]),
                 routed_models=routed_models,
-                cost_estimate=cost_estimate
+                cost_estimate=cost_estimate,
             )
-            
+
             return smart_classification
-            
+
         except Exception as e:
             logger.error(f"Smart classification failed: {str(e)}")
             # Return safe fallback
@@ -146,19 +178,21 @@ class AIOrchestrator:
                 complexity=ComplexityLevel.MEDIUM,
                 intent=EmotionalIntent.CLARITY,
                 routed_models=["gpt4o-mini"],
-                cost_estimate="low"
+                cost_estimate="low",
             )
-    
+
     def _estimate_cost(self, models: List[str], complexity: str) -> str:
         """Estimate cost category based on models and complexity"""
         high_cost_models = ["claude-sonnet", "gpt4o"]
-        
+
         if any(model in high_cost_models for model in models):
             return "high" if complexity == "HIGH" else "medium"
         else:
             return "low"
 
-    async def classify_question(self, question: str, cache_key: str = None) -> DecisionType:
+    async def classify_question(
+        self, question: str, cache_key: str = None
+    ) -> DecisionType:
         """
         Classify whether a question requires structured, intuitive, or mixed reasoning
         """
@@ -185,24 +219,30 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
                     "gpt4o",
                     f"classification_{cache_key or 'temp'}",
                     classification_prompt,
-                    []
+                    [],
                 )
-                
+
                 classification_text = response.strip().upper()
                 if classification_text in ["STRUCTURED", "INTUITIVE", "MIXED"]:
                     decision_type = DecisionType(classification_text.lower())
                     if cache_key:
                         self.classification_cache[cache_key] = decision_type
                     return decision_type
-                        
+
         except Exception as e:
             logger.error(f"Classification error: {e}")
-            
+
         # Default fallback based on keywords
         question_lower = question.lower()
-        if any(word in question_lower for word in ["compare", "better", "cost", "price", "which", "pros", "cons"]):
+        if any(
+            word in question_lower
+            for word in ["compare", "better", "cost", "price", "which", "pros", "cons"]
+        ):
             return DecisionType.STRUCTURED
-        elif any(word in question_lower for word in ["feel", "happy", "passion", "fulfilling", "heart", "soul"]):
+        elif any(
+            word in question_lower
+            for word in ["feel", "happy", "passion", "fulfilling", "heart", "soul"]
+        ):
             return DecisionType.INTUITIVE
         else:
             return DecisionType.MIXED
@@ -214,24 +254,28 @@ Respond with exactly one word: STRUCTURED, INTUITIVE, or MIXED."""
         """
         model_mapping = {
             DecisionType.STRUCTURED: ["claude"],  # Analytical decisions
-            DecisionType.INTUITIVE: ["claude"],   # Use Claude for all due to GPT-4o access issues
-            DecisionType.MIXED: ["claude"]        # Use single model but simulate multi-perspective
+            DecisionType.INTUITIVE: [
+                "claude"
+            ],  # Use Claude for all due to GPT-4o access issues
+            DecisionType.MIXED: [
+                "claude"
+            ],  # Use single model but simulate multi-perspective
         }
         return model_mapping.get(decision_type, ["claude"])
 
     async def generate_smart_followup_questions(
-        self, 
-        initial_question: str, 
+        self,
+        initial_question: str,
         classification: SmartClassification,
         session_id: str = None,
         max_questions: int = 3,
-        previous_answers: List[str] = None
+        previous_answers: List[str] = None,
     ) -> List[FollowUpQuestion]:
         """
         Generate intelligent follow-up questions using smart followup engine with personas
         Enhanced with dynamic context injection for truly responsive questions
         """
-        
+
         try:
             # Use smart followup engine if available
             if self.followup_engine:
@@ -255,55 +299,63 @@ Adapt your question style based on their response:
 - If detailed → explore specific concerns they mentioned"""
                 else:
                     context = initial_question
-                
+
                 questions_data = await self.followup_engine.generate_smart_followups(
                     context,
                     {
                         "complexity": classification.complexity.value,
-                        "intent": classification.intent.value
+                        "intent": classification.intent.value,
                     },
                     classification.routed_models,
-                    session_id or f"session_{datetime.now().timestamp()}"
+                    session_id or f"session_{datetime.now().timestamp()}",
                 )
-                
+
                 # Convert to FollowUpQuestion objects
                 followup_questions = []
                 for q_data in questions_data:
                     # Handle both dict and object formats
                     if isinstance(q_data, dict):
-                        followup_questions.append(FollowUpQuestion(
-                            question=q_data.get("question", ""),
-                            nudge=q_data.get("nudge", ""),
-                            category=q_data.get("category", "general"),
-                            persona=q_data.get("persona", "realist")
-                        ))
+                        followup_questions.append(
+                            FollowUpQuestion(
+                                question=q_data.get("question", ""),
+                                nudge=q_data.get("nudge", ""),
+                                category=q_data.get("category", "general"),
+                                persona=q_data.get("persona", "realist"),
+                            )
+                        )
                     else:
-                        followup_questions.append(FollowUpQuestion(
-                            question=getattr(q_data, 'question', ""),
-                            nudge=getattr(q_data, 'nudge', ""),
-                            category=getattr(q_data, 'category', "general"),
-                            persona=getattr(q_data, 'persona', "realist")
-                        ))
-                
+                        followup_questions.append(
+                            FollowUpQuestion(
+                                question=getattr(q_data, "question", ""),
+                                nudge=getattr(q_data, "nudge", ""),
+                                category=getattr(q_data, "category", "general"),
+                                persona=getattr(q_data, "persona", "realist"),
+                            )
+                        )
+
                 return followup_questions
             else:
                 # Fallback to legacy method
-                return await self._generate_legacy_followups(initial_question, classification, max_questions)
-                
+                return await self._generate_legacy_followups(
+                    initial_question, classification, max_questions
+                )
+
         except Exception as e:
             logger.error(f"Smart followup generation failed: {str(e)}")
-            return await self._generate_legacy_followups(initial_question, classification, max_questions)
+            return await self._generate_legacy_followups(
+                initial_question, classification, max_questions
+            )
 
     async def _generate_legacy_followups(
-        self, 
-        initial_question: str, 
+        self,
+        initial_question: str,
         classification: SmartClassification,
-        max_questions: int = 3
+        max_questions: int = 3,
     ) -> List[FollowUpQuestion]:
         """
         Legacy fallback for follow-up generation
         """
-        
+
         # Map classification to decision type for legacy compatibility
         if classification.complexity == ComplexityLevel.LOW:
             decision_type = DecisionType.STRUCTURED
@@ -311,22 +363,22 @@ Adapt your question style based on their response:
             decision_type = DecisionType.INTUITIVE
         else:
             decision_type = DecisionType.MIXED
-        
-        return await self.generate_followup_questions(initial_question, decision_type, max_questions)
+
+        return await self.generate_followup_questions(
+            initial_question, decision_type, max_questions
+        )
+
     async def generate_followup_questions(
-        self, 
-        initial_question: str, 
-        decision_type: DecisionType,
-        max_questions: int = 3
+        self, initial_question: str, decision_type: DecisionType, max_questions: int = 3
     ) -> List[FollowUpQuestion]:
         """
         Generate intelligent follow-up questions with nudges (legacy method)
         """
-        
+
         # Select appropriate model for follow-up generation
         models = self.select_models(decision_type)
         primary_model = models[0]
-        
+
         followup_prompt = f"""You are a decision-making AI advisor. Based on the user's query, generate {max_questions} short, sharp follow-up questions to gather key context. Each question should include a helpful nudge.
 
 User's question: "{initial_question}"
@@ -354,79 +406,127 @@ Make questions specific to their situation and include practical nudges."""
                     primary_model,
                     f"followup_{initial_question[:50]}",
                     followup_prompt,
-                    []
+                    [],
                 )
-                
+
                 # Parse JSON response
                 response_clean = response.strip()
-                if response_clean.startswith('```json'):
+                if response_clean.startswith("```json"):
                     response_clean = response_clean[7:-3]
-                elif response_clean.startswith('```'):
+                elif response_clean.startswith("```"):
                     response_clean = response_clean[3:-3]
-                    
+
                 try:
                     parsed = json.loads(response_clean)
                     questions = []
                     for q_data in parsed.get("questions", []):
-                        questions.append(FollowUpQuestion(
-                            question=q_data.get("question", ""),
-                            nudge=q_data.get("nudge", ""),
-                            category=q_data.get("category", "general")
-                        ))
+                        questions.append(
+                            FollowUpQuestion(
+                                question=q_data.get("question", ""),
+                                nudge=q_data.get("nudge", ""),
+                                category=q_data.get("category", "general"),
+                            )
+                        )
                     return questions[:max_questions]
                 except json.JSONDecodeError:
                     # Fallback to pattern extraction
                     return self._extract_questions_from_text(response, decision_type)
-                    
+
         except Exception as e:
             logger.error(f"Follow-up generation error: {e}")
-            
+
         return self._generate_fallback_questions(initial_question, decision_type)
 
-    def _extract_questions_from_text(self, text: str, decision_type: DecisionType) -> List[FollowUpQuestion]:
+    def _extract_questions_from_text(
+        self, text: str, decision_type: DecisionType
+    ) -> List[FollowUpQuestion]:
         """
         Extract questions from unstructured text response
         """
         questions = []
-        lines = text.split('\n')
-        
+        lines = text.split("\n")
+
         for line in lines:
-            if '?' in line and len(line.strip()) > 10:
+            if "?" in line and len(line.strip()) > 10:
                 question = line.strip()
                 # Remove numbering and formatting
-                question = re.sub(r'^\d+\.\s*', '', question)
-                question = re.sub(r'^[-*]\s*', '', question)
-                
-                if question:
-                    questions.append(FollowUpQuestion(
-                        question=question,
-                        nudge="Consider your specific situation and constraints",
-                        category="general"
-                    ))
-                    
-        return questions[:3] if questions else self._generate_fallback_questions("", decision_type)
+                question = re.sub(r"^\d+\.\s*", "", question)
+                question = re.sub(r"^[-*]\s*", "", question)
 
-    def _generate_fallback_questions(self, initial_question: str, decision_type: DecisionType) -> List[FollowUpQuestion]:
+                if question:
+                    questions.append(
+                        FollowUpQuestion(
+                            question=question,
+                            nudge="Consider your specific situation and constraints",
+                            category="general",
+                        )
+                    )
+
+        return (
+            questions[:3]
+            if questions
+            else self._generate_fallback_questions("", decision_type)
+        )
+
+    def _generate_fallback_questions(
+        self, initial_question: str, decision_type: DecisionType
+    ) -> List[FollowUpQuestion]:
         """
         Generate fallback questions when AI generation fails
         """
         if decision_type == DecisionType.STRUCTURED:
             return [
-                FollowUpQuestion("What are your key criteria for this decision?", "e.g., cost, quality, timeline", "criteria"),
-                FollowUpQuestion("What constraints do you need to consider?", "e.g., budget limits, time restrictions", "constraints"),
-                FollowUpQuestion("How will you measure success?", "e.g., ROI, satisfaction, specific outcomes", "success_metrics")
+                FollowUpQuestion(
+                    "What are your key criteria for this decision?",
+                    "e.g., cost, quality, timeline",
+                    "criteria",
+                ),
+                FollowUpQuestion(
+                    "What constraints do you need to consider?",
+                    "e.g., budget limits, time restrictions",
+                    "constraints",
+                ),
+                FollowUpQuestion(
+                    "How will you measure success?",
+                    "e.g., ROI, satisfaction, specific outcomes",
+                    "success_metrics",
+                ),
             ]
         elif decision_type == DecisionType.INTUITIVE:
             return [
-                FollowUpQuestion("What feels most important to you personally?", "e.g., freedom, security, growth", "values"),
-                FollowUpQuestion("What does your gut instinct tell you?", "e.g., excited, worried, uncertain", "intuition"),
-                FollowUpQuestion("How does this align with your life goals?", "e.g., short-term relief vs long-term vision", "alignment")
+                FollowUpQuestion(
+                    "What feels most important to you personally?",
+                    "e.g., freedom, security, growth",
+                    "values",
+                ),
+                FollowUpQuestion(
+                    "What does your gut instinct tell you?",
+                    "e.g., excited, worried, uncertain",
+                    "intuition",
+                ),
+                FollowUpQuestion(
+                    "How does this align with your life goals?",
+                    "e.g., short-term relief vs long-term vision",
+                    "alignment",
+                ),
             ]
         else:  # MIXED
             return [
-                FollowUpQuestion("What are both your logical and emotional priorities?", "e.g., practical needs vs personal desires", "priorities"),
-                FollowUpQuestion("What would success look like in 1 year?", "e.g., measurable outcomes and how you'd feel", "future_vision"),
-                FollowUpQuestion("What risks concern you most?", "e.g., financial loss, missed opportunities, regret", "risk_assessment")
+                FollowUpQuestion(
+                    "What are both your logical and emotional priorities?",
+                    "e.g., practical needs vs personal desires",
+                    "priorities",
+                ),
+                FollowUpQuestion(
+                    "What would success look like in 1 year?",
+                    "e.g., measurable outcomes and how you'd feel",
+                    "future_vision",
+                ),
+                FollowUpQuestion(
+                    "What risks concern you most?",
+                    "e.g., financial loss, missed opportunities, regret",
+                    "risk_assessment",
+                ),
             ]
 
     async def synthesize_decision(
@@ -435,16 +535,17 @@ Make questions specific to their situation and include practical nudges."""
         followup_answers: List[str],
         decision_type: DecisionType,
         user_profile: Dict = None,
-        enable_personalization: bool = False
+        enable_personalization: bool = False,
+        additional_context: str = "",
     ) -> DecisionRecommendation:
         """
         Synthesize final decision using multi-framework approach
         """
         start_time = datetime.now()
-        
+
         # Select models for synthesis
         models = self.select_models(decision_type)
-        
+
         # Build context
         context = f"""
 Initial Question: {initial_question}
@@ -453,9 +554,12 @@ Decision Type: {decision_type.value}
 User Responses:
 {chr(10).join([f"{i+1}. {answer}" for i, answer in enumerate(followup_answers)])}
 """
-        
+
         if enable_personalization and user_profile:
             context += f"\nUser Profile Context: {user_profile.get('preferences', 'No specific preferences')}"
+
+        if additional_context:
+            context += f"\nAdditional Context: {additional_context.strip()}"
 
         # Generate decision using appropriate models
         if len(models) == 1:
@@ -468,23 +572,20 @@ User Responses:
             recommendation = await self._single_model_synthesis(
                 context, models[0], decision_type
             )
-            
+
         # Calculate processing time
         processing_time = int((datetime.now() - start_time).total_seconds() * 1000)
         recommendation.trace.processing_time_ms = processing_time
-        
+
         return recommendation
 
     async def _single_model_synthesis(
-        self, 
-        context: str, 
-        model: str, 
-        decision_type: DecisionType
+        self, context: str, model: str, decision_type: DecisionType
     ) -> DecisionRecommendation:
         """
         Generate decision using single model with multiple frameworks and simulated multi-perspective
         """
-        
+
         # Enhanced synthesis prompt with personalization and user answer callbacks
         synthesis_prompt = f"""You are GetGingee's advanced decision AI that provides deeply personalized recommendations. Your goal is to create a recommendation that feels emotionally resonant and specifically tailored to this user.
 
@@ -550,16 +651,22 @@ User Responses:
                     model,
                     f"synthesis_{hash(context[:100])}",
                     synthesis_prompt,
-                    []
+                    [],
                 )
-                
-                return self._parse_synthesis_response(response, ["claude", "gpt4o-simulated"], decision_type)
+
+                return self._parse_synthesis_response(
+                    response, ["claude", "gpt4o-simulated"], decision_type
+                )
             else:
-                return self._generate_fallback_recommendation(context, [model], decision_type)
-                
+                return self._generate_fallback_recommendation(
+                    context, [model], decision_type
+                )
+
         except Exception as e:
             logger.error(f"Synthesis error: {e}")
-            return self._generate_fallback_recommendation(context, [model], decision_type)
+            return self._generate_fallback_recommendation(
+                context, [model], decision_type
+            )
 
     def _get_decision_type_guidance(self, decision_type: DecisionType) -> str:
         """
@@ -568,15 +675,12 @@ User Responses:
         guidance = {
             DecisionType.STRUCTURED: "Focus on data, comparisons, systematic evaluation, and logical frameworks.",
             DecisionType.INTUITIVE: "Focus on values, feelings, personal alignment, and intuitive insights.",
-            DecisionType.MIXED: "Balance analytical reasoning with personal values and emotional considerations."
+            DecisionType.MIXED: "Balance analytical reasoning with personal values and emotional considerations.",
         }
         return guidance.get(decision_type, "")
 
     def _parse_synthesis_response(
-        self, 
-        response: str, 
-        models_used: List[str], 
-        decision_type: DecisionType
+        self, response: str, models_used: List[str], decision_type: DecisionType
     ) -> DecisionRecommendation:
         """
         Parse AI response into structured recommendation
@@ -584,52 +688,106 @@ User Responses:
         try:
             # Clean JSON response
             response_clean = response.strip()
-            if response_clean.startswith('```json'):
+            if response_clean.startswith("```json"):
                 response_clean = response_clean[7:-3]
-            elif response_clean.startswith('```'):
+            elif response_clean.startswith("```"):
                 response_clean = response_clean[3:-3]
-                
+
             parsed = json.loads(response_clean)
-            
+
             # Extract persona voices if available
             persona_voices = parsed.get("persona_voices", {})
-            personas_consulted = list(persona_voices.keys()) if persona_voices else ["Realist", "Visionary", "Pragmatist", "Supportive"]
-            
+            personas_consulted = (
+                list(persona_voices.keys())
+                if persona_voices
+                else ["Realist", "Visionary", "Pragmatist", "Supportive"]
+            )
+
             trace = DecisionTrace(
                 models_used=models_used,
-                frameworks_used=parsed.get("frameworks_used", ["Emotional Alignment", "Multi-Persona Synthesis", "Value-Based Decision Making"]),
-                themes=parsed.get("themes", ["Personal values alignment", "Risk-opportunity balance", "Emotional considerations"]),
-                confidence_factors=parsed.get("confidence_factors", ["User response quality", "Multi-perspective analysis"]),
+                frameworks_used=parsed.get(
+                    "frameworks_used",
+                    [
+                        "Emotional Alignment",
+                        "Multi-Persona Synthesis",
+                        "Value-Based Decision Making",
+                    ],
+                ),
+                themes=parsed.get(
+                    "themes",
+                    [
+                        "Personal values alignment",
+                        "Risk-opportunity balance",
+                        "Emotional considerations",
+                    ],
+                ),
+                confidence_factors=parsed.get(
+                    "confidence_factors",
+                    ["User response quality", "Multi-perspective analysis"],
+                ),
                 used_web_search=False,
                 personas_consulted=personas_consulted,
                 processing_time_ms=0,  # Will be set by caller
-                classification={"persona_voices": persona_voices}  # Include persona voices in classification
+                classification={
+                    "persona_voices": persona_voices
+                },  # Include persona voices in classification
             )
-            
+
             return DecisionRecommendation(
-                final_recommendation=parsed.get("final_recommendation", "Consider your options carefully and make the choice that aligns with your priorities."),
-                summary=parsed.get("summary", "Based on your responses, this decision requires careful consideration of your priorities and values."),
-                next_steps=parsed.get("next_steps", ["Review your options", "Gather additional information", "Make your decision"]),
-                next_steps_with_time=parsed.get("next_steps_with_time", [
-                    {"step": "Review your options", "time_estimate": "1 hour", "description": "Carefully evaluate each possibility"},
-                    {"step": "Gather additional information", "time_estimate": "2-3 days", "description": "Research any missing details"},
-                    {"step": "Make your decision", "time_estimate": "30 minutes", "description": "Choose based on your analysis"}
-                ]),
+                final_recommendation=parsed.get(
+                    "final_recommendation",
+                    "Consider your options carefully and make the choice that aligns with your priorities.",
+                ),
+                summary=parsed.get(
+                    "summary",
+                    "Based on your responses, this decision requires careful consideration of your priorities and values.",
+                ),
+                next_steps=parsed.get(
+                    "next_steps",
+                    [
+                        "Review your options",
+                        "Gather additional information",
+                        "Make your decision",
+                    ],
+                ),
+                next_steps_with_time=parsed.get(
+                    "next_steps_with_time",
+                    [
+                        {
+                            "step": "Review your options",
+                            "time_estimate": "1 hour",
+                            "description": "Carefully evaluate each possibility",
+                        },
+                        {
+                            "step": "Gather additional information",
+                            "time_estimate": "2-3 days",
+                            "description": "Research any missing details",
+                        },
+                        {
+                            "step": "Make your decision",
+                            "time_estimate": "30 minutes",
+                            "description": "Choose based on your analysis",
+                        },
+                    ],
+                ),
                 confidence_score=min(max(parsed.get("confidence_score", 75), 0), 100),
-                confidence_tooltip=parsed.get("confidence_tooltip", "Based on available information and analysis"),
-                reasoning=parsed.get("reasoning", "Analysis completed using multiple decision frameworks"),
-                trace=trace
+                confidence_tooltip=parsed.get(
+                    "confidence_tooltip", "Based on available information and analysis"
+                ),
+                reasoning=parsed.get(
+                    "reasoning", "Analysis completed using multiple decision frameworks"
+                ),
+                trace=trace,
             )
-            
+
         except (json.JSONDecodeError, KeyError) as e:
             logger.error(f"Response parsing error: {e}")
-            return self._generate_fallback_recommendation("", models_used, decision_type)
+            return self._generate_fallback_recommendation(
+                "", models_used, decision_type
+            )
 
     def _generate_fallback_recommendation(
-        self, 
-        context: str, 
-        models_used: List[str], 
-        decision_type: DecisionType
+        self, context: str, models_used: List[str], decision_type: DecisionType
     ) -> DecisionRecommendation:
         """
         Generate fallback recommendation when AI analysis fails
@@ -642,27 +800,40 @@ User Responses:
             used_web_search=False,
             personas_consulted=[],
             processing_time_ms=0,
-            classification={}  # Empty classification for backward compatibility
+            classification={},  # Empty classification for backward compatibility
         )
-        
+
         return DecisionRecommendation(
             final_recommendation="Based on your responses, take time to carefully weigh your options against your stated priorities. Consider both the practical implications and how each choice aligns with your personal values.",
             summary="This decision requires balancing practical considerations with personal values. Take time to evaluate each option systematically.",
             next_steps=[
                 "List out your top 3 priorities for this decision",
                 "Research any additional information you need",
-                "Set a timeline for making your final choice"
+                "Set a timeline for making your final choice",
             ],
             next_steps_with_time=[
-                {"step": "List out your top 3 priorities for this decision", "time_estimate": "30 minutes", "description": "Write down what matters most to you"},
-                {"step": "Research any additional information you need", "time_estimate": "2-3 hours", "description": "Gather missing details and data"},
-                {"step": "Set a timeline for making your final choice", "time_estimate": "15 minutes", "description": "Decide when you'll make the final decision"}
+                {
+                    "step": "List out your top 3 priorities for this decision",
+                    "time_estimate": "30 minutes",
+                    "description": "Write down what matters most to you",
+                },
+                {
+                    "step": "Research any additional information you need",
+                    "time_estimate": "2-3 hours",
+                    "description": "Gather missing details and data",
+                },
+                {
+                    "step": "Set a timeline for making your final choice",
+                    "time_estimate": "15 minutes",
+                    "description": "Decide when you'll make the final decision",
+                },
             ],
             confidence_score=70,
             confidence_tooltip="Based on structured analysis of your priorities",
             reasoning="Decision analyzed using systematic framework considering your stated priorities and concerns.",
-            trace=trace
+            trace=trace,
         )
+
 
 # Function to create orchestrator instance (to be called from server)
 def create_ai_orchestrator(llm_router):
@@ -670,16 +841,16 @@ def create_ai_orchestrator(llm_router):
     # Import the smart classes here to avoid circular imports
     try:
         from server import DecisionClassifier, SmartModelRouter, SmartFollowupEngine
-        
+
         classifier = DecisionClassifier()
         smart_router = SmartModelRouter()
         followup_engine = SmartFollowupEngine()
-        
+
         return AIOrchestrator(
             llm_router=llm_router,
             classifier=classifier,
             smart_router=smart_router,
-            followup_engine=followup_engine
+            followup_engine=followup_engine,
         )
     except ImportError as e:
         # Fallback to basic orchestrator if smart systems not available
