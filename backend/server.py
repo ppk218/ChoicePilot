@@ -624,8 +624,24 @@ async def check_usage_and_permissions(user: dict, use_voice: bool = False, advis
     
     if errors:
         return {"allowed": False, "errors": errors, "credit_cost": credit_cost}
-    
+
     return {"allowed": True, "errors": [], "credit_cost": credit_cost}
+
+async def update_usage(user: dict, credit_cost: int) -> None:
+    """Increment monthly usage counter or deduct credits."""
+    plan = user.get("plan", "free")
+    if plan == "free":
+        monthly_used = user.get("monthly_decisions_used", 0)
+        if monthly_used < SUBSCRIPTION_PLANS["free"]["monthly_decisions"]:
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$inc": {"monthly_decisions_used": 1}}
+            )
+        else:
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$inc": {"credits": -credit_cost}}
+            )
 
 # Enhanced authentication endpoints with security
 @api_router.post("/auth/register")
@@ -1292,23 +1308,8 @@ async def chat_with_assistant(request: DecisionRequest, current_user: dict = Dep
         reasoning_type = determine_reasoning_type(request.message, category, advisor_style)
         advisor_personality = ADVISOR_STYLES.get(advisor_style, ADVISOR_STYLES["realist"])
         
-        # Deduct credits and update usage
-        plan = current_user.get("plan", "free")
-        if plan == "free":
-            monthly_used = current_user.get("monthly_decisions_used", 0)
-            if monthly_used < SUBSCRIPTION_PLANS["free"]["monthly_decisions"]:
-                # Use free decision
-                await db.users.update_one(
-                    {"id": current_user["id"]},
-                    {"$inc": {"monthly_decisions_used": 1}}
-                )
-            else:
-                # Use credits
-                await db.users.update_one(
-                    {"id": current_user["id"]},
-                    {"$inc": {"credits": -credit_cost}}
-                )
-        # Pro users don't have limits, so no deduction needed
+        # Deduct credits or increment monthly usage
+        await update_usage(current_user, credit_cost)
         
         # Store conversation
         conversation = ConversationHistory(
@@ -1481,6 +1482,15 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
     """Process a step in the structured decision flow"""
     try:
         decision_id = request.decision_id or str(uuid.uuid4())
+
+        # Check plan permissions and usage
+        permission_check = await check_usage_and_permissions(current_user)
+        if not permission_check["allowed"]:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                {"errors": permission_check["errors"], "credit_cost": permission_check["credit_cost"]},
+            )
+        credit_cost = permission_check["credit_cost"]
         
         # Get or create decision session
         session = await db.decision_sessions_new.find_one({
@@ -1519,7 +1529,9 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
                     "$push": {"followup_questions": followup.dict()}
                 }
             )
-            
+
+            await update_usage(current_user, credit_cost)
+
             return DecisionStepResponse(
                 decision_id=decision_id,
                 step="followup",
@@ -1544,8 +1556,8 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
             if step_num < 3:
                 # Generate next follow-up question
                 followup = await generate_followup_question(
-                    session["initial_question"], 
-                    step_num + 1, 
+                    session["initial_question"],
+                    step_num + 1,
                     session.get("category"),
                     session.get("followup_answers", []) + [request.message]
                 )
@@ -1557,7 +1569,9 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
                         "$set": {"step_number": step_num + 1}
                     }
                 )
-                
+
+                await update_usage(current_user, credit_cost)
+
                 return DecisionStepResponse(
                     decision_id=decision_id,
                     step="followup",
@@ -1584,7 +1598,9 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
                         }
                     }
                 )
-                
+
+                await update_usage(current_user, credit_cost)
+
                 return DecisionStepResponse(
                     decision_id=decision_id,
                     step="complete",
@@ -1616,7 +1632,9 @@ async def process_decision_step(request: DecisionStepRequest, current_user: dict
                 {"id": decision_id},
                 {"$set": {"recommendation": recommendation.dict()}}
             )
-            
+
+            await update_usage(current_user, credit_cost)
+
             return DecisionStepResponse(
                 decision_id=decision_id,
                 step="complete",
@@ -2019,6 +2037,17 @@ async def process_advanced_decision_step(
     try:
         user_id = current_user.get("id") if current_user else None
         decision_id = request.decision_id or str(uuid.uuid4())
+
+        if current_user:
+            permission_check = await check_usage_and_permissions(current_user)
+            if not permission_check["allowed"]:
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    {"errors": permission_check["errors"], "credit_cost": permission_check["credit_cost"]},
+                )
+            credit_cost = permission_check["credit_cost"]
+        else:
+            credit_cost = CREDIT_COSTS["text_decision"]
         
         # Get or create decision session
         session = await db.decision_sessions_advanced.find_one({"id": decision_id})
@@ -2097,7 +2126,10 @@ async def process_advanced_decision_step(
                     }
                 }
             )
-            
+
+            if current_user:
+                await update_usage(current_user, credit_cost)
+
             response_text = f"I've analyzed your {decision_type.value} decision. Let me ask you some targeted questions to give you the best recommendation."
             
             # Return ONLY the first question to match frontend step-by-step flow
@@ -2147,7 +2179,10 @@ async def process_advanced_decision_step(
                     {"id": decision_id},
                     {"$set": {"step_number": next_step_number}}
                 )
-                
+
+                if current_user:
+                    await update_usage(current_user, credit_cost)
+
                 return AdvancedDecisionStepResponse(
                     decision_id=decision_id,
                     step="followup",
@@ -2166,16 +2201,22 @@ async def process_advanced_decision_step(
                 )
                 
                 # Generate the final recommendation using AI
-                return await _generate_advanced_recommendation(
+                result = await _generate_advanced_recommendation(
                     decision_id, session, current_answers
                 )
+                if current_user:
+                    await update_usage(current_user, credit_cost)
+                return result
                 
         elif request.step == "recommendation" and session:
             # Direct recommendation request
             current_answers = session.get("followup_answers", [])
-            return await _generate_advanced_recommendation(
+            result = await _generate_advanced_recommendation(
                 decision_id, session, current_answers
             )
+            if current_user:
+                await update_usage(current_user, credit_cost)
+            return result
             
         elif request.step == "go_deeper" and session:
             # 🚀 OPTIONAL DEPTH ENHANCEMENT: Generate deeper questions based on all answers
@@ -2236,14 +2277,20 @@ Based on their answers, generate 1-2 deeper clarifying or exploratory questions 
                         decision_type=session.get("decision_type"),
                         session_version=1
                     )
-                    
+
+                if current_user:
+                    await update_usage(current_user, credit_cost)
+
             except Exception as e:
                 logging.warning(f"Deeper question generation failed: {e}")
-                
+
             # Fallback to direct recommendation
-            return await _generate_advanced_recommendation(
+            result = await _generate_advanced_recommendation(
                 decision_id, session, current_answers
             )
+            if current_user:
+                await update_usage(current_user, credit_cost)
+            return result
             
         elif request.step == "adjust" and session:
             # Adjustment request - create new version
@@ -2271,10 +2318,13 @@ Based on their answers, generate 1-2 deeper clarifying or exploratory questions 
             )
             
             # Regenerate with adjustment context
-            return await _generate_advanced_recommendation(
+            result = await _generate_advanced_recommendation(
                 decision_id, session, session.get("followup_answers", []),
                 adjustment_context=request.adjustment_context
             )
+            if current_user:
+                await update_usage(current_user, credit_cost)
+            return result
             
         else:
             raise HTTPException(
