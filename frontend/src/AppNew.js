@@ -158,8 +158,57 @@ const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const updateProfile = async (name, email) => {
+    try {
+      const res = await axios.put(`${API}/auth/profile`, { name, email });
+      setUser(res.data.user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Update failed' };
+    }
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      await axios.post(`${API}/auth/change-password`, {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Password update failed' };
+    }
+  };
+
+  const exportData = async () => {
+    const res = await axios.get(`${API}/auth/export-data`);
+    return res.data;
+  };
+
+  const deleteAccount = async () => {
+    try {
+      await axios.delete(`${API}/auth/delete-account`);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Delete failed' };
+    }
+  };
+
+  const refreshUser = fetchUserInfo;
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!token,
+      updateProfile,
+      changePassword,
+      exportData,
+      deleteAccount,
+      refreshUser
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -209,6 +258,8 @@ const MainApp = () => {
         return <DecisionFlow />;
       case 'dashboard':
         return <Dashboard />;
+      case 'settings':
+        return <AccountSettings />;
       default:
         return <LandingPage onStartDecision={() => setCurrentView('decision')} />;
     }
@@ -259,6 +310,14 @@ const MainApp = () => {
                   >
                     <User className="h-4 w-4" />
                     Dashboard
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setCurrentView('settings')}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
                   </Button>
                   <Button
                     variant="outline"
@@ -452,6 +511,104 @@ const Dashboard = () => {
             <p className="text-muted-foreground">No decisions yet. Start your first one!</p>
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+};
+
+const AccountSettings = () => {
+  const { user, updateProfile, changePassword, exportData, deleteAccount, logout, refreshUser } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+  }, [user]);
+
+  const handleProfile = async (e) => {
+    e.preventDefault();
+    const res = await updateProfile(name, email);
+    if (res.success) {
+      setMessage('Profile updated');
+      setError('');
+      refreshUser();
+    } else {
+      setError(res.error);
+    }
+  };
+
+  const handlePassword = async (e) => {
+    e.preventDefault();
+    const res = await changePassword(currentPassword, newPassword);
+    if (res.success) {
+      setMessage('Password changed');
+      setError('');
+      setCurrentPassword('');
+      setNewPassword('');
+    } else {
+      setError(res.error);
+    }
+  };
+
+  const handleExport = async () => {
+    const data = await exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'choicepilot-data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete account permanently?')) return;
+    const res = await deleteAccount();
+    if (res.success) {
+      logout();
+    } else {
+      setError(res.error);
+    }
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-4 space-y-6">
+      <h1 className="text-2xl font-bold">Account Settings</h1>
+      {message && <div className="text-green-600">{message}</div>}
+      {error && <div className="text-red-600">{error}</div>}
+      <form onSubmit={handleProfile} className="space-y-4">
+        <div>
+          <label className="block mb-1">Name</label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div>
+          <label className="block mb-1">Email</label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div>Plan: <span className="font-semibold">{user?.plan}</span></div>
+        <Button type="submit">Save Profile</Button>
+      </form>
+
+      <form onSubmit={handlePassword} className="space-y-4">
+        <div>
+          <label className="block mb-1">Current Password</label>
+          <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+        </div>
+        <div>
+          <label className="block mb-1">New Password</label>
+          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+        </div>
+        <Button type="submit">Change Password</Button>
+      </form>
+
+      <div className="space-y-2">
+        <Button variant="outline" onClick={handleExport}>Export My Data</Button>
+        <Button variant="destructive" onClick={handleDelete}>Delete Account</Button>
       </div>
     </div>
   );

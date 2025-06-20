@@ -326,6 +326,14 @@ class PasswordReset(BaseModel):
     reset_token: str
     new_password: str
 
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
 class SubscriptionInfo(BaseModel):
     plan: str
     monthly_decisions_used: int
@@ -875,6 +883,37 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         "email_verified": current_user.get("email_verified", True),  # Default to True as per the fix
         "created_at": current_user["created_at"]
     }
+
+@api_router.put("/auth/profile")
+async def update_profile(update: ProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update current user's profile information"""
+    update_data = {}
+    if update.name is not None:
+        update_data["name"] = update.name.strip()
+    if update.email is not None and update.email != current_user["email"]:
+        existing = await db.users.find_one({"email": update.email})
+        if existing and existing.get("id") != current_user["id"]:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email already in use")
+        update_data["email"] = update.email
+    if not update_data:
+        return {"message": "No changes"}
+
+    update_data["updated_at"] = datetime.utcnow()
+    await db.users.update_one({"id": current_user["id"]}, {"$set": update_data})
+    current_user.update(update_data)
+    return {"message": "Profile updated", "user": current_user}
+
+@api_router.post("/auth/change-password")
+async def change_password(data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    """Change the authenticated user's password"""
+    if not verify_password(data.current_password, current_user["password_hash"]):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Current password incorrect")
+    if len(data.new_password) < 8:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Password must be at least 8 characters")
+
+    new_hash = hash_password(data.new_password)
+    await db.users.update_one({"id": current_user["id"]}, {"$set": {"password_hash": new_hash, "updated_at": datetime.utcnow()}})
+    return {"message": "Password updated"}
 
 @api_router.get("/subscription/info")
 async def get_subscription_info(current_user: dict = Depends(get_current_user)) -> SubscriptionInfo:
