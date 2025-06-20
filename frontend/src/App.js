@@ -572,6 +572,7 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   const [goDeeperContext, setGoDeeperContext] = useState('');
   const [guidedQuestions, setGuidedQuestions] = useState([]);
   const [guidedAnswers, setGuidedAnswers] = useState({});
+  const [tempGoDeeperContext, setTempGoDeeperContext] = useState('');
   
   // Adjust state
   const [adjustmentReason, setAdjustmentReason] = useState('');
@@ -583,6 +584,20 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
   
   // Additional state for modals
   const [showGuidedQuestions, setShowGuidedQuestions] = useState(false);
+
+  // When opening Go Deeper modal, initialize temp context and default questions
+  useEffect(() => {
+    if (showGoDeeperModal) {
+      setTempGoDeeperContext(goDeeperContext);
+      if (guidedQuestions.length === 0) {
+        setGuidedQuestions([
+          'What doubts or concerns still remain about this decision?',
+          'What additional information would help you feel more confident?',
+          'Are there trade-offs you want to explore further?'
+        ]);
+      }
+    }
+  }, [showGoDeeperModal]);
   
   const { trackDecisionStarted, trackDecisionCompleted, trackFollowupAnswered } = usePostHog();
   const { isAuthenticated } = useAuth();
@@ -1015,6 +1030,60 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
     }
   };
 
+  const runNewDecision = async () => {
+    setGoDeeperContext(tempGoDeeperContext);
+    setShowGoDeeperModal(false);
+    const adjustment_context = [
+      tempGoDeeperContext,
+      ...Object.values(guidedAnswers)
+    ]
+      .filter((v) => v && v.trim() !== '')
+      .join('\n');
+
+    if (!adjustment_context) return;
+
+    setLoading(true);
+    setProcessingStep('Generating updated recommendation...');
+    try {
+      const response = await axios.post(`${API}/api/decision/advanced`, {
+        decision_id: decisionId,
+        step: 'adjust',
+        adjustment_context,
+        enable_personalization: isAuthenticated
+      });
+
+      if (response.data.recommendation) {
+        const advancedRec = response.data.recommendation;
+        const newRec = {
+          recommendation: advancedRec.final_recommendation,
+          summary: advancedRec.summary,
+          confidence_score: advancedRec.confidence_score,
+          reasoning: advancedRec.reasoning,
+          logic_trace: advancedRec.trace.frameworks_used || [],
+          next_steps: advancedRec.next_steps || [],
+          next_steps_with_time: advancedRec.next_steps_with_time || [],
+          confidence_tooltip: advancedRec.confidence_tooltip,
+          trace: advancedRec.trace
+        };
+
+        setDecisionVersions((prev) => [...prev, recommendation]);
+        setCurrentVersion((v) => v + 1);
+        setRecommendation(newRec);
+        setCurrentStep('recommendation');
+        setConversationHistory((prev) => [
+          ...prev,
+          { type: 'ai_recommendation', content: newRec, timestamp: new Date() }
+        ]);
+      }
+    } catch (error) {
+      console.error('Run new decision error:', error);
+      setError('Failed to generate updated recommendation.');
+    } finally {
+      setLoading(false);
+      setProcessingStep('');
+    }
+  };
+
   const currentQuestion = followupQuestions[currentFollowupIndex];
 
   // Utility function for confidence color coding
@@ -1315,19 +1384,37 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                 
                 <div className="min-h-[200px]">
                   <p className="text-sm text-muted-foreground mb-4">
-                    {!showGuidedQuestions 
-                      ? "Share any additional context that might influence your decision..."
-                      : "Answer questions that seem relevant to your situation:"
-                    }
+                    {!showGuidedQuestions
+                      ? 'Share any additional context that might influence your decision...'
+                      : 'Answer questions that seem relevant to your situation:'}
                   </p>
-                  
-                  <textarea
-                    placeholder={!showGuidedQuestions 
-                      ? "What other factors should the AI consider?"
-                      : "What are your biggest concerns about this decision?"
-                    }
-                    className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[120px]"
-                  />
+
+                  {!showGuidedQuestions && (
+                    <textarea
+                      value={tempGoDeeperContext}
+                      onChange={(e) => setTempGoDeeperContext(e.target.value)}
+                      placeholder="What other factors should the AI consider?"
+                      className="w-full p-4 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[120px]"
+                    />
+                  )}
+
+                  {showGuidedQuestions && (
+                    <div className="space-y-4">
+                      {guidedQuestions.map((q, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <p className="text-sm font-medium text-foreground">{q}</p>
+                          <textarea
+                            value={guidedAnswers[idx] || ''}
+                            onChange={(e) =>
+                              setGuidedAnswers((prev) => ({ ...prev, [idx]: e.target.value }))
+                            }
+                            className="w-full p-3 text-sm border border-border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                            rows={2}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end gap-3 mt-6">
@@ -1338,10 +1425,19 @@ const DecisionFlow = ({ initialQuestion, onComplete, onSaveAndContinue }) => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => setShowGoDeeperModal(false)}
+                    onClick={() => {
+                      setGoDeeperContext(tempGoDeeperContext);
+                      setShowGoDeeperModal(false);
+                    }}
+                    className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted/50"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={runNewDecision}
                     className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
                   >
-                    💾 Update Recommendation
+                    Run new decision
                   </button>
                 </div>
               </div>
