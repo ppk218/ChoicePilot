@@ -3,8 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import json
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from security_middleware import SecurityMiddleware, CORSSecurityMiddleware
-from account_management import (
+from backend.security_middleware import SecurityMiddleware, CORSSecurityMiddleware
+from backend.account_management import (
     AccountSecurityService, EmailVerificationRequest, EmailVerificationConfirm,
     AccountDeletionRequest, DataExportRequest, PrivacySettings
 )
@@ -28,18 +28,25 @@ import smtplib
 import sys
 import io
 
-# Add the backend directory to the path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from payment_models import (
+from backend.payment_models import (
     PaymentRequest, SubscriptionRequest, PaymentDocument, SubscriptionDocument,
     CREDIT_PACKS, SUBSCRIPTION_PRODUCTS, PaymentResponse, SubscriptionResponse,
     BillingHistory, WebhookPayload
 )
-from payment_service import DodoPaymentsService
-from export_service import DecisionPDFExporter, DecisionSharingService, DecisionComparisonService
-from email_service import EmailService, EmailVerificationService
-from monitoring_service import SecurityMonitor, SystemMonitor, BackupManager, AuditLogger
+from backend.payment_service import DodoPaymentsService
+from backend.export_service import (
+    DecisionPDFExporter,
+    DecisionSharingService,
+    DecisionComparisonService,
+)
+from backend.email_service import EmailService, EmailVerificationService
+from backend.monitoring_service import (
+    SecurityMonitor,
+    SystemMonitor,
+    BackupManager,
+    AuditLogger,
+)
 
 
 ROOT_DIR = Path(__file__).parent
@@ -3683,12 +3690,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Add current directory to path for local imports
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 # Import AI Orchestrator after logger is defined
 try:
-    from ai_orchestrator_v2 import (
+    from backend.ai_orchestrator_v2 import (
         create_ai_orchestrator, DecisionType, FollowUpQuestion, 
         DecisionRecommendation, DecisionTrace
     )

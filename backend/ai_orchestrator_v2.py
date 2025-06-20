@@ -669,7 +669,11 @@ def create_ai_orchestrator(llm_router):
     """Create enhanced AI orchestrator with smart classification and routing systems"""
     # Import the smart classes here to avoid circular imports
     try:
-        from server import DecisionClassifier, SmartModelRouter, SmartFollowupEngine
+        from backend.server import (
+            DecisionClassifier,
+            SmartModelRouter,
+            SmartFollowupEngine,
+        )
         
         classifier = DecisionClassifier()
         smart_router = SmartModelRouter()

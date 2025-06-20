@@ -202,7 +202,7 @@ class AccountSecurityService:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
             
             # Verify password
-            from server import verify_password  # Import from main server
+            from backend.server import verify_password  # Import from main server
             if not verify_password(password, user["password_hash"]):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
